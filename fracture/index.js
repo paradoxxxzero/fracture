@@ -331,6 +331,7 @@ window.addEventListener('wheel', e => {
   state.update()
 })
 window.addEventListener('dblclick', e => {
-  state.init()
-  state.update()
+  location.hash = ''
+  state = new State()
+  sizeGL()
 })

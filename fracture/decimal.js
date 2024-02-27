@@ -2,14 +2,13 @@ export class Decimal {
   static DECIMALS = 32 // number of decimals on all instances
   static SHIFT = BigInt('1' + '0'.repeat(Decimal.DECIMALS)) // derived constant
   constructor(value) {
-    if (value instanceof Decimal) return value
-    let [ints, decis] = value
-      .toLocaleString('fullwide', {
-        useGrouping: true,
-        maximumSignificantDigits: 20,
-      })
-      .split('.')
-      .concat('')
+    if (value instanceof Decimal) {
+      return value
+    }
+    if (typeof value === 'number') {
+      value = value.toFixed(Decimal.DECIMALS)
+    }
+    let [ints, decis] = value.split('.').concat('')
     this._n = BigInt(
       ints + decis.padEnd(Decimal.DECIMALS, '0').slice(0, Decimal.DECIMALS)
     )
