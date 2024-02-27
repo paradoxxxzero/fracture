@@ -1,0 +1,15 @@
+{
+  "name": "fracture",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build && touch docs/.nojekyll",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "vite": "^4.3.9"
+  },
+  "dependencies": {}
+}
