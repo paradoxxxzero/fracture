@@ -28,6 +28,9 @@ export class Decimal {
   multiply(num) {
     return Decimal._divRound(this._n * new Decimal(num)._n, Decimal.SHIFT)
   }
+  pow(num) {
+    return Decimal._divRound(this._n ** new Decimal(num), Decimal.SHIFT)
+  }
   divide(num) {
     return Decimal._divRound(this._n * Decimal.SHIFT, new Decimal(num)._n)
   }
@@ -100,22 +103,113 @@ export class Complex {
       this.im.multiply(c.re).subtract(this.re.multiply(c.im)).divide(d)
     )
   }
-  norm() {
+  exp() {
+    const r = Math.exp(this.re.toNumber())
+    return new Complex(
+      m(r * Math.cos(this.im.toNumber())),
+      m(r * Math.sin(this.im.toNumber()))
+    )
+  }
+  arg() {
+    return m(Math.atan2(this.im.toNumber(), this.re.toNumber()))
+  }
+  cos() {
+    return new Complex(
+      m(Math.cos(this.re.toNumber()) * Math.cosh(this.im.toNumber())),
+      m(-Math.sin(this.re.toNumber()) * Math.sinh(this.im.toNumber()))
+    )
+  }
+  sin() {
+    return new Complex(
+      m(Math.sin(this.re.toNumber()) * Math.cosh(this.im.toNumber())),
+      m(Math.cos(this.re.toNumber()) * Math.sinh(this.im.toNumber()))
+    )
+  }
+  ln() {
+    const length = this.abs()
+    if (length === 0) {
+      return new Complex(m(-1e10), m(0))
+    }
+    return new Complex(m(Math.log(this.abs())), this.arg())
+  }
+  pow(k) {
+    if (!(k instanceof Complex)) {
+      if (k % 1 === 0) {
+        if (k === 0) {
+          return c(1)
+        }
+        if (k === 1) {
+          return this
+        }
+        if (k === 2) {
+          return this.multiply(this)
+        }
+        if (k === 3) {
+          return this.multiply(this).multiply(this)
+        }
+        if (k === 4) {
+          const z2 = this.multiply(this)
+          return z2.multiply(z2)
+        }
+        if (k === 5) {
+          const z2 = this.multiply(this)
+          return z2.multiply(z2).multiply(this)
+        }
+        if (k === 6) {
+          const z2 = this.multiply(this)
+          return z2.multiply(z2).multiply(z2)
+        }
+        if (k === 7) {
+          const z2 = this.multiply(this)
+          return z2.multiply(z2).multiply(z2).multiply(this)
+        }
+        if (k === 8) {
+          const z2 = this.multiply(this)
+          const z4 = z2.multiply(z2)
+          return z4.multiply(z4)
+        }
+        if (k === 9) {
+          const z2 = this.multiply(this)
+          const z4 = z2.multiply(z2)
+          return z4.multiply(z4).multiply(this)
+        }
+      }
+      k = c(k)
+    }
+    if (this.re.toNumber() === 0 && this.im.toNumber() === 0) {
+      return c(0)
+    }
+    if (k.re.toNumber() === 0 && k.im.toNumber() === 0) {
+      return c(1)
+    }
+    return this.ln().multiply(k).exp()
+  }
+  norm2() {
     return this.re.multiply(this.re).add(this.im.multiply(this.im))
   }
   abs() {
-    return Math.sqrt(this.norm())
+    return Math.sqrt(this.norm2())
   }
   toString() {
-    return `${this.re} ${this.im}i`
+    return `complex: <${this.re}+${this.im}i>`
+  }
+  to2fv() {
+    return [this.re.toNumber(), this.im.toNumber()]
+  }
+  static isComplexString(s) {
+    return s.match(/^complex: <.+\+.+i>$/)
   }
   static fromString(s) {
-    const [re, im] = s.split(' ')
-    return new Complex(m(re), m(im.replace(/i$/, '')))
+    const match = s.match(/^complex: <(.+)\+(.+)i>$/)
+    if (!match) {
+      throw new Error('Invalid complex string')
+    }
+
+    const [, re, im] = match
+    return new Complex(m(re), m(im))
   }
 }
 
 export const c = (re = 0, im = 0) => new Complex(m(re), m(im))
-export const cs = s => Complex.fromString(s)
 
 window.m = m
