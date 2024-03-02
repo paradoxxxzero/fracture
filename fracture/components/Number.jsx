@@ -144,9 +144,7 @@ export default function Number({
             value={raw}
             style={{
               width: `${
-                Math.max(
-                  ...[step, raw].map(c => c.toString().replace('.', '').length)
-                ) + 0.3
+                Math.max(...[step, raw].map(c => c.toString().length)) + 0.3
               }ch`,
               maxWidth: `${maxWidth}ch`,
             }}

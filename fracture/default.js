@@ -13,5 +13,7 @@ export const defaultParams = {
     window.devicePixelRatio > 2 ? window.devicePixelRatio / 2 : 1.1,
   fixed: true,
   point: c(0, 0),
-  power: 2,
+  fzc: 'cadd(cpow(z, 2.), c)',
+  dfzcdz: 'cmul(2., z)',
+  fZdzdc: 'cadd(cadd(cmul(2., cmul(Z, dz)), cpow(dz, 2.)), dc)',
 }

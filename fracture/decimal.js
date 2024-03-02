@@ -190,6 +190,12 @@ export class Complex {
   abs() {
     return Math.sqrt(this.norm2())
   }
+  cabs() {
+    return c(Math.abs(this.re), Math.abs(this.im))
+  }
+  conj() {
+    return c(this.re, -this.im)
+  }
   toString() {
     return `complex: <${this.re}+${this.im}i>`
   }
@@ -210,6 +216,21 @@ export class Complex {
   }
 }
 
-export const c = (re = 0, im = 0) => new Complex(m(re), m(im))
+export const c = (re = 0, im = 0) =>
+  re instanceof Complex ? re : new Complex(m(re), m(im))
 
 window.m = m
+
+export const complexFunction = (...args) => {
+  const scope = {
+    cmul: (a, b) => c(a).multiply(b),
+    cadd: (a, b) => c(a).add(b),
+    cpow: (a, b) => c(a).pow(b),
+    cabs: a => a.cabs(),
+    conj: a => a.conj(),
+  }
+  const f = args.pop()
+  args.push(`with(this) return ${f}`)
+  // eslint-disable-next-line no-new-func
+  return new Function(...args).bind(scope)
+}

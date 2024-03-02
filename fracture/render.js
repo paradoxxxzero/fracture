@@ -1,37 +1,38 @@
 import vertexSource from './vertex.glsl?raw'
 import fragmentSource from './fragment.glsl?raw'
-import { c } from './decimal'
+import { c, complexFunction } from './decimal'
 
-const expand = (rt, source) =>
-  rt.power > 0 && rt.power < 10 && rt.power % 1 === 0
-    ? source
-        .replace(/cpow\(\s*(.+?)\s*,\s*power\s*\)/g, `cpow${rt.power}($1)`)
-        .replace(
-          /cpow\(\s*(.+?)\s*,\s*power\s*-\s*(\d+).\s*\)/g,
-          (_, $1, $2) => `cpow${rt.power - $2}(${$1})`
-        )
-        .replace(
-          /cpow\(\s*(.+?)\s*,\s*(\d+).\s*\)/g,
-          (_, $1, $2) => `cpow${$2}(${$1})`
-        )
-    : source
+const maxOptimizedPower = 9
 
-const setConfig = (rt, source) =>
-  expand(
-    rt,
-    source.replace(
+const expand = source =>
+  source.replace(/cpow\(\s*(.+?)\s*,\s*(\d+).0?\s*\)/g, (_, $1, $2) =>
+    +$2 < maxOptimizedPower ? `cpow${$2}(${$1})` : `cpow(${$1}, ${$2})`
+  )
+
+const preprocess = (rt, source) => {
+  source = source
+    .replace(
       '##CONFIG',
       [
         rt.perturb ? '#define PERTURB' : '',
         rt.fixed ? '#define FIXED' : '',
         rt.useDerivative ? '#define USE_DERIVATIVE' : '',
         rt.showDerivative ? '#define SHOW_DERIVATIVE' : '',
-        rt.power % 1 === 0 ? `#define POWER ${rt.power}` : '',
       ]
         .filter(Boolean)
         .join('\n')
     )
-  )
+    .replace(/F\(z,\s*c\)/g, expand(rt.fzc))
+    .replace(/dF\s*\/\s*dz\(z,\s*c\)/, expand(rt.dfzcdz))
+    .replace(/F\(Z,\s*dz,\s*dc\)/, expand(rt.fZdzdc))
+  // console.log(
+  //   source
+  //     .split('\n')
+  //     .map((s, i) => `${i + 1}: ${s}`)
+  //     .join('\n')
+  // )
+  return source
+}
 
 const compileShader = (rt, shaderSource, shader) => {
   const { gl } = rt
@@ -144,7 +145,7 @@ export const initializeGl = (rt, onContextLost, onContextRestored) => {
 
 export const recompile = rt => {
   const { gl } = rt
-  compileShader(rt, setConfig(rt, fragmentSource), rt.env.fragmentShader)
+  compileShader(rt, preprocess(rt, fragmentSource), rt.env.fragmentShader)
   linkProgram(rt)
   rt.env.uniforms = {
     orbit: gl.getUniformLocation(rt.env.program, 'orbit'),
@@ -173,7 +174,6 @@ export const updateUniforms = rt => {
   uniforms.iterations && rt.gl.uniform1i(uniforms.iterations, rt.iterations)
   uniforms.center && rt.gl.uniform2fv(uniforms.center, rt.center.to2fv())
   uniforms.point && rt.gl.uniform2fv(uniforms.point, rt.point.to2fv())
-  uniforms.power && rt.gl.uniform1f(uniforms.power, rt.power)
   uniforms.derivative &&
     rt.gl.uniform1f(uniforms.derivative, 10 ** -rt.derivative)
   uniforms.aspect &&
@@ -196,15 +196,20 @@ export const resizeCanvasToDisplaySize = (canvas, sampling) => {
   }
 }
 
+// Add complex functions to global scope
+window.cmul = (a, b) => c(a).multiply(b)
+window.cadd = (a, b) => c(a).add(b)
+window.cpow = (a, b) => c(a).pow(b)
+
 const fillOrbit = (rt, orbit, z, cst, max, shift) => {
   const [a, b] = shift ? [2, 3] : [0, 1]
+  const F = complexFunction('z', 'c', rt.fzc)
 
   let i = 0
   for (; i < rt.iterations; i++) {
     orbit[i * 4 + a] = z.re.toNumber()
     orbit[i * 4 + b] = z.im.toNumber()
-
-    z = z.pow(rt.power).add(cst)
+    z = F(z, cst)
 
     if (z.norm2().toNumber() >= rt.bailout) {
       break

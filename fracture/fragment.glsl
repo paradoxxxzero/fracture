@@ -9,7 +9,6 @@ uniform float scale;
 uniform float aspect;
 uniform float derivative;
 uniform vec2 center;
-uniform float power;
 uniform vec2 point;
 
 // uniform mat4x2 coefs;
@@ -22,6 +21,14 @@ uniform ivec2 maxIterations;
 in vec2 uv;
 out vec4 fragColor;
 
+vec2 cadd(in vec2 z0, in vec2 z1) {
+  return z0 + z1;
+}
+
+vec2 cmul(in float k, vec2 w) {
+  return k * w;
+}
+
 vec2 cmul(vec2 z, vec2 w) {
   return vec2(z.x * w.x - z.y * w.y, z.x * w.y + z.y * w.x);
 }
@@ -33,6 +40,13 @@ vec2 cdiv(in vec2 z0, in vec2 z1) {
   return cmul(z0, cinv(z1));
 }
 
+vec2 cabs(in vec2 z) {
+  return vec2(abs(z.x), abs(z.y));
+}
+
+vec2 conj(in vec2 z) {
+  return vec2(z.x, -z.y);
+}
 vec2 expi(in float x) {
   return vec2(cos(x), sin(x));
 }
@@ -57,9 +71,15 @@ vec2 csin(in vec2 z) {
 vec2 cpow(in vec2 z, in float k) {
   return cexp(k * clog(z));
 }
+vec2 cpow(in vec2 z, in int k) {
+  vec2 w = vec2(1., 0.);
+  for(int i = 0; i < k; i++) {
+    w = cmul(w, z);
+  }
+  return w;
+}
 
 // Fast integer power functions
-#ifdef POWER
 vec2 cpow0(in vec2 z) {
   return vec2(1.);
 }
@@ -90,7 +110,6 @@ vec2 cpow8(in vec2 z) {
 vec2 cpow9(in vec2 z) {
   return cmul(z, cpow8(z));
 }
-#endif
 
 #ifdef PERTURB
 vec2 fetchRef(in int n, in bool shift) {
@@ -131,45 +150,24 @@ void main(void) {
   int m = 0;
   bool shift = true;
   int max = maxIterations.y;
-  vec2 zref = fetchRef(m, shift);
+  vec2 Z = fetchRef(m, shift);
   #endif
 
   vec3 col = vec3(0.);
   float n = -.0;
   for(int i = 0; i < iterations; i++) {
     #ifdef PERTURB
-      #ifdef POWER
-        #if POWER == 1
-    dz = dz + dc;
-        #elif POWER == 2
-    dz = 2.0 * cmul(zref, dz) + cpow(dz, 2.) + dc;
-        #elif POWER == 3
-    dz = 3.0 * cmul(cpow(zref, 2.), dz) + 3.0 * cmul(zref, cpow(dz, 2.)) + cpow(dz, 3.) + dc;
-        #elif POWER == 4
-    dz = 4.0 * cmul(cpow(zref, 3.), dz) + 6.0 * cmul(cpow(zref, 2.), cpow(dz, 2.)) + 4.0 * cmul(zref, cpow(dz, 3.)) + cpow(dz, 4.) + dc;
-        #elif POWER == 5
-    dz = 5.0 * cmul(cpow(zref, 4.), dz) + 10.0 * cmul(cpow(zref, 3.), cpow(dz, 2.)) + 10.0 * cmul(cpow(zref, 2.), cpow(dz, 3.)) + 5.0 * cmul(zref, cpow(dz, 4.)) + cpow(dz, 5.) + dc;
-        #elif POWER == 6
-    dz = 6.0 * cmul(cpow(zref, 5.), dz) + 15.0 * cmul(cpow(zref, 4.), cpow(dz, 2.)) + 20.0 * cmul(cpow(zref, 3.), cpow(dz, 3.)) + 15.0 * cmul(cpow(zref, 2.), cpow(dz, 4.)) + 6.0 * cmul(zref, cpow(dz, 5.)) + cpow(dz, 6.) + dc;
-        #elif POWER == 7
-    dz = 7.0 * cmul(cpow(zref, 6.), dz) + 21.0 * cmul(cpow(zref, 5.), cpow(dz, 2.)) + 35.0 * cmul(cpow(zref, 4.), cpow(dz, 3.)) + 35.0 * cmul(cpow(zref, 3.), cpow(dz, 4.)) + 21.0 * cmul(cpow(zref, 2.), cpow(dz, 5.)) + 7.0 * cmul(zref, cpow(dz, 6.)) + cpow(dz, 7.) + dc;
-        #elif POWER == 8
-    dz = 8.0 * cmul(cpow(zref, 7.), dz) + 28.0 * cmul(cpow(zref, 6.), cpow(dz, 2.)) + 56.0 * cmul(cpow(zref, 5.), cpow(dz, 3.)) + 70.0 * cmul(cpow(zref, 4.), cpow(dz, 4.)) + 56.0 * cmul(cpow(zref, 3.), cpow(dz, 5.)) + 28.0 * cmul(cpow(zref, 2.), cpow(dz, 6.)) + 8.0 * cmul(zref, cpow(dz, 7.)) + cpow(dz, 8.) + dc;
-        #elif POWER == 9
-    dz = 9.0 * cmul(cpow(zref, 8.), dz) + 36.0 * cmul(cpow(zref, 7.), cpow(dz, 2.)) + 84.0 * cmul(cpow(zref, 6.), cpow(dz, 3.)) + 126.0 * cmul(cpow(zref, 5.), cpow(dz, 4.)) + 126.0 * cmul(cpow(zref, 4.), cpow(dz, 5.)) + 84.0 * cmul(cpow(zref, 3.), cpow(dz, 6.)) + 36.0 * cmul(cpow(zref, 2.), cpow(dz, 7.)) + 9.0 * cmul(zref, cpow(dz, 8.)) + cpow(dz, 9.) + dc;
-        #endif
-      #else
-      // Good question
-      #endif
+    dz = F(Z, dz, dc);
     m++;
-    zref = fetchRef(m, shift);
-    z = zref + dz;
+    Z = fetchRef(m, shift);
+    z = Z + dz;
     #else
-    z = cpow(z, power) + c;
+    z = F(z, c);
     #endif
 
     #ifdef USE_DERIVATIVE
-    zd = cmul(zd, power * cpow(z, power - 1.));
+    vec2 df = dF / dz(z, c);
+    zd = cmul(zd, df);
 
     float zdzd = dot(zd, zd);
     if(zdzd < derivative) {
@@ -198,7 +196,7 @@ void main(void) {
       m = 0;
       max = maxIterations.x;
       shift = false;
-      zref = fetchRef(m, shift);
+      Z = fetchRef(m, shift);
     }
     #endif
   }
