@@ -27,6 +27,9 @@ export const useRender = (runtime, setRuntime) => {
     runtime.center,
     runtime.point,
     runtime.derivative,
+    runtime.smoothing,
+    runtime.contrast,
+    runtime.hue,
     setRuntime,
   ])
 
@@ -42,6 +45,7 @@ export const useRender = (runtime, setRuntime) => {
     runtime.perturb,
     runtime.useDerivative,
     runtime.showDerivative,
+    runtime.useSmoothing,
     setRuntime,
   ])
 
@@ -71,10 +75,14 @@ export const useRender = (runtime, setRuntime) => {
     runtime.scale,
     runtime.derivative,
     runtime.useDerivative,
+    runtime.useSmoothing,
     runtime.showDerivative,
     runtime.perturb,
     runtime.bailout,
+    runtime.hue,
+    runtime.contrast,
     runtime.iterations,
+    runtime.smoothing,
     runtime.supersampling,
     runtime.type,
     runtime.point,

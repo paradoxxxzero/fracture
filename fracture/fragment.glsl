@@ -10,6 +10,9 @@ uniform float aspect;
 uniform float derivative;
 uniform vec2 center;
 uniform vec2 point;
+uniform float smoothing;
+uniform float contrast;
+uniform float hue;
 
 // uniform mat4x2 coefs;
 
@@ -115,6 +118,11 @@ vec2 cpow9(in vec2 z) {
   return cmul(z, cpow8(z));
 }
 
+vec3 hslToRgb(in vec3 c) {
+  vec3 rgb = clamp(abs(mod(c.x * 6. + vec3(0., 4., 2.), 6.) - 3.) - 1., 0., 1.);
+  return c.z + c.y * (rgb - 0.5) * (1. - abs(2. * c.z - 1.));
+}
+
 #ifdef PERTURB
 vec2 fetchRef(in int n, in bool shift) {
   vec4 tex = texelFetch(orbit, ivec2(n % 64, n / 64), 0);
@@ -122,11 +130,8 @@ vec2 fetchRef(in int n, in bool shift) {
 }
 #endif
 
-const float k = pow(1., 0.22) * .05;
-const vec3 l = vec3(3.0, 3.5, 4.0);
 void main(void) {
   vec2 p = scale * vec2(aspect, 1.) * (2. * uv - 1.);
-
   #ifdef PERTURB
   vec2 z = vec2(0.);
     #ifdef FIXED// Mandelbrot-like
@@ -177,7 +182,7 @@ void main(void) {
     if(zdzd < derivative) {
       #ifdef SHOW_DERIVATIVE
       n = float(i) + 1.;// - 1. / (zdzd * log(2.) * log2(zdzd));
-      col = 0.5 + 0.5 * cos(k * n + l.zxy);
+      col = 1. - contrast + contrast * cos(smoothing * n + 4. * hslToRgb(vec3(hue - .5, 1., 0.875)));
       #endif
       break;
     }
@@ -187,8 +192,11 @@ void main(void) {
 
     if(zz > bailout) {
       // Smooth iteration count
-      n = float(i) - log2(log2(zz)) + 4.0;
-      col = 0.5 + 0.5 * cos(k * n + l);
+      n = float(i);
+      #ifdef USE_SMOOTHING
+      n -= log2(log2(zz)) - 4.0;
+      #endif
+      col = 1. - contrast + contrast * cos(smoothing * n + 4. * hslToRgb(vec3(hue, 1., 0.875)));
 
       break;
     }

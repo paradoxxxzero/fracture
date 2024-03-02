@@ -7,7 +7,11 @@ export const defaultParams = {
   useDerivative: true,
   derivative: 5,
   showDerivative: false,
+  useSmoothing: true,
+  smoothing: 50,
   bailout: 16 ** 2,
+  contrast: 50,
+  hue: 210,
   iterations: 1000,
   supersampling:
     window.devicePixelRatio > 2 ? window.devicePixelRatio / 2 : 1.1,

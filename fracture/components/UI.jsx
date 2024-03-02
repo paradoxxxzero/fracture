@@ -196,6 +196,33 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
                 onChange={handleChange}
               />
               <Number
+                name="smoothing"
+                label="Smoothing"
+                min={0}
+                value={params.smoothing}
+                togglerName="useSmoothing"
+                toggler={params.useSmoothing}
+                onChange={handleChange}
+              />
+              {['full'].includes(showUI) ? (
+                <Number
+                  name="contrast"
+                  label="Contrast"
+                  min={0}
+                  value={params.contrast}
+                  onChange={handleChange}
+                />
+              ) : null}
+              {['full'].includes(showUI) ? (
+                <Number
+                  name="hue"
+                  label="Hue"
+                  min={0}
+                  value={params.hue}
+                  onChange={handleChange}
+                />
+              ) : null}
+              <Number
                 name="supersampling"
                 label="Supersampling"
                 min={0}

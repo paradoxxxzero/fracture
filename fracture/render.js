@@ -18,6 +18,7 @@ const preprocess = (rt, source) => {
         rt.fixed ? '#define FIXED' : '',
         rt.useDerivative ? '#define USE_DERIVATIVE' : '',
         rt.showDerivative ? '#define SHOW_DERIVATIVE' : '',
+        rt.useSmoothing ? '#define USE_SMOOTHING' : '',
       ]
         .filter(Boolean)
         .join('\n')
@@ -159,6 +160,9 @@ export const recompile = rt => {
     scale: gl.getUniformLocation(rt.env.program, 'scale'),
     aspect: gl.getUniformLocation(rt.env.program, 'aspect'),
     derivative: gl.getUniformLocation(rt.env.program, 'derivative'),
+    smoothing: gl.getUniformLocation(rt.env.program, 'smoothing'),
+    contrast: gl.getUniformLocation(rt.env.program, 'contrast'),
+    hue: gl.getUniformLocation(rt.env.program, 'hue'),
   }
 
   gl.useProgram(rt.env.program) // NEEDED?
@@ -171,6 +175,9 @@ export const updateUniforms = rt => {
   uniforms.orbit && rt.gl.uniform1i(uniforms.orbit, 0)
   uniforms.scale && rt.gl.uniform1f(uniforms.scale, rt.scale)
   uniforms.bailout && rt.gl.uniform1f(uniforms.bailout, rt.bailout)
+  uniforms.smoothing && rt.gl.uniform1f(uniforms.smoothing, rt.smoothing / 1000)
+  uniforms.contrast && rt.gl.uniform1f(uniforms.contrast, rt.contrast / 100)
+  uniforms.hue && rt.gl.uniform1f(uniforms.hue, rt.hue / 360)
   uniforms.iterations && rt.gl.uniform1i(uniforms.iterations, rt.iterations)
   uniforms.center && rt.gl.uniform2fv(uniforms.center, rt.center.to2fv())
   uniforms.point && rt.gl.uniform2fv(uniforms.point, rt.point.to2fv())
