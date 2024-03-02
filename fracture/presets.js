@@ -81,7 +81,7 @@ export const presets = [
     name: 'Mandelbar',
     params: {
       ...brot('Mandelbar', 2).params,
-      fzc: `cadd(cpow(conj(z), 2), c)`,
+      fzc: `cadd(cpow(conj(z), 2.), c)`,
       dfzcdz: 'cmul(2., conj(z))',
       fZdzdc: 'cadd(conj(cadd(cmul(2., cmul(Z, dz)), cpow(dz, 2.))), dc)',
     },
@@ -90,8 +90,8 @@ export const presets = [
     name: 'Burningship',
     params: {
       center: c(),
-      fzc: 'cadd(cpow(cabs(z), 2), c)',
-      dfzcdz: 'cmul(2., cabs(z))',
+      fzc: 'cadd(cpow(cabs(z), 2.), c)',
+      dfzcdz: 'cmul(cmul(cmul(2., z), cabs(z)), csign(z))',
       fZdzdc: 'cadd(cadd(cmul(2., cmul(Z, dz)), cpow(dz, 2.)), dc)',
     },
   },

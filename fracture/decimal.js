@@ -1,83 +1,104 @@
+const shifts = {
+  0: BigInt(1),
+  1: BigInt(10),
+  2: BigInt(100),
+  3: BigInt(1000),
+  4: BigInt(10000),
+  5: BigInt(100000),
+  6: BigInt(1000000),
+  7: BigInt(10000000),
+  8: BigInt(100000000),
+  9: BigInt(1000000000),
+  10: BigInt(10000000000),
+}
+const shift = precision => {
+  if (!shifts[precision]) {
+    shifts[precision] = BigInt(10) ** BigInt(precision)
+  }
+  return shifts[precision]
+}
+
+const floatPrecision = 6
+
 export class Decimal {
-  static DECIMALS = 32 // number of decimals on all instances
-  static SHIFT = BigInt('1' + '0'.repeat(Decimal.DECIMALS)) // derived constant
-  constructor(value) {
-    if (value instanceof Decimal) {
-      return value
+  constructor(value, precision) {
+    if (typeof value === 'bigint') {
+      this._n = value
+      this.precision = precision || floatPrecision
+      return
     }
+
     if (typeof value === 'number') {
-      value = value.toFixed(Decimal.DECIMALS)
+      if (value === 0) {
+        value = '0.'.padEnd(floatPrecision, '0')
+      } else {
+        value = value.toFixed(-Math.log10(Math.abs(value)) + floatPrecision)
+      }
     }
+
     let [ints, decis] = value.split('.').concat('')
+    this.precision = precision || decis.length || 1
     this._n = BigInt(
-      ints + decis.padEnd(Decimal.DECIMALS, '0').slice(0, Decimal.DECIMALS)
+      ints + decis.padEnd(this.precision, '0').slice(0, this.precision)
     )
   }
-  static fromBigInt(bigint) {
-    return Object.assign(Object.create(Decimal.prototype), { _n: bigint })
+  toPrecision(precision) {
+    if (precision === this.precision) {
+      return
+    }
+    if (precision > this.precision) {
+      this._n *= BigInt(10) ** BigInt(precision - this.precision)
+    } else {
+      this._n /= BigInt(10) ** BigInt(this.precision - precision)
+    }
+    this.precision = precision
+  }
+  adapt(num) {
+    num = m(num)
+    if (this.precision > num.precision) {
+      num.toPrecision(this.precision)
+    } else if (this.precision < num.precision) {
+      this.toPrecision(num.precision)
+    }
+    return num
   }
   add(num) {
-    return Decimal.fromBigInt(this._n + new Decimal(num)._n)
+    num = this.adapt(num)
+    return m(this._n + num._n, this.precision)
   }
   subtract(num) {
-    return Decimal.fromBigInt(this._n - new Decimal(num)._n)
-  }
-  static _divRound(dividend, divisor) {
-    return Decimal.fromBigInt(dividend / divisor)
+    num = this.adapt(num)
+    return m(this._n - num._n, this.precision)
   }
   multiply(num) {
-    return Decimal._divRound(this._n * new Decimal(num)._n, Decimal.SHIFT)
+    num = this.adapt(num)
+    return m((this._n * num._n) / shift(this.precision), this.precision)
   }
   pow(num) {
-    return Decimal._divRound(this._n ** new Decimal(num), Decimal.SHIFT)
+    num = this.adapt(num)
+    return m(this._n ** num._n / shift(this.precision), this.precision)
   }
   divide(num) {
-    return Decimal._divRound(this._n * Decimal.SHIFT, new Decimal(num)._n)
+    num = this.adapt(num)
+    return m((this._n * shift(this.precision)) / num._n, this.precision)
   }
   toNumber() {
-    return Number(this._n) / Number(Decimal.SHIFT)
+    return Number(this._n) / Number(shift(this.precision))
   }
   toString() {
     let s = this._n
       .toString()
       .replace('-', '')
-      .padStart(Decimal.DECIMALS + 1, '0')
-    s = (
-      s.slice(0, -Decimal.DECIMALS) +
-      '.' +
-      s.slice(-Decimal.DECIMALS)
-    ).replace(/(\.0*|0+)$/, '')
+      .padStart(this.precision + 1, '0')
+    s = (s.slice(0, -this.precision) + '.' + s.slice(-this.precision)).replace(
+      /(\.0*|0+)$/,
+      ''
+    )
     return this._n < 0 ? '-' + s : s
   }
 }
 
-export class Float {
-  constructor(value) {
-    this._n = typeof value === 'string' ? parseFloat(value) : value
-  }
-  add(num) {
-    return new Float(this._n + (num._n ? num._n : num))
-  }
-  subtract(num) {
-    return new Float(this._n - (num._n ? num._n : num))
-  }
-  multiply(num) {
-    return new Float(this._n * (num._n ? num._n : num))
-  }
-  divide(num) {
-    return new Float(this._n / (num._n ? num._n : num))
-  }
-  toNumber() {
-    return this._n
-  }
-  toString() {
-    return this._n.toString()
-  }
-}
-
-export const m = window.location.search.includes('float')
-  ? v => new Float(v)
-  : v => new Decimal(v)
+export const m = (v, p) => (!p && v instanceof Decimal ? v : new Decimal(v, p))
 
 export class Complex {
   constructor(re, im) {
@@ -193,6 +214,9 @@ export class Complex {
   cabs() {
     return c(Math.abs(this.re), Math.abs(this.im))
   }
+  csign() {
+    return c(Math.sign(this.re), Math.sign(this.im))
+  }
   conj() {
     return c(this.re, -this.im)
   }
@@ -220,6 +244,7 @@ export const c = (re = 0, im = 0) =>
   re instanceof Complex ? re : new Complex(m(re), m(im))
 
 window.m = m
+window.c = c
 
 export const complexFunction = (...args) => {
   const scope = {
@@ -227,6 +252,7 @@ export const complexFunction = (...args) => {
     cadd: (a, b) => c(a).add(b),
     cpow: (a, b) => c(a).pow(b),
     cabs: a => a.cabs(),
+    csign: a => a.csign(),
     conj: a => a.conj(),
   }
   const f = args.pop()

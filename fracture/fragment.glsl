@@ -44,6 +44,10 @@ vec2 cabs(in vec2 z) {
   return vec2(abs(z.x), abs(z.y));
 }
 
+vec2 csign(in vec2 z) {
+  return vec2(sign(z.x), sign(z.y));
+}
+
 vec2 conj(in vec2 z) {
   return vec2(z.x, -z.y);
 }
