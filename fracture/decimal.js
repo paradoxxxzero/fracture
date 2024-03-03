@@ -18,8 +18,8 @@ const shift = precision => {
   return shifts[precision]
 }
 
-const floatPrecision = 6
-
+const floatPrecision = 16
+const approx = 10
 export class Decimal {
   constructor(value, precision) {
     if (typeof value === 'bigint') {
@@ -30,7 +30,7 @@ export class Decimal {
 
     if (typeof value === 'number') {
       if (value === 0) {
-        value = '0.'.padEnd(floatPrecision, '0')
+        value = '0.0'
       } else {
         value = value.toFixed(-Math.log10(Math.abs(value)) + floatPrecision)
       }
@@ -76,7 +76,15 @@ export class Decimal {
   }
   pow(num) {
     num = this.adapt(num)
-    return m(this._n ** num._n / shift(this.precision), this.precision)
+    let res = this
+    const k = num.toNumber()
+    if (k % 1 === 0) {
+      for (let i = 1; i < k; i++) {
+        res = res.multiply(res)
+      }
+      return res
+    }
+    return res.ln().multiply(num).exp()
   }
   divide(num) {
     num = this.adapt(num)
@@ -95,6 +103,93 @@ export class Decimal {
   nop() {
     return this
   }
+  sqrt() {
+    const precision = this.precision
+    let n = this._n
+    let x = n
+    let y = (n + 1n) / 2n
+    while (y < x) {
+      x = y
+      y = (x + n / x) / 2n
+    }
+    return m(x, precision)
+  }
+  atan() {
+    const precision = this.precision
+    let x = this
+    let y = m(0, precision)
+    for (let i = 1; i < approx; i += 2) {
+      y = y.add(x.pow(i).divide(i))
+      x = x.neg()
+    }
+    return y
+  }
+  exp() {
+    // Full precision exp
+    const precision = this.precision
+    let x = this
+    let y = m(1, precision)
+    for (let i = 1; i < approx; i++) {
+      y = y.add(x.pow(i).divide(i))
+    }
+    return y
+  }
+  ln() {
+    // Full precision ln
+    const precision = this.precision
+    let x = this
+    let y = m(0, precision)
+    let sign = 1
+    for (let i = 1; i < approx; i++) {
+      y = y.add(x.pow(i).divide(i).multiply(sign))
+      sign *= -1
+    }
+    return y
+  }
+  cos() {
+    // Full precision cos
+    const precision = this.precision
+    let x = this
+    let y = m(1, precision)
+    let sign = -1
+    for (let i = 2; i < approx; i += 2) {
+      y = y.add(x.pow(i).divide(i).neg().multiply(sign))
+      sign *= -1
+    }
+    return y
+  }
+  sin() {
+    // Full precision sin
+    let x = this
+    let y = x
+    let sign = -1
+    for (let i = 3; i < approx; i += 2) {
+      y = y.add(x.pow(i).divide(i).neg().multiply(sign))
+      sign *= -1
+    }
+    return y
+  }
+  sinh() {
+    // Full precision sinh
+    const precision = this.precision
+    let x = this
+    let y = m(1, precision)
+    for (let i = 2; i < approx; i += 2) {
+      y = y.add(x.pow(i).divide(i))
+    }
+    return y
+  }
+  cosh() {
+    // Full precision cosh
+    const precision = this.precision
+    let x = this
+    let y = m(1, precision)
+    for (let i = 2; i < approx; i += 2) {
+      y = y.add(x.pow(i).divide(i))
+    }
+    return y
+  }
+
   toNumber() {
     return Number(this._n) / Number(shift(this.precision))
   }
@@ -138,77 +233,100 @@ export class Complex {
     )
   }
   exp() {
-    const r = Math.exp(this.re.toNumber())
-    return new Complex(
-      m(r * Math.cos(this.im.toNumber())),
-      m(r * Math.sin(this.im.toNumber()))
-    )
+    const r = this.re.exp()
+    return new Complex(this.im.cos().multiply(r), this.im.sin().multiply(r))
   }
   arg() {
-    return m(Math.atan2(this.im.toNumber(), this.re.toNumber()))
+    return this.atan2()
+  }
+  atan2() {
+    // Full precision atan2
+    const { re, im } = this
+    const absRe = re.abs()
+    const absIm = im.abs()
+    if (absRe._n === 0n && absIm._n === 0n) {
+      return m(0)
+    }
+    if (absRe._n === 0n) {
+      if (im > 0n) {
+        return m(Math.PI / 2)
+      }
+      return m(-Math.PI / 2)
+    }
+    const t = im.divide(re)
+    const atan = t.atan()
+    if (re._n > 0n) {
+      return atan
+    }
+    if (im._n >= 0n) {
+      return atan.add(Math.PI)
+    }
+    return atan.subtract(Math.PI)
   }
   cos() {
     return new Complex(
-      m(Math.cos(this.re.toNumber()) * Math.cosh(this.im.toNumber())),
-      m(-Math.sin(this.re.toNumber()) * Math.sinh(this.im.toNumber()))
+      this.re.cos().multiply(this.im.sinh()),
+      this.re.sin().multiply(this.im.cosh())
     )
   }
   sin() {
     return new Complex(
-      m(Math.sin(this.re.toNumber()) * Math.cosh(this.im.toNumber())),
-      m(Math.cos(this.re.toNumber()) * Math.sinh(this.im.toNumber()))
+      this.re.sin().multiply(this.im.cosh()),
+      this.re.cos().multiply(this.im.sinh())
     )
   }
   ln() {
-    const length = this.abs()
-    if (length === 0) {
-      return new Complex(m(-1e10), m(0))
-    }
-    return new Complex(m(Math.log(this.abs())), this.arg())
+    return new Complex(this.abs().ln(), this.arg())
   }
   pow(k) {
-    if (!(k instanceof Complex)) {
-      if (k % 1 === 0) {
-        if (k === 0) {
+    k = cx(k)
+    if (k.im.toNumber() === 0) {
+      const p = k.re.toNumber()
+      if (p % 1 === 0) {
+        if (p === 0) {
           return cx(1)
         }
-        if (k === 1) {
+        if (p === 1) {
           return this
         }
-        if (k === 2) {
+        if (p === 2) {
           return this.multiply(this)
         }
-        if (k === 3) {
+        if (p === 3) {
           return this.multiply(this).multiply(this)
         }
-        if (k === 4) {
+        if (p === 4) {
           const z2 = this.multiply(this)
           return z2.multiply(z2)
         }
-        if (k === 5) {
+        if (p === 5) {
           const z2 = this.multiply(this)
           return z2.multiply(z2).multiply(this)
         }
-        if (k === 6) {
+        if (p === 6) {
           const z2 = this.multiply(this)
           return z2.multiply(z2).multiply(z2)
         }
-        if (k === 7) {
+        if (p === 7) {
           const z2 = this.multiply(this)
           return z2.multiply(z2).multiply(z2).multiply(this)
         }
-        if (k === 8) {
+        if (p === 8) {
           const z2 = this.multiply(this)
           const z4 = z2.multiply(z2)
           return z4.multiply(z4)
         }
-        if (k === 9) {
+        if (p === 9) {
           const z2 = this.multiply(this)
           const z4 = z2.multiply(z2)
           return z4.multiply(z4).multiply(this)
         }
+        let res = this
+        for (let i = 1; i < p; i++) {
+          res = res.multiply(res)
+        }
+        return res
       }
-      k = cx(k)
     }
     if (this.re.toNumber() === 0 && this.im.toNumber() === 0) {
       return cx(0)
@@ -222,7 +340,7 @@ export class Complex {
     return this.re.multiply(this.re).add(this.im.multiply(this.im))
   }
   abs() {
-    return Math.sqrt(this.norm2())
+    return this.norm2().sqrt()
   }
   conj() {
     return cx(this.re, -this.im)

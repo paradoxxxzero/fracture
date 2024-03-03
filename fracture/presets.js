@@ -15,8 +15,9 @@ const pascal = (a, b, n, s = 0) => {
     if (coef === 0) {
       continue
     }
-    const op1 = `${a}^${n - k}`
-    const op2 = `${b}^${k}`
+    const pow = (x, p) => (p === 0 ? '' : p === 1 ? x : `${x}^${p}`)
+    const op1 = pow(a, n - k)
+    const op2 = pow(b, k)
     const op12 = op1 && op2 ? `${op1} * ${op2}` : op1 || op2
     const operand = coef === 1 ? op12 : `${coef} * ${op12}`
     if (result) {
@@ -72,7 +73,7 @@ export const presets = [
     name: 'Mandelbar',
     params: {
       ...brot('Mandelbar', 2).params,
-      fzc: '(~z)^2 + c',
+      fzc: '~z^2 + c',
       dfzcdz: '2 * ~z',
       fZdzdc: '~(2 * Z * dz + dz^2) + dc',
     },

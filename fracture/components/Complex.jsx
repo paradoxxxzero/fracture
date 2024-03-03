@@ -1,5 +1,5 @@
 import { cx } from '../decimal'
-import Number from './Number'
+import Float from './Float'
 
 export default function Complex({
   name,
@@ -38,7 +38,7 @@ export default function Complex({
       )}
       {(!togglerName || toggler) && (
         <div className="complex-control">
-          <Number
+          <Float
             name={`${name}-re`}
             value={value.re}
             onChange={handleRealChange}
@@ -46,7 +46,7 @@ export default function Complex({
             {...props}
           />
           <span className="complex-inner-label">+</span>
-          <Number
+          <Float
             name={`${name}-im`}
             value={value.im}
             onChange={handleImaginaryChange}

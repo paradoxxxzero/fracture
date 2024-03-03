@@ -17,6 +17,7 @@ import { cx } from '../decimal.js'
 import ComplexFormula from './ComplexFormula.jsx'
 import { presets } from '../presets.js'
 import Presets from './Presets'
+import Float from './Float.jsx'
 
 const getShowUI = () => {
   try {
@@ -291,7 +292,6 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
                 label="Center"
                 value={params.center}
                 step={params.scale}
-                noPlusMinus
                 maxWidth={null}
                 onChange={handleChange}
               />
@@ -310,16 +310,14 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
               <Complex
                 name="point"
                 label="Point"
-                noPlusMinus
                 maxWidth={null}
                 value={params.point}
                 onChange={handleChange}
               />
-              <Number
+              <Float
                 name="scale"
                 label="Scale"
                 maxWidth={null}
-                noPlusMinus
                 value={params.scale}
                 onChange={handleChange}
               />

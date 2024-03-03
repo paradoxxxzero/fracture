@@ -1,36 +1,26 @@
 import { useCallback, useEffect, useState } from 'react'
-import { m } from '../decimal'
 
-export const parse = (raw, min, max, step, decimal) => {
+export const parse = (raw, min, max, step) => {
   let valid = true
   let value = 0
 
-  if (decimal) {
-    try {
-      value = m(raw)
-      raw = value.toString()
-    } catch (e) {
-      valid = false
-    }
+  const float = parseInt(step) !== parseFloat(step)
+  if (float) {
+    value = raw === '' ? '' : parseFloat(raw)
   } else {
-    const float = parseInt(step) !== parseFloat(step)
-    if (float) {
-      value = raw === '' ? '' : parseFloat(raw)
-    } else {
-      value = raw === '' ? '' : parseInt(raw)
-    }
-
-    valid = !(
-      value === '' ||
-      isNaN(value) ||
-      value < min ||
-      value > max ||
-      (step % 1 === 0 && value % step !== 0) ||
-      // Consider x.  as invalid to prevent auto deletion
-      (step % 1 !== 0 && raw.endsWith('.')) ||
-      (min < 0 && raw === '-0')
-    )
+    value = raw === '' ? '' : parseInt(raw)
   }
+
+  valid = !(
+    value === '' ||
+    isNaN(value) ||
+    value < min ||
+    value > max ||
+    (step % 1 === 0 && value % step !== 0) ||
+    // Consider x.  as invalid to prevent auto deletion
+    (step % 1 !== 0 && raw.endsWith('.')) ||
+    (min < 0 && raw === '-0')
+  )
 
   return {
     valid,
@@ -50,7 +40,6 @@ export default function Number({
   maxWidth = 5,
   togglerName,
   noPlusMinus,
-  decimal,
   onChange,
   ...props
 }) {
@@ -66,14 +55,14 @@ export default function Number({
 
   const update = useCallback(
     (newRaw, input = false) => {
-      const parsed = parse(newRaw, min, max, step, decimal)
+      const parsed = parse(newRaw, min, max, step)
       setRaw(parsed.raw)
       setValid(parsed.valid)
       if (parsed.valid) {
         onChange(name, parsed.value)
       }
     },
-    [max, min, name, decimal, onChange, step]
+    [max, min, name, onChange, step]
   )
 
   const handleMinus = useCallback(() => {

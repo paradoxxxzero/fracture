@@ -203,7 +203,6 @@ const fillOrbit = (rt, orbit, z, c, max, shift) => {
   const [a, b] = shift ? [2, 3] : [0, 1]
   // eslint-disable-next-line no-new-func
   const F = new Function('z', 'c', `return ${ast(rt.fzc).toComplex()}`)
-
   let i = 0
   for (; i < rt.iterations; i++) {
     orbit[i * 4 + a] = z.re.toNumber()

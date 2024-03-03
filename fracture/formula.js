@@ -3,6 +3,7 @@ const tokens = {
   float: /^-?([0-9]+([.][0-9]*)?|[.][0-9]+)/,
   integer: /^-?[0-9]+/,
   operator: /^(\*\*|[+\-*/^]|\|-\|)/,
+  unaryPrefix: /^~/,
   unarySuffix: /^(\.re|\.im)/,
   identifier: /^[a-zA-Z_][a-zA-Z0-9_]*/,
   pipe: /^\|/,
