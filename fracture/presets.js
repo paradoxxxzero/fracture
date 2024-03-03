@@ -81,9 +81,10 @@ export const presets = [
     name: 'Burningship',
     params: {
       center: cx(),
-      fzc: '|z|^2 + c',
-      dfzcdz: '2 * z * |z| * #z',
-      fZdzdc: '2 * Z * dz + dz^2 + dc', //?
+      fzc: '<|z.re|, |z.im|>^2 + c',
+      dfzcdz: '2 * z * <|z.re|, |z.im|> * <#z.re#, #z.im#>',
+      fZdzdc:
+        '<2 * dz.re * Z.re + dz.re * dz.re - 2 * Z.im * dz.im - dz.im * dz.im, 2 * ((Z.re * Z.im) |-| (Z.re * dz.im + dz.re * Z.im + dz.re * dz.im))> + dc',
     },
   },
 

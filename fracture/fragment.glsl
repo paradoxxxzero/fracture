@@ -27,28 +27,41 @@ out vec4 fragColor;
 vec2 cadd(in vec2 z0, in vec2 z1) {
   return z0 + z1;
 }
+vec2 csub(in vec2 z0, in vec2 z1) {
+  return z0 - z1;
+}
 
-vec2 cmul(in float k, vec2 w) {
+float cadd(in float k, in float w) {
+  return k + w;
+}
+float csub(in float k, in float w) {
+  return k - w;
+}
+float cmul(in float k, in float w) {
   return k * w;
 }
+vec2 cmul(in float k, in vec2 w) {
+  return k * w;
+}
+vec2 cmul(in vec2 z, in float k) {
+  return k * z;
+}
+vec2 cdiv(in vec2 z0, in float k) {
+  return z0 / k;
+}
+float cdiv(in float k, in float w) {
+  return k / w;
+}
 
-vec2 cmul(vec2 z, vec2 w) {
+vec2 cmul(in vec2 z, in vec2 w) {
   return vec2(z.x * w.x - z.y * w.y, z.x * w.y + z.y * w.x);
 }
-vec2 cinv(vec2 z) {
+vec2 cinv(in vec2 z) {
   return z * vec2(1, -1) / dot(z, z);
 }
 
 vec2 cdiv(in vec2 z0, in vec2 z1) {
   return cmul(z0, cinv(z1));
-}
-
-vec2 cabs(in vec2 z) {
-  return vec2(abs(z.x), abs(z.y));
-}
-
-vec2 csign(in vec2 z) {
-  return vec2(sign(z.x), sign(z.y));
 }
 
 vec2 conj(in vec2 z) {
@@ -75,6 +88,9 @@ vec2 csin(in vec2 z) {
   return cdiv(cexp(vec2(-z.y, z.x)) - cexp(vec2(z.y, -z.x)), vec2(0, 2.0));
 }
 
+vec2 cpow(in vec2 z, in vec2 k) {
+  return cexp(cmul(k, clog(z)));
+}
 vec2 cpow(in vec2 z, in float k) {
   return cexp(k * clog(z));
 }
@@ -116,6 +132,22 @@ vec2 cpow8(in vec2 z) {
 }
 vec2 cpow9(in vec2 z) {
   return cmul(z, cpow8(z));
+}
+
+float diffabs(in float X, in float x) {
+  if(X >= 0.) {
+    if(X + x >= 0.) {
+      return x;
+    } else {
+      return -(2. * X + x);
+    }
+  } else {
+    if(X + x > 0.) {
+      return 2. * X + x;
+    } else {
+      return -x;
+    }
+  }
 }
 
 vec3 hslToRgb(in vec3 c) {

@@ -1,14 +1,17 @@
 const tokens = {
   whitespace: /^\s+/,
-  imaginary: /^-?([0-9]+([.][0-9]*)?|[.][0-9]+)i/,
   float: /^-?([0-9]+([.][0-9]*)?|[.][0-9]+)/,
   integer: /^-?[0-9]+/,
-  operator: /^[+\-*/^]/,
-  unary: /^[~#]/,
+  operator: /^(\*\*|[+\-*/^]|\|-\|)/,
+  unarySuffix: /^(\.re|\.im)/,
   identifier: /^[a-zA-Z_][a-zA-Z0-9_]*/,
   pipe: /^\|/,
+  hash: /^#/,
   lparen: /^\(/,
   rparen: /^\)/,
+  lt: /^</,
+  gt: /^>/,
+  comma: /^,/,
 }
 
 class Token {
@@ -24,25 +27,39 @@ class Token {
   }
 }
 
-const shaderFunctions = {
+const shaderBinary = {
   '+': 'cadd',
   '-': 'csub',
   '*': 'cmul',
   '/': 'cdiv',
   '^': 'cpow',
-  '~': 'conj',
-  '#': 'csign',
-  abs: 'cabs',
+  '**': 'cpow',
+  '|-|': 'diffabs',
+  complex: 'vec2',
 }
-const complexFunctions = {
+const shaderUnary = {
+  '+': '+',
+  '-': '-',
+  '~': 'conj',
+  abs: 'abs',
+  sign: 'sign',
+}
+const complexBinary = {
   '+': 'add',
   '-': 'sub',
   '*': 'multiply',
   '/': 'div',
   '^': 'pow',
+  '**': 'pow',
+}
+const complexUnary = {
+  '+': 'nop',
+  '-': 'neg',
+  '.re': 'real',
+  '.im': 'imag',
   '~': 'conj',
-  '#': 'csign',
-  abs: 'cabs',
+  abs: 'abs',
+  sign: 'sign',
 }
 
 class BinaryOp {
@@ -57,6 +74,9 @@ class BinaryOp {
   }
 
   toFull() {
+    if (this.type === 'complex') {
+      return `(${this.left.toFull()} + ${this.right.toFull()}i)`
+    }
     return `(${this.left.toFull()} ${this.type} ${this.right.toFull()})`
   }
   toShader() {
@@ -71,13 +91,16 @@ class BinaryOp {
           return `cpow(${this.left.toShader()}, ${this.right.value})`
         }
       } else {
-        return `cpow(${this.left.toShader()}, ${this.right.toShader()})`
+        return `cpow(${this.left.toShader()}, ${this.right.value})`
       }
     }
-    return `${shaderFunctions[this.type]}(${this.left.toShader()}, ${this.right.toShader()})`
+    return `${shaderBinary[this.type]}(${this.left.toShader()}, ${this.right.toShader()})`
   }
   toComplex() {
-    return `(${this.left.toComplex()}).${complexFunctions[this.type]}(${this.right.toComplex()})`
+    if (this.type === 'complex') {
+      return `cx(${this.left.toComplex()}, ${this.right.toComplex()})`
+    }
+    return `(${this.left.toComplex()}).${complexBinary[this.type]}(${this.right.toComplex()})`
   }
 }
 
@@ -90,15 +113,20 @@ class UnaryOp {
   toString() {
     return `<${this.type}: ${this.operand.toString()}>`
   }
-
   toFull() {
     return `${this.type}(${this.operand.toFull()})`
   }
   toShader() {
-    return `${shaderFunctions[this.type]}(${this.operand.toShader()})`
+    if (this.type === '.re') {
+      return `${this.operand.toShader()}.x`
+    }
+    if (this.type === '.im') {
+      return `${this.operand.toShader()}.y`
+    }
+    return `${shaderUnary[this.type]}(${this.operand.toShader()})`
   }
   toComplex() {
-    return `(${this.operand.toComplex()}).${complexFunctions[this.type]}()`
+    return `(${this.operand.toComplex()}).${complexUnary[this.type]}()`
   }
 }
 
@@ -111,25 +139,20 @@ class Leaf {
   toString() {
     return `<${this.type}: ${this.value}>`
   }
-
   toFull() {
-    return this.value + (this.type === 'imaginary' ? 'i' : '')
+    return this.value
   }
   toShader() {
     if (this.type === 'identifier') {
       return this.value
     }
-    return this.type === 'imaginary'
-      ? `vec2(0.0, ${this.value.toFixed(6)})`
-      : `vec2(${this.value.toFixed(6)}, 0.0)`
+    return `${this.value.toFixed(6)}`
   }
   toComplex() {
     if (this.type === 'identifier') {
       return this.value
     }
-    return this.type === 'imaginary'
-      ? `cx(0, ${this.value})`
-      : `cx(${this.value})`
+    return `cx(${this.value})`
   }
 }
 
@@ -161,50 +184,69 @@ const tokenize = input => {
 // Create the ast from the tokens
 const parse = tokens => {
   let i = 0
-  const parse_expression = () => {
-    let node = parse_term()
+  const expression = () => {
+    let node = term()
     while (i < tokens.length) {
       const token = tokens[i]
-      if (token.type === 'operator' && '+-'.includes(token.value)) {
+      if (
+        token.type === 'operator' &&
+        ['+', '-', '|-|'].includes(token.value)
+      ) {
         i++
-        node = new BinaryOp(token.value, node, parse_term())
+        node = new BinaryOp(token.value, node, term())
       } else {
         break
       }
     }
     return node
   }
-  const parse_term = () => {
-    let node = parse_pow()
+  const term = () => {
+    let node = exponentiation()
     while (i < tokens.length) {
       const token = tokens[i]
-      if (token.type === 'operator' && '*/'.includes(token.value)) {
+      if (token.type === 'operator' && ['*', '/'].includes(token.value)) {
         i++
-        node = new BinaryOp(token.value, node, parse_pow())
+        node = new BinaryOp(token.value, node, exponentiation())
+      } else if (token.type === 'identifier') {
+        i++
+        node = new BinaryOp('*', node, new Leaf('identifier', token.value))
       } else {
         break
       }
     }
     return node
   }
-  const parse_pow = () => {
-    let node = parse_factor()
+  const exponentiation = () => {
+    let node = suffix()
     while (i < tokens.length) {
       const token = tokens[i]
-      if (token.type === 'operator' && token.value === '^') {
+      if (token.type === 'operator' && ['^', '**'].includes(token.value)) {
         i++
-        node = new BinaryOp('^', node, parse_factor())
+        node = new BinaryOp('^', node, suffix())
       } else {
         break
       }
     }
     return node
   }
-  const parse_factor = () => {
+  const suffix = () => {
+    let node = factor()
+    while (i < tokens.length) {
+      const token = tokens[i]
+      if (token.type === 'unarySuffix') {
+        i++
+        node = new UnaryOp(token.value, node)
+      } else {
+        break
+      }
+    }
+    return node
+  }
+  const factor = () => {
     const token = tokens[i]
     if (token.type === 'lparen') {
       i++
-      const node = parse_expression()
+      const node = expression()
       if (tokens[i].type !== 'rparen') {
         throw new Error('Expected ) at ' + tokens[i].start)
       }
@@ -212,21 +254,42 @@ const parse = tokens => {
       return node
     } else if (token.type === 'pipe') {
       i++
-      const node = parse_expression()
+      const node = expression()
       if (tokens[i].type !== 'pipe') {
         throw new Error('Expected | at ' + tokens[i].start)
       }
       i++
       return new UnaryOp('abs', node)
-    } else if (token.type === 'unary') {
+    } else if (token.type === 'hash') {
       i++
-      return new UnaryOp(token.value, parse_factor())
+      const node = expression()
+      if (tokens[i].type !== 'hash') {
+        throw new Error('Expected # at ' + tokens[i].start)
+      }
+      i++
+      return new UnaryOp('sign', node)
+    } else if (token.type === 'lt') {
+      i++
+      const node = expression()
+      if (tokens[i].type !== 'comma') {
+        throw new Error('Expected , at ' + tokens[i].start)
+      }
+      i++
+      const node2 = expression()
+      if (tokens[i].type !== 'gt') {
+        throw new Error('Expected > at ' + tokens[i].start)
+      }
+      i++
+      return new BinaryOp('complex', node, node2)
+    } else if (token.type === 'unaryPrefix') {
+      i++
+      return new UnaryOp(token.value, factor())
+    } else if (token.type === 'operator' && '+-'.includes(token.value)) {
+      i++
+      return new UnaryOp(token.value, factor())
     } else if (token.type === 'float' || token.type === 'integer') {
       i++
       return new Leaf('number', parseFloat(token.value))
-    } else if (token.type === 'imaginary') {
-      i++
-      return new Leaf('imaginary', parseFloat(token.value))
     } else if (token.type === 'identifier') {
       i++
       return new Leaf('identifier', token.value)
@@ -234,9 +297,9 @@ const parse = tokens => {
       throw new Error(`Unexpected token ${token}`)
     }
   }
-  const ast = parse_expression()
+  const ast = expression()
   if (i !== tokens.length) {
-    throw new Error(`Unexpected token ${tokens[i]}`)
+    throw new Error(`Unexpected EOF ${tokens[i]}`)
   }
   return ast
 }

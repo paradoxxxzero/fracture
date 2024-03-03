@@ -133,7 +133,7 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
                     setRuntime({ ...runtime, lockCenter: !runtime.lockCenter })
                   }
                 >
-                  {params.lockCenter ? lockIcon : unlockIcon}
+                  {runtime.lockCenter ? lockIcon : unlockIcon}
                 </button>
                 <button
                   className="button"

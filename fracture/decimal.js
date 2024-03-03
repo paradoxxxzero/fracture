@@ -85,6 +85,16 @@ export class Decimal {
   abs() {
     return m(this._n < 0 ? -this._n : this._n, this.precision)
   }
+  sign() {
+    return this._n < 0 ? -1 : this._n > 0 ? 1 : 0
+  }
+  neg() {
+    this._n = -this._n
+    return this
+  }
+  nop() {
+    return this
+  }
   toNumber() {
     return Number(this._n) / Number(shift(this.precision))
   }
@@ -214,14 +224,14 @@ export class Complex {
   abs() {
     return Math.sqrt(this.norm2())
   }
-  cabs() {
-    return cx(Math.abs(this.re), Math.abs(this.im))
-  }
-  csign() {
-    return cx(Math.sign(this.re), Math.sign(this.im))
-  }
   conj() {
     return cx(this.re, -this.im)
+  }
+  real() {
+    return this.re
+  }
+  imag() {
+    return this.im
   }
   toString() {
     return `complex: <${this.re}+${this.im}i>`
