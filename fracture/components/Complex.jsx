@@ -1,4 +1,4 @@
-import { c, m } from '../decimal'
+import { cx } from '../decimal'
 import Number from './Number'
 
 export default function Complex({
@@ -18,11 +18,11 @@ export default function Complex({
   }
 
   const handleRealChange = (_, re) => {
-    onChange(name, c(re, value.im))
+    onChange(name, cx(re, value.im))
   }
 
   const handleImaginaryChange = (_, im) => {
-    onChange(name, c(value.re, im))
+    onChange(name, cx(value.re, im))
   }
 
   return (

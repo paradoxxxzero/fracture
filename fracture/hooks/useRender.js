@@ -41,6 +41,7 @@ export const useRender = (runtime, setRuntime) => {
   }, [
     runtime.fzc,
     runtime.dfzcdz,
+    runtime.fZdzdc,
     runtime.fixed,
     runtime.perturb,
     runtime.useDerivative,
@@ -71,6 +72,7 @@ export const useRender = (runtime, setRuntime) => {
   }, [
     runtime.fzc,
     runtime.dfzcdz,
+    runtime.fZdzdc,
     runtime.center,
     runtime.scale,
     runtime.derivative,

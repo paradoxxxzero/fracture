@@ -13,7 +13,7 @@ import {
   eyeIcon,
 } from '../icons'
 import Boolean from './Boolean.jsx'
-import { c } from '../decimal.js'
+import { cx } from '../decimal.js'
 import ComplexFormula from './ComplexFormula.jsx'
 import { presets } from '../presets.js'
 import Presets from './Presets'
@@ -70,8 +70,8 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
 
   const handleReset = useCallback(() => {
     updateParams({
-      center: c(),
-      point: c(),
+      center: cx(),
+      point: cx(),
       scale: 1.2,
     })
   }, [updateParams])
@@ -164,7 +164,7 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
                   onChange={handleChange}
                 />
               ) : null}
-              {showUI === 'advanced' && params.usePerturbation ? (
+              {runtime.perturb ? (
                 <ComplexFormula
                   label="F(Z, dz, dc) ="
                   params={['Z', 'dz', 'dc']}

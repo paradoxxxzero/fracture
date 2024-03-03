@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
-import { c, complexFunction, m } from '../decimal'
+import { cx } from '../decimal'
+import { ast } from '../formula'
 
 export default function ComplexFormula({
   name,
@@ -26,10 +27,12 @@ export default function ComplexFormula({
     newRaw => {
       setRaw(newRaw)
       try {
-        const F = complexFunction(...params, newRaw)
-        const args = params.map(p => c(1))
+        // eslint-disable-next-line no-new-func
+        const F = new Function(...params, `return ${ast(newRaw).toComplex()}`)
+        const args = params.map(p => cx(1))
         F(...args)
       } catch (e) {
+        console.warn(e)
         setValid(false)
         return
       }

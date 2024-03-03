@@ -1,7 +1,8 @@
-import { c } from './decimal'
+import { cx } from './decimal'
+import './formula'
 
 export const defaultParams = {
-  center: c(-0.5),
+  center: cx(-0.5),
   scale: 1.2,
   usePerturbation: null, // Auto
   useDerivative: true,
@@ -16,8 +17,8 @@ export const defaultParams = {
   supersampling:
     window.devicePixelRatio > 2 ? window.devicePixelRatio / 2 : 1.1,
   fixed: true,
-  point: c(0, 0),
-  fzc: 'cadd(cpow(z, 2.), c)',
-  dfzcdz: 'cmul(2., z)',
-  fZdzdc: 'cadd(cadd(cmul(2., cmul(Z, dz)), cpow(dz, 2.)), dc)',
+  point: cx(0, 0),
+  fzc: 'z^2 + c',
+  dfzcdz: '2 * z',
+  fZdzdc: '2 * Z * dz + dz^2 + dc',
 }

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef } from 'react'
 import { debounce } from '../../utils'
 import { render } from '../render'
-import { c } from '../decimal'
+import { cx } from '../decimal'
 
 export const useInteract = (runtime, updateParams) => {
   const loop = useRef(null)
@@ -44,11 +44,11 @@ export const useInteract = (runtime, updateParams) => {
       const width = local.current.scale * 2
       if (!runtime.moveCenter && !zoom) {
         local.current.point = local.current.point.add(
-          c(-dx * width * aspect, dy * width)
+          cx(-dx * width * aspect, dy * width)
         )
       } else {
         local.current.center = local.current.center.add(
-          c(-dx * width * aspect, dy * width)
+          cx(-dx * width * aspect, dy * width)
         )
       }
     },

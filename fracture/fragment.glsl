@@ -88,7 +88,7 @@ vec2 cpow(in vec2 z, in int k) {
 
 // Fast integer power functions
 vec2 cpow0(in vec2 z) {
-  return vec2(1.);
+  return vec2(1., 0.);
 }
 vec2 cpow1(in vec2 z) {
   return z;

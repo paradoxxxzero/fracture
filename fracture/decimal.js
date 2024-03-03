@@ -82,6 +82,9 @@ export class Decimal {
     num = this.adapt(num)
     return m((this._n * shift(this.precision)) / num._n, this.precision)
   }
+  abs() {
+    return m(this._n < 0 ? -this._n : this._n, this.precision)
+  }
   toNumber() {
     return Number(this._n) / Number(shift(this.precision))
   }
@@ -157,7 +160,7 @@ export class Complex {
     if (!(k instanceof Complex)) {
       if (k % 1 === 0) {
         if (k === 0) {
-          return c(1)
+          return cx(1)
         }
         if (k === 1) {
           return this
@@ -195,13 +198,13 @@ export class Complex {
           return z4.multiply(z4).multiply(this)
         }
       }
-      k = c(k)
+      k = cx(k)
     }
     if (this.re.toNumber() === 0 && this.im.toNumber() === 0) {
-      return c(0)
+      return cx(0)
     }
     if (k.re.toNumber() === 0 && k.im.toNumber() === 0) {
-      return c(1)
+      return cx(1)
     }
     return this.ln().multiply(k).exp()
   }
@@ -212,13 +215,13 @@ export class Complex {
     return Math.sqrt(this.norm2())
   }
   cabs() {
-    return c(Math.abs(this.re), Math.abs(this.im))
+    return cx(Math.abs(this.re), Math.abs(this.im))
   }
   csign() {
-    return c(Math.sign(this.re), Math.sign(this.im))
+    return cx(Math.sign(this.re), Math.sign(this.im))
   }
   conj() {
-    return c(this.re, -this.im)
+    return cx(this.re, -this.im)
   }
   toString() {
     return `complex: <${this.re}+${this.im}i>`
@@ -240,23 +243,8 @@ export class Complex {
   }
 }
 
-export const c = (re = 0, im = 0) =>
+export const cx = (re = 0, im = 0) =>
   re instanceof Complex ? re : new Complex(m(re), m(im))
 
 window.m = m
-window.c = c
-
-export const complexFunction = (...args) => {
-  const scope = {
-    cmul: (a, b) => c(a).multiply(b),
-    cadd: (a, b) => c(a).add(b),
-    cpow: (a, b) => c(a).pow(b),
-    cabs: a => a.cabs(),
-    csign: a => a.csign(),
-    conj: a => a.conj(),
-  }
-  const f = args.pop()
-  args.push(`with(this) return ${f}`)
-  // eslint-disable-next-line no-new-func
-  return new Function(...args).bind(scope)
-}
+window.cx = cx

@@ -1,13 +1,7 @@
-import vertexSource from './vertex.glsl?raw'
+import { cx } from './decimal'
+import { ast } from './formula'
 import fragmentSource from './fragment.glsl?raw'
-import { c, complexFunction } from './decimal'
-
-const maxOptimizedPower = 9
-
-const expand = source =>
-  source.replace(/cpow\(\s*(.+?)\s*,\s*(\d+).0?\s*\)/g, (_, $1, $2) =>
-    +$2 < maxOptimizedPower ? `cpow${$2}(${$1})` : `cpow(${$1}, ${$2})`
-  )
+import vertexSource from './vertex.glsl?raw'
 
 const preprocess = (rt, source) => {
   source = source
@@ -23,9 +17,9 @@ const preprocess = (rt, source) => {
         .filter(Boolean)
         .join('\n')
     )
-    .replace(/F\(z,\s*c\)/g, expand(rt.fzc))
-    .replace(/dF\s*\/\s*dz\(z,\s*c\)/, expand(rt.dfzcdz))
-    .replace(/F\(Z,\s*dz,\s*dc\)/, expand(rt.fZdzdc))
+    .replace(/F\(z,\s*c\)/g, ast(rt.fzc).toShader())
+    .replace(/dF\s*\/\s*dz\(z,\s*c\)/, ast(rt.dfzcdz).toShader())
+    .replace(/F\(Z,\s*dz,\s*dc\)/, ast(rt.fZdzdc).toShader())
   // console.log(
   //   source
   //     .split('\n')
@@ -153,7 +147,6 @@ export const recompile = rt => {
     bailout: gl.getUniformLocation(rt.env.program, 'bailout'),
     iterations: gl.getUniformLocation(rt.env.program, 'iterations'),
     maxIterations: gl.getUniformLocation(rt.env.program, 'maxIterations'),
-    // coefs: gl.getUniformLocation(rt.env.program, 'coefs'),
     center: gl.getUniformLocation(rt.env.program, 'center'),
     point: gl.getUniformLocation(rt.env.program, 'point'),
     power: gl.getUniformLocation(rt.env.program, 'power'),
@@ -164,7 +157,10 @@ export const recompile = rt => {
     contrast: gl.getUniformLocation(rt.env.program, 'contrast'),
     hue: gl.getUniformLocation(rt.env.program, 'hue'),
   }
-
+  // ;['fzc', 'dfzcdz', 'fZdzdc'].forEach((name, i) => {
+  //   const st = ast(rt[name])
+  //   console.log(name, st.toShader(), st.toComplex())
+  // })
   gl.useProgram(rt.env.program) // NEEDED?
   updateUniforms(rt)
 }
@@ -203,20 +199,16 @@ export const resizeCanvasToDisplaySize = (canvas, sampling) => {
   }
 }
 
-// Add complex functions to global scope
-window.cmul = (a, b) => c(a).multiply(b)
-window.cadd = (a, b) => c(a).add(b)
-window.cpow = (a, b) => c(a).pow(b)
-
-const fillOrbit = (rt, orbit, z, cst, max, shift) => {
+const fillOrbit = (rt, orbit, z, c, max, shift) => {
   const [a, b] = shift ? [2, 3] : [0, 1]
-  const F = complexFunction('z', 'c', rt.fzc)
+  // eslint-disable-next-line no-new-func
+  const F = new Function('z', 'c', `return ${ast(rt.fzc).toComplex()}`)
 
   let i = 0
   for (; i < rt.iterations; i++) {
     orbit[i * 4 + a] = z.re.toNumber()
     orbit[i * 4 + b] = z.im.toNumber()
-    z = F(z, cst)
+    z = F(z, c)
 
     if (z.norm2().toNumber() >= rt.bailout) {
       break
@@ -226,18 +218,6 @@ const fillOrbit = (rt, orbit, z, cst, max, shift) => {
 
   return { orbit, max: i }
 }
-
-// const coefs = [c(1), c(), c(), c()]
-// const fillCoefs = (rt, z, cst, coefs) => {
-//   const zx2 = z.multiply(c(2, 0))
-//   const [A, B, C, D] = coefs
-//   coefs[0] = A.multiply(zx2).add(c(1))
-//   coefs[1] = B.multiply(zx2).add(A.multiply(A))
-//   coefs[2] = C.multiply(zx2).add(B.multiply(A.multiply(c(2))))
-//   coefs[3] = D.multiply(zx2)
-//     .add(C.multiply(A.multiply(c(2))))
-//     .add(B.multiply(B))
-// }
 
 export const render = rt => {
   if (!rt.gl) {
@@ -256,10 +236,10 @@ export const render = rt => {
     const orbit = new Float32Array(64 * 64 * 4)
     const max = [0, 0]
     if (rt.fixed) {
-      fillOrbit(rt, orbit, c(), rt.center, max)
+      fillOrbit(rt, orbit, cx(), rt.center, max)
       fillOrbit(rt, orbit, rt.point, rt.center, max, true)
     } else {
-      fillOrbit(rt, orbit, c(), rt.point, max)
+      fillOrbit(rt, orbit, cx(), rt.point, max)
       fillOrbit(rt, orbit, rt.center, rt.point, max, true)
     }
     gl.uniform2iv(rt.env.uniforms.maxIterations, max)
