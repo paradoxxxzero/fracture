@@ -72,7 +72,7 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
   const handleReset = useCallback(() => {
     updateParams({
       center: cx(),
-      point: cx(),
+      // point: cx(),
       scale: 1.2,
     })
   }, [updateParams])
@@ -151,26 +151,23 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
             <aside className="formula">
               <ComplexFormula
                 label="F(z, c) ="
-                name="fzc"
-                params={['z', 'c']}
-                value={params.fzc}
+                name="f"
+                value={params.f}
                 onChange={handleChange}
               />
               {params.useDerivative ? (
                 <ComplexFormula
-                  label="dF(z, c)/dz ="
-                  name="dfzcdz"
-                  params={['z', 'c']}
-                  value={params.dfzcdz}
+                  label="F'(z, z', c) ="
+                  name="f_prime"
+                  value={params.f_prime}
                   onChange={handleChange}
                 />
               ) : null}
               {runtime.perturb ? (
                 <ComplexFormula
                   label="F(Z, dz, dc) ="
-                  params={['Z', 'dz', 'dc']}
-                  name="fZdzdc"
-                  value={params.fZdzdc}
+                  name="f_perturb"
+                  value={params.f_perturb}
                   onChange={handleChange}
                 />
               ) : null}
@@ -240,6 +237,17 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
                 toggler={params.useDerivative}
                 onChange={handleChange}
               />
+              {params.useDerivative ? (
+                <label className="boolean-label">
+                  <Boolean
+                    className="button"
+                    name="useDistanceEstimate"
+                    value={params.useDistanceEstimate}
+                    onChange={handleChange}
+                  />
+                  Distance Estimate
+                </label>
+              ) : null}
               {params.useDerivative ? (
                 <label className="boolean-label">
                   <Boolean

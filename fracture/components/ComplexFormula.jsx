@@ -5,7 +5,6 @@ import { ast } from '../formula'
 export default function ComplexFormula({
   name,
   label,
-  params,
   togglerName,
   toggler,
   value,
@@ -19,6 +18,7 @@ export default function ComplexFormula({
 
   useEffect(() => {
     setRaw(defaultValue())
+    setValid(true)
   }, [defaultValue, value])
 
   const [valid, setValid] = useState(true)
@@ -27,9 +27,20 @@ export default function ComplexFormula({
     newRaw => {
       setRaw(newRaw)
       try {
+        const params = [
+          'z',
+          'c',
+          'Z',
+          'dz',
+          'dc',
+          'z_prime',
+          'z_1',
+          'z_1_prime',
+          'dz_1',
+        ]
         // eslint-disable-next-line no-new-func
         const F = new Function(...params, `return ${ast(newRaw).toComplex()}`)
-        const args = params.map(p => cx(1))
+        const args = params.map(p => cx(Math.random()))
         F(...args)
       } catch (e) {
         console.warn(e)
@@ -39,7 +50,7 @@ export default function ComplexFormula({
       setValid(true)
       onChange(name, newRaw)
     },
-    [params, onChange, name]
+    [onChange, name]
   )
 
   const handleChange = event => {

@@ -75,7 +75,7 @@ export default memo(function Preset({
           ) : null}
           <span className="preset-name">{name}</span>
           <span className="preset-spacer" />
-          <code className="preset-formula">{params.fzc}</code>
+          <code className="preset-formula">{params.f}</code>
         </div>
       </div>
       {open &&

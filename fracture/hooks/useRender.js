@@ -25,6 +25,7 @@ export const useRender = (runtime, setRuntime) => {
     runtime.iterations,
     runtime.maxIterations,
     runtime.center,
+    runtime.transform,
     runtime.point,
     runtime.derivative,
     runtime.smoothing,
@@ -39,13 +40,14 @@ export const useRender = (runtime, setRuntime) => {
       return runtime
     })
   }, [
-    runtime.fzc,
-    runtime.dfzcdz,
-    runtime.fZdzdc,
+    runtime.f,
+    runtime.f_prime,
+    runtime.f_perturb,
     runtime.fixed,
     runtime.perturb,
     runtime.useDerivative,
     runtime.showDerivative,
+    runtime.useDistanceEstimate,
     runtime.useSmoothing,
     setRuntime,
   ])
@@ -70,19 +72,21 @@ export const useRender = (runtime, setRuntime) => {
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
-    runtime.fzc,
-    runtime.dfzcdz,
-    runtime.fZdzdc,
+    runtime.f,
+    runtime.f_prime,
+    runtime.f_perturb,
     runtime.center,
     runtime.scale,
     runtime.derivative,
     runtime.useDerivative,
+    runtime.useDistanceEstimate,
     runtime.useSmoothing,
     runtime.showDerivative,
     runtime.perturb,
     runtime.bailout,
     runtime.hue,
     runtime.contrast,
+    runtime.transform,
     runtime.iterations,
     runtime.smoothing,
     runtime.supersampling,

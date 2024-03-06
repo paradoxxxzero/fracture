@@ -14,27 +14,33 @@ export default function Float({
   onChange,
   ...props
 }) {
-  const defaultValue = useCallback(() => `${value}`, [value])
-
-  const [raw, setRaw] = useState(defaultValue)
+  const [raw, setRaw] = useState(`${value}`)
 
   useEffect(() => {
-    setRaw(defaultValue())
-  }, [defaultValue, value])
+    try {
+      if (decimal ? !value.eq(m(raw)) : value !== parseFloat(raw)) {
+        setRaw(`${value}`)
+        setValid(true)
+      }
+    } catch (e) {
+      console.warn(e)
+      setValid(false)
+    }
+  }, [raw, value])
 
   const [valid, setValid] = useState(true)
 
   const update = useCallback(
     newRaw => {
       setRaw(newRaw)
-      let parsed
-      try {
-        parsed = decimal ? m(newRaw) : parseFloat(newRaw)
-      } catch (e) {
-        console.warn(e)
+      if (
+        !newRaw ||
+        !newRaw.match(/^\s*-?\s*(\d+(\.\d*)?|\.\d+)(e-?\d+)?\s*$/)
+      ) {
         setValid(false)
         return
       }
+      const parsed = decimal ? m(newRaw) : parseFloat(newRaw)
       if (!decimal && (isNaN(parsed) || parsed < min || parsed > max)) {
         setValid(false)
       } else {

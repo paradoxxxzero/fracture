@@ -35,6 +35,9 @@ export class Decimal {
         value = value.toFixed(-Math.log10(Math.abs(value)) + floatPrecision)
       }
     }
+    if (typeof value === 'string' && value.match(/e/)) {
+      value = parseFloat(value).toFixed(floatPrecision)
+    }
 
     let [ints, decis] = value.split('.').concat('')
     this.precision = precision || decis.length || 1
@@ -189,7 +192,10 @@ export class Decimal {
     }
     return y
   }
-
+  eq(num) {
+    num = this.adapt(num)
+    return this._n === num._n
+  }
   toNumber() {
     return Number(this._n) / Number(shift(this.precision))
   }
@@ -231,6 +237,9 @@ export class Complex {
       this.re.multiply(c.re).add(this.im.multiply(c.im)).divide(d),
       this.im.multiply(c.re).subtract(this.re.multiply(c.im)).divide(d)
     )
+  }
+  neg() {
+    return new Complex(this.re.neg(), this.im.neg())
   }
   exp() {
     const r = this.re.exp()

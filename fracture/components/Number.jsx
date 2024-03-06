@@ -49,6 +49,7 @@ export default function Number({
 
   useEffect(() => {
     setRaw(defaultValue())
+    setValid(true)
   }, [defaultValue, value])
 
   const [valid, setValid] = useState(true)

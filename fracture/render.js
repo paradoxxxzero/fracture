@@ -13,13 +13,14 @@ const preprocess = (rt, source) => {
         rt.useDerivative ? '#define USE_DERIVATIVE' : '',
         rt.showDerivative ? '#define SHOW_DERIVATIVE' : '',
         rt.useSmoothing ? '#define USE_SMOOTHING' : '',
+        rt.useDistanceEstimate ? '#define USE_DISTANCE_ESTIMATE' : '',
       ]
         .filter(Boolean)
         .join('\n')
     )
-    .replace(/F\(z,\s*c\)/g, ast(rt.fzc).toShader())
-    .replace(/dF\s*\/\s*dz\(z,\s*c\)/, ast(rt.dfzcdz).toShader())
-    .replace(/F\(Z,\s*dz,\s*dc\)/, ast(rt.fZdzdc).toShader())
+    .replace(/F\(z,\s*c\)/g, ast(rt.f).toShader())
+    .replace(/F_prime\s*\(z,\s*c\,\s*z_prime\)/, ast(rt.f_prime).toShader())
+    .replace(/F\(Z,\s*dz,\s*dc\)/, ast(rt.f_perturb).toShader())
   // console.log(
   //   source
   //     .split('\n')
@@ -149,7 +150,7 @@ export const recompile = rt => {
     maxIterations: gl.getUniformLocation(rt.env.program, 'maxIterations'),
     center: gl.getUniformLocation(rt.env.program, 'center'),
     point: gl.getUniformLocation(rt.env.program, 'point'),
-    power: gl.getUniformLocation(rt.env.program, 'power'),
+    transform: gl.getUniformLocation(rt.env.program, 'transform'),
     scale: gl.getUniformLocation(rt.env.program, 'scale'),
     aspect: gl.getUniformLocation(rt.env.program, 'aspect'),
     derivative: gl.getUniformLocation(rt.env.program, 'derivative'),
@@ -157,10 +158,12 @@ export const recompile = rt => {
     contrast: gl.getUniformLocation(rt.env.program, 'contrast'),
     hue: gl.getUniformLocation(rt.env.program, 'hue'),
   }
-  // ;['fzc', 'dfzcdz', 'fZdzdc'].forEach((name, i) => {
-  //   const st = ast(rt[name])
-  //   console.log(name, st.toShader(), st.toComplex())
-  // })
+  if (window.location.search.includes('debug')) {
+    ;['f', 'f_prime', 'f_perturb'].forEach((name, i) => {
+      const st = ast(rt[name])
+      console.info(name, st.toShader(), st.toComplex())
+    })
+  }
   gl.useProgram(rt.env.program) // NEEDED?
   updateUniforms(rt)
 }
@@ -176,9 +179,10 @@ export const updateUniforms = rt => {
   uniforms.hue && rt.gl.uniform1f(uniforms.hue, rt.hue / 360)
   uniforms.iterations && rt.gl.uniform1i(uniforms.iterations, rt.iterations)
   uniforms.center && rt.gl.uniform2fv(uniforms.center, rt.center.to2fv())
+  uniforms.transform &&
+    rt.gl.uniformMatrix2fv(uniforms.transform, false, rt.transform.flat(1))
   uniforms.point && rt.gl.uniform2fv(uniforms.point, rt.point.to2fv())
-  uniforms.derivative &&
-    rt.gl.uniform1f(uniforms.derivative, 10 ** -rt.derivative)
+  uniforms.derivative && rt.gl.uniform1f(uniforms.derivative, rt.derivative)
   uniforms.aspect &&
     rt.gl.uniform1f(uniforms.aspect, rt.gl.canvas.width / rt.gl.canvas.height)
 }
@@ -199,15 +203,25 @@ export const resizeCanvasToDisplaySize = (canvas, sampling) => {
   }
 }
 
+const multiply = (c, matrix) => {
+  return cx(
+    c.re.multiply(matrix[0][0]).add(c.im.multiply(matrix[0][1])),
+    c.re.multiply(matrix[1][0]).add(c.im.multiply(matrix[1][1]))
+  )
+}
+
 const fillOrbit = (rt, orbit, z, c, max, shift) => {
   const [a, b] = shift ? [2, 3] : [0, 1]
   // eslint-disable-next-line no-new-func
-  const F = new Function('z', 'c', `return ${ast(rt.fzc).toComplex()}`)
+  const F = new Function('z', 'c', 'z_1', `return ${ast(rt.f).toComplex()}`)
   let i = 0
+  let z_1 = cx()
   for (; i < rt.iterations; i++) {
     orbit[i * 4 + a] = z.re.toNumber()
     orbit[i * 4 + b] = z.im.toNumber()
-    z = F(z, c)
+    let prev_z = z
+    z = F(z, c, z_1)
+    z_1 = prev_z
 
     if (z.norm2().toNumber() >= rt.bailout) {
       break
@@ -234,12 +248,13 @@ export const render = rt => {
   if (rt.perturb) {
     const orbit = new Float32Array(64 * 64 * 4)
     const max = [0, 0]
+    const center = multiply(rt.center, rt.transform)
     if (rt.fixed) {
-      fillOrbit(rt, orbit, cx(), rt.center, max)
-      fillOrbit(rt, orbit, rt.point, rt.center, max, true)
+      fillOrbit(rt, orbit, cx(), center, max)
+      fillOrbit(rt, orbit, rt.point, center, max, true)
     } else {
       fillOrbit(rt, orbit, cx(), rt.point, max)
-      fillOrbit(rt, orbit, rt.center, rt.point, max, true)
+      fillOrbit(rt, orbit, center, rt.point, max, true)
     }
     gl.uniform2iv(rt.env.uniforms.maxIterations, max)
 

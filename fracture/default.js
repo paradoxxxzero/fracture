@@ -6,7 +6,8 @@ export const defaultParams = {
   scale: 1.2,
   usePerturbation: null, // Auto
   useDerivative: true,
-  derivative: 5,
+  derivative: 50,
+  useDistanceEstimate: false,
   showDerivative: false,
   useSmoothing: true,
   smoothing: 50,
@@ -17,8 +18,12 @@ export const defaultParams = {
   supersampling:
     window.devicePixelRatio > 2 ? window.devicePixelRatio / 2 : 1.1,
   fixed: true,
-  point: cx(0, 0),
-  fzc: 'z^2 + c',
-  dfzcdz: '2 * z',
-  fZdzdc: '2 * Z * dz + dz^2 + dc',
+  point: cx(),
+  transform: [
+    [1, 0],
+    [0, 1],
+  ],
+  f: 'z^2 + c',
+  f_prime: "2 * z * z'",
+  f_perturb: '2 * Z * dz + dz^2 + dc',
 }

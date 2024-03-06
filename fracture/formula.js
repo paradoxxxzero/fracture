@@ -1,11 +1,11 @@
 const tokens = {
   whitespace: /^\s+/,
-  float: /^-?([0-9]+([.][0-9]*)?|[.][0-9]+)/,
-  integer: /^-?[0-9]+/,
+  float: /^([0-9]+([.][0-9]*)?|[.][0-9]+)/,
+  integer: /^[0-9]+/,
   operator: /^(\*\*|[+\-*/^]|\|-\|)/,
   unaryPrefix: /^~/,
   unarySuffix: /^(\.re|\.im)/,
-  identifier: /^[a-zA-Z_][a-zA-Z0-9_]*/,
+  identifier: /^[a-zA-Z_][a-zA-Z0-9_]*'?/,
   pipe: /^\|/,
   hash: /^#/,
   lparen: /^\(/,
@@ -39,7 +39,6 @@ const shaderBinary = {
   complex: 'vec2',
 }
 const shaderUnary = {
-  '+': '+',
   '-': '-',
   '~': 'conj',
   abs: 'abs',
@@ -47,14 +46,13 @@ const shaderUnary = {
 }
 const complexBinary = {
   '+': 'add',
-  '-': 'sub',
+  '-': 'subtract',
   '*': 'multiply',
-  '/': 'div',
+  '/': 'divide',
   '^': 'pow',
   '**': 'pow',
 }
 const complexUnary = {
-  '+': 'nop',
   '-': 'neg',
   '.re': 'real',
   '.im': 'imag',
@@ -81,18 +79,28 @@ class BinaryOp {
     return `(${this.left.toFull()} ${this.type} ${this.right.toFull()})`
   }
   toShader() {
-    if (this.type === '^' && this.right.type === 'number') {
-      if (this.right.value % 1 === 0) {
-        if (this.right.value === 1) {
+    if (
+      this.type === '^' &&
+      (this.right.type === 'number' ||
+        (this.right instanceof UnaryOp && this.right.operand.type === 'number'))
+    ) {
+      let k = 0
+      if (this.right instanceof UnaryOp) {
+        k = this.right.operand.value * (this.right.type === '-' ? -1 : 1)
+      } else {
+        k = this.right.value
+      }
+      if (k % 1 === 0) {
+        if (k === 1) {
           return this.left.toShader()
         }
-        if (this.right.value < 10) {
-          return `cpow${this.right.value}(${this.left.toShader()})`
+        if (k > 0 && k < 10) {
+          return `cpow${k}(${this.left.toShader()})`
         } else {
-          return `cpow(${this.left.toShader()}, ${this.right.value})`
+          return `cpow(${this.left.toShader()}, ${k})`
         }
       } else {
-        return `cpow(${this.left.toShader()}, ${this.right.value})`
+        return `cpow(${this.left.toShader()}, ${k})`
       }
     }
     return `${shaderBinary[this.type]}(${this.left.toShader()}, ${this.right.toShader()})`
@@ -124,9 +132,15 @@ class UnaryOp {
     if (this.type === '.im') {
       return `${this.operand.toShader()}.y`
     }
+    if (this.type === '+') {
+      return this.operand.toShader()
+    }
     return `${shaderUnary[this.type]}(${this.operand.toShader()})`
   }
   toComplex() {
+    if (this.type === '+') {
+      return this.operand.toComplex()
+    }
     return `(${this.operand.toComplex()}).${complexUnary[this.type]}()`
   }
 }
@@ -145,13 +159,13 @@ class Leaf {
   }
   toShader() {
     if (this.type === 'identifier') {
-      return this.value
+      return this.value.replace(/'/g, '_prime')
     }
     return `${this.value.toFixed(6)}`
   }
   toComplex() {
     if (this.type === 'identifier') {
-      return this.value
+      return this.value.replace(/'/g, '_prime')
     }
     return `cx(${this.value})`
   }
@@ -211,6 +225,8 @@ const parse = tokens => {
       } else if (token.type === 'identifier') {
         i++
         node = new BinaryOp('*', node, new Leaf('identifier', token.value))
+      } else if (['lparen', 'lt', 'identifier'].includes(token.type)) {
+        node = new BinaryOp('*', node, factor())
       } else {
         break
       }
