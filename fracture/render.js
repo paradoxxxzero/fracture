@@ -19,8 +19,14 @@ const preprocess = (rt, source) => {
         .join('\n')
     )
     .replace(/F\(z,\s*c\)/g, ast(rt.f).toShader())
-    .replace(/F_prime\s*\(z,\s*c\,\s*z_prime\)/, ast(rt.f_prime).toShader())
-    .replace(/F\(Z,\s*dz,\s*dc\)/, ast(rt.f_perturb).toShader())
+    .replace(/F_prime\s*\(z,\s*c,\s*z_prime\)/g, ast(rt.f_prime).toShader())
+    .replace(
+      /F_prime\s*\(z,\s*c,\s*z_prime_de\)/g,
+      ast(rt.f_prime)
+        .toShader()
+        .replace(/z_prime/g, 'z_prime_de')
+    )
+    .replace(/F\(Z,\s*dz,\s*dc\)/g, ast(rt.f_perturb).toShader())
   // console.log(
   //   source
   //     .split('\n')

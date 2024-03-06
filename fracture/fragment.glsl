@@ -206,12 +206,11 @@ void main(void) {
   vec2 z_1 = vec2(0.);
 
   #ifdef USE_DERIVATIVE
-      #ifdef USE_DISTANCE_ESTIMATE
-  float z_prime_max = scale * pow(exp(-derivative * .06), 2.);
-  vec2 z_prime = vec2(z_prime_max);
-    #else
   float z_prime_max = exp(-derivative * .15);
   vec2 z_prime = vec2(1., 0.);
+      #ifdef USE_DISTANCE_ESTIMATE
+  float z_prime_max_de = scale * pow(exp(-derivative * .06), 2.);
+  vec2 z_prime_de = vec2(z_prime_max_de, 0.);
     #endif
   vec2 z_1_prime = vec2(1000., 0.);
   #endif
@@ -246,23 +245,23 @@ void main(void) {
 
     #ifdef USE_DERIVATIVE
     z_prime = F_prime(z, c, z_prime);
+
       #ifdef USE_DISTANCE_ESTIMATE
-    z_prime += vec2(z_prime_max);
-    float z_prime2 = dot(z_prime, z_prime);
-    if(z2 < z_prime2) {
+    z_prime_de = F_prime(z, c, z_prime_de) + vec2(z_prime_max_de, 0.);
+    float z_prime_de2 = dot(z_prime_de, z_prime_de);
+    if(z2 < z_prime_de2) {
       float r = length(z);
-      float d = r * 2. * log(r) / length(z_prime);
-      float t = clamp(d / z_prime_max, 0., 1.);
+      float d = r * 2. * log(r) / length(z_prime_de);
+      float t = clamp(d / z_prime_max_de, 0., 1.);
       n = float(i);
         #ifdef USE_SMOOTHING
       // n -= log2(log2(z2)) - 4.0;
         #endif
       col = 1. - contrast + contrast * cos(smoothing * n + 4. * hslToRgb(vec3(hue, 1., 0.875)));
       col = mix(col, vec3(0., 0., 0.), t);
-      // col = vec3(1.);
       break;
     }
-      #else
+      #endif
       // Keep this in DE?
     float z_prime2 = dot(z_prime, z_prime);
     if(z_prime2 < z_prime_max) {
@@ -272,7 +271,6 @@ void main(void) {
         #endif
       break;
     }
-      #endif
     z_1_prime = z_prime;
     #endif
 
