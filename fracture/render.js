@@ -1,4 +1,5 @@
 import { cx } from './decimal'
+import { ambiances } from './default'
 import { ast } from './formula'
 import fragmentSource from './fragment.glsl?raw'
 import vertexSource from './vertex.glsl?raw'
@@ -10,29 +11,40 @@ const preprocess = (rt, source) => {
       [
         rt.perturb ? '#define PERTURB' : '',
         rt.fixed ? '#define FIXED' : '',
+        rt.convergent ? '#define CONVERGENT' : '',
+        rt.divergent ? '#define DIVERGENT' : '',
         rt.useDerivative ? '#define USE_DERIVATIVE' : '',
         rt.showDerivative ? '#define SHOW_DERIVATIVE' : '',
         rt.useSmoothing ? '#define USE_SMOOTHING' : '',
         rt.useDistanceEstimate ? '#define USE_DISTANCE_ESTIMATE' : '',
+        rt.roots
+          ? `#define ROOTS\nvec2[] roots = vec2[](${rt.roots
+              .map(
+                r =>
+                  `vec2(${r.re.toNumber().toFixed(12)}, ${r.im.toNumber().toFixed(12)})`
+              )
+              .join(', ')});`
+          : '',
+        `#define AMBIANCE ${ambiances.indexOf(rt.ambiance)}`,
       ]
         .filter(Boolean)
         .join('\n')
     )
     .replace(/F\(z,\s*c\)/g, ast(rt.f).toShader())
-    .replace(/F_prime\s*\(z,\s*c,\s*z_prime\)/g, ast(rt.f_prime).toShader())
     .replace(
-      /F_prime\s*\(z,\s*c,\s*z_prime_de\)/g,
-      ast(rt.f_prime)
-        .toShader()
-        .replace(/z_prime/g, 'z_prime_de')
+      /F_prime\s*\(z,\s*c,\s*(.*)\)/g,
+      ast(rt.f_prime).toShader().replace('z_prime', '$1')
     )
     .replace(/F\(Z,\s*dz,\s*dc\)/g, ast(rt.f_perturb).toShader())
-  // console.log(
-  //   source
-  //     .split('\n')
-  //     .map((s, i) => `${i + 1}: ${s}`)
-  //     .join('\n')
-  // )
+
+  if (window.location.search.includes('debug')) {
+    console.info(
+      source
+        .split('\n')
+        .map((s, i) => `${i + 1}: ${s}`)
+        .join('\n')
+    )
+  }
   return source
 }
 
@@ -152,6 +164,7 @@ export const recompile = rt => {
   rt.env.uniforms = {
     orbit: gl.getUniformLocation(rt.env.program, 'orbit'),
     bailout: gl.getUniformLocation(rt.env.program, 'bailout'),
+    bailin: gl.getUniformLocation(rt.env.program, 'bailin'),
     iterations: gl.getUniformLocation(rt.env.program, 'iterations'),
     maxIterations: gl.getUniformLocation(rt.env.program, 'maxIterations'),
     center: gl.getUniformLocation(rt.env.program, 'center'),
@@ -179,6 +192,7 @@ export const updateUniforms = rt => {
 
   uniforms.orbit && rt.gl.uniform1i(uniforms.orbit, 0)
   uniforms.scale && rt.gl.uniform1f(uniforms.scale, rt.scale)
+  uniforms.bailin && rt.gl.uniform1f(uniforms.bailin, rt.bailin)
   uniforms.bailout && rt.gl.uniform1f(uniforms.bailout, rt.bailout)
   uniforms.smoothing && rt.gl.uniform1f(uniforms.smoothing, rt.smoothing / 1000)
   uniforms.contrast && rt.gl.uniform1f(uniforms.contrast, rt.contrast / 100)

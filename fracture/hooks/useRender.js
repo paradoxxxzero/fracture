@@ -22,6 +22,7 @@ export const useRender = (runtime, setRuntime) => {
   }, [
     runtime.scale,
     runtime.bailout,
+    runtime.bailin,
     runtime.iterations,
     runtime.maxIterations,
     runtime.center,
@@ -44,6 +45,10 @@ export const useRender = (runtime, setRuntime) => {
     runtime.f_prime,
     runtime.f_perturb,
     runtime.fixed,
+    runtime.roots,
+    runtime.convergent,
+    runtime.divergent,
+    runtime.ambiance,
     runtime.perturb,
     runtime.useDerivative,
     runtime.showDerivative,
@@ -84,6 +89,7 @@ export const useRender = (runtime, setRuntime) => {
     runtime.showDerivative,
     runtime.perturb,
     runtime.bailout,
+    runtime.bailin,
     runtime.hue,
     runtime.contrast,
     runtime.transform,
@@ -93,5 +99,9 @@ export const useRender = (runtime, setRuntime) => {
     runtime.type,
     runtime.point,
     runtime.fixed,
+    runtime.ambiance,
+    runtime.roots,
+    runtime.convergent,
+    runtime.divergent,
   ])
 }

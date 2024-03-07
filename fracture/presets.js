@@ -129,7 +129,7 @@ export const presets = withDefaults([
   {
     name: 'Moonbrot',
     params: {
-      center: cx(0, 0),
+      center: cx(),
       scale: 6,
       f: 'c / (z + 1)^2',
       f_prime: "- 2 * c / (z + 1)^3 * z'",
@@ -140,7 +140,7 @@ export const presets = withDefaults([
   {
     name: 'Phoenix',
     params: {
-      center: cx(0, 0),
+      center: cx(),
       point: cx(0.5667),
       scale: 1.5,
       transform: rotate(-Math.PI / 2),
@@ -149,6 +149,36 @@ export const presets = withDefaults([
       useDerivative: false,
       f_prime: "2 * z * z' - 0.5 * z_1 * z_1'",
       f_perturb: '2 * Z * dz + dz^2 + dc - 0.5 * dz_1',
+    },
+  },
+  {
+    name: 'Newton',
+    params: {
+      center: cx(),
+      fixed: false,
+      f: 'z - (z^3 - 1) / (3 * z^2) + c',
+      f_prime: "2(z^3 - 1) * z' / (3 * z^3)",
+      f_perturb: '3 * Z^2 * dz + dc',
+      roots: [cx(1), cx(-0.5, Math.sqrt(3) / 2), cx(-0.5, -Math.sqrt(3) / 2)],
+      useDerivative: false, // TODO
+      usePerturbation: false, // TODO
+      convergent: true,
+      divergent: false,
+    },
+  },
+  {
+    name: 'Nova',
+    params: {
+      center: cx(-0.5),
+      point: cx(1),
+      f: 'z - (z^3 - 1) / (3 * z^2) + c',
+      f_prime: "2(z^3 - 1) * z' / (3 * z^3)",
+      f_perturb: '3 * Z^2 * dz + dc',
+      roots: [cx(1), cx(-0.5, Math.sqrt(3) / 2), cx(-0.5, -Math.sqrt(3) / 2)],
+      useDerivative: false, // TODO
+      usePerturbation: false, // TODO
+      convergent: true,
+      divergent: false,
     },
   },
   // 'multibrot',

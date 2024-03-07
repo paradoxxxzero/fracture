@@ -1,6 +1,8 @@
 import { cx } from './decimal'
 import './formula'
 
+export const ambiances = ['calm', 'magma', 'blackAndWhite', 'colorful']
+
 export const defaultParams = {
   center: cx(-0.5),
   scale: 1.2,
@@ -11,7 +13,6 @@ export const defaultParams = {
   showDerivative: false,
   useSmoothing: true,
   smoothing: 50,
-  bailout: 16 ** 2,
   contrast: 50,
   hue: 210,
   iterations: 1000,
@@ -26,4 +27,10 @@ export const defaultParams = {
   f: 'z^2 + c',
   f_prime: "2 * z * z'",
   f_perturb: '2 * Z * dz + dz^2 + dc',
+  ambiance: 'calm',
+  roots: false,
+  convergent: false,
+  bailin: -6,
+  divergent: true,
+  bailout: 2.5,
 }

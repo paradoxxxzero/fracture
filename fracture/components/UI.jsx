@@ -18,6 +18,7 @@ import ComplexFormula from './ComplexFormula.jsx'
 import { presets } from '../presets.js'
 import Presets from './Presets'
 import Float from './Float.jsx'
+import { ambiances } from '../default.js'
 
 const getShowUI = () => {
   try {
@@ -42,6 +43,14 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
       closePresets()
     },
     [updateParams, closePresets]
+  )
+
+  const handleRawChange = useCallback(
+    event => {
+      const { name, value } = event.target
+      updateParams({ [name]: value })
+    },
+    [updateParams]
   )
 
   const handleChange = useCallback(
@@ -186,13 +195,26 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
                 onChange={handleChange}
               />
               <Number
-                name="bailout"
-                label="Bailout"
-                min={0}
-                step={1}
-                value={params.bailout}
+                name="bailin"
+                label="Bailin"
+                min={-Infinity}
+                step={0.1}
+                value={params.bailin}
+                togglerName="convergent"
+                toggler={params.convergent}
                 onChange={handleChange}
               />
+              <Number
+                name="bailout"
+                label="Bailout"
+                min={-Infinity}
+                step={0.1}
+                value={params.bailout}
+                togglerName="divergent"
+                toggler={params.divergent}
+                onChange={handleChange}
+              />
+
               <Number
                 name="smoothing"
                 label="Smoothing"
@@ -329,6 +351,20 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
                 value={params.scale}
                 onChange={handleChange}
               />
+              <label className="select-label">
+                Ambiance
+                <select
+                  name="ambiance"
+                  value={params.ambiance}
+                  onChange={handleRawChange}
+                >
+                  {ambiances.map(a => (
+                    <option key={a} value={a}>
+                      {a.replace(/_/g, ' ').replace(/./, c => c.toUpperCase())}
+                    </option>
+                  ))}
+                </select>
+              </label>
             </aside>
           )}
           {showUI === 'empty' ? <div className="spacer" /> : null}
