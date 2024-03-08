@@ -184,7 +184,7 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
                 <ComplexFormula
                   label="F'(z, z', c) ="
                   name="f_prime"
-                  value={params.f_prime}
+                  value={runtime.f_prime}
                   onChange={handleChange}
                 />
               ) : null}

@@ -4,13 +4,20 @@ const tokens = {
   integer: /^[0-9]+/,
   operator: /^(\*\*|[+\-*/^]|\|-\|)/,
   unaryPrefix: /^~/,
-  unarySuffix: /^(\.re|\.im)/,
+  unarySuffix: /^'/,
   identifier: /^[a-zA-Z_][a-zA-Z0-9_]*'?/,
   pipe: /^\|/,
-  hash: /^#/,
   lparen: /^\(/,
   rparen: /^\)/,
   comma: /^,/,
+}
+const precedence = {
+  '+': 1,
+  '-': 2,
+  '*': 3,
+  '/': 4,
+  '~': 5,
+  '^': 6,
 }
 
 class Token {
@@ -49,8 +56,6 @@ const complexBinary = {
 }
 const complexUnary = {
   '-': 'neg',
-  '.re': 'real',
-  '.im': 'imag',
   '~': 'conj',
   abs: 'abs',
   sign: 'sign',
@@ -88,30 +93,29 @@ class BinaryOp {
   }
 
   toString() {
-    const precedence = {
-      '+': 1,
-      '-': 1,
-      '*': 2,
-      '/': 2,
-      '^': 3,
-    }
-
     let left = this.left.toString()
     let right = this.right.toString()
     if (this.type === 'complex') {
       return `(${left} + ${right}i)`
     }
     if (
-      this.left instanceof BinaryOp &&
-      precedence[this.left.type] < precedence[this.type]
+      (this.left instanceof BinaryOp &&
+        precedence[this.left.type] < precedence[this.type]) ||
+      (precedence[this.left.type] === precedence[this.type] &&
+        ['-', '/', '^'].includes(this.type))
     ) {
       left = `(${left})`
     }
     if (
-      this.right instanceof BinaryOp &&
-      precedence[this.right.type] < precedence[this.type]
+      (this.right instanceof BinaryOp &&
+        precedence[this.right.type] < precedence[this.type]) ||
+      (precedence[this.right.type] === precedence[this.type] &&
+        ['-', '/', '^'].includes(this.type))
     ) {
       right = `(${right})`
+    }
+    if (this.type === '^') {
+      return `${left}${this.type}${right}`
     }
     return `${left} ${this.type} ${right}`
   }
@@ -189,25 +193,20 @@ class BinaryOp {
     }
     if (this.type === '/') {
       if (
+        this.right.type === 'number' ||
+        (this.right.type === 'identifier' && !wrt.includes(this.right.value))
+      ) {
+        return new BinaryOp('/', this.left.toDerivative(...wrt), this.right)
+      }
+      if (
         this.left.type === 'number' ||
         (this.left.type === 'identifier' && !wrt.includes(this.left.value))
       ) {
         return new BinaryOp(
           '/',
-          this.left.toDerivative(...wrt),
-          new BinaryOp('^', this.right, new Leaf('number', 2))
-        )
-      }
-      if (
-        this.right.type === 'number' ||
-        (this.right.type === 'identifier' && !wrt.includes(this.right.value))
-      ) {
-        return new BinaryOp(
-          '/',
-          new BinaryOp(
+          new UnaryOp(
             '-',
-            new BinaryOp('*', this.left.toDerivative(...wrt), this.right),
-            new BinaryOp('*', this.left, this.right.toDerivative(...wrt))
+            new BinaryOp('*', this.right.toDerivative(...wrt), this.left)
           ),
           new BinaryOp('^', this.right, new Leaf('number', 2))
         )
@@ -258,17 +257,19 @@ class BinaryOp {
       return new BinaryOp(
         '*',
         this,
-        new FunctionOp('*', [
+        new BinaryOp(
+          '*',
           new FunctionOp('log', [this.left]),
           new BinaryOp(
             '*',
             this.right,
-            new FunctionOp('^', [
+            new BinaryOp(
+              '^',
               this.left,
-              new BinaryOp('-', this.right, new Leaf('number', 1)),
-            ])
-          ),
-        ])
+              new BinaryOp('-', this.right, new Leaf('number', 1))
+            )
+          )
+        )
       )
     }
 
@@ -334,12 +335,20 @@ class BinaryOp {
       if (k === 1) {
         return left
       }
+      if (left.type === '^' && left.right.type === 'number') {
+        return new BinaryOp(
+          '^',
+          left.left,
+          new Leaf('number', left.right.value * k)
+        ).solve()
+      }
     }
     if (right.type === 'number' && left.type === 'number') {
+      const op = this.type === '^' ? '**' : this.type
       return new Leaf(
         'number',
         // eslint-disable-next-line no-eval
-        eval(`${left.value} ${this.type} ${right.value}`)
+        eval(`${left.value} ${op} ${right.value}`)
       )
     }
     if (left.type === 'complex' && right.isPureReal()) {
@@ -439,15 +448,18 @@ class UnaryOp {
     return `<${this.type}: ${this.operand.toTree()}>`
   }
   toString() {
-    return `${this.type}(${this.operand.toString()})`
+    let op = this.operand.toString()
+    if (
+      (this.operand instanceof BinaryOp &&
+        precedence[this.operand.type] < precedence[this.type]) ||
+      (precedence[this.operand.type] === precedence[this.type] &&
+        ['-', '/', '^'].includes(this.type))
+    ) {
+      op = `(${op})`
+    }
+    return `${this.type}${op}`
   }
   toShader() {
-    if (this.type === '.re') {
-      return `${this.operand.toShader()}.x`
-    }
-    if (this.type === '.im') {
-      return `${this.operand.toShader()}.y`
-    }
     if (this.type === '+') {
       return this.operand.toShader()
     }
@@ -470,6 +482,14 @@ class UnaryOp {
     if (this.type === '-' && operand.type === 'number') {
       return new Leaf('number', -operand.value)
     }
+    if (
+      operand instanceof UnaryOp &&
+      ['-', '~'].includes(this.type) &&
+      operand.type === this.type
+    ) {
+      return operand.operand
+    }
+
     return new UnaryOp(this.type, operand)
   }
 }
@@ -478,6 +498,7 @@ class FunctionOp {
   constructor(name, args) {
     this.name = name.toLowerCase()
     this.args = args
+    this.type = 'function'
   }
   isPureReal() {
     return ['abs', 're', 'im'].includes(this.name)
@@ -493,10 +514,17 @@ class FunctionOp {
     return `${this.name}(${this.args.map(a => a.toString()).join(', ')})`
   }
   toShader() {
+    if (this.name === 're') {
+      return `${this.args[0].toShader()}.x`
+    }
+    if (this.name === 'im') {
+      return `${this.args[0].toShader()}.y`
+    }
     return `${this.name}(${this.args.map(a => a.toShader()).join(', ')})`
   }
   toComplex() {
-    return `${this.args[0].toComplex()}.${this.name}(${this.args
+    const name = { re: 'real', im: 'imag' }[this.name] || this.name
+    return `${this.args[0].toComplex()}.${name}(${this.args
       .slice(1)
       .map(a => a.toComplex())
       .join(', ')})`
@@ -507,6 +535,13 @@ class FunctionOp {
     }
     if (this.name === 'exp') {
       return new BinaryOp('*', this, this.args[0].toDerivative(...wrt))
+    }
+    if (this.name === 'abs') {
+      return new BinaryOp(
+        '*',
+        new FunctionOp('sign', this.args),
+        this.args[0].toDerivative(...wrt)
+      )
     }
     if (this.name === 'sin') {
       return new BinaryOp(
@@ -634,10 +669,19 @@ class FunctionOp {
         this.args[0].toDerivative(...wrt)
       )
     }
-    return new FunctionOp(`${this.name}'`, [
-      this.args[0],
-      ...this.args.slice(1).map(a => a.toDerivative(...wrt)),
-    ])
+    if (['re', 'im'].includes(this.name)) {
+      return new BinaryOp(
+        '*',
+        new FunctionOp(this.name, this.args),
+        this.args[0].toDerivative(...wrt)
+      )
+    }
+
+    return new BinaryOp(
+      '*',
+      new FunctionOp(`${this.name}'`, this.args),
+      this.args[0].toDerivative(...wrt)
+    )
   }
   solve() {
     const args = this.args.map(a => a.solve())
@@ -782,14 +826,8 @@ const parse = tokens => {
       if (token.type === 'operator' && ['*', '/'].includes(token.value)) {
         i++
         node = new BinaryOp(token.value, node, exponentiation())
-      } else if (
-        token.type === 'identifier' &&
-        tokens[i + 1]?.type !== 'lparen'
-      ) {
-        i++
-        node = new BinaryOp('*', node, new Leaf('identifier', token.value))
       } else if (['lparen', 'identifier'].includes(token.type)) {
-        node = new BinaryOp('*', node, factor())
+        node = new BinaryOp('*', node, exponentiation())
       } else {
         break
       }
@@ -802,7 +840,7 @@ const parse = tokens => {
       const token = tokens[i]
       if (token.type === 'operator' && ['^', '**'].includes(token.value)) {
         i++
-        node = new BinaryOp('^', node, suffix())
+        node = new BinaryOp('^', node, exponentiation())
       } else {
         break
       }
@@ -839,15 +877,7 @@ const parse = tokens => {
         throw new Error('Expected | at ' + tokens[i].start)
       }
       i++
-      return new UnaryOp('abs', node)
-    } else if (token.type === 'hash') {
-      i++
-      const node = expression()
-      if (tokens[i].type !== 'hash') {
-        throw new Error('Expected # at ' + tokens[i].start)
-      }
-      i++
-      return new UnaryOp('sign', node)
+      return new FunctionOp('abs', [node])
     } else if (token.type === 'unaryPrefix') {
       i++
       return new UnaryOp(token.value, factor())
@@ -888,8 +918,14 @@ const parse = tokens => {
 }
 
 export const ast = s => parse(tokenize(s)).solve()
+export const derive = (s, ...wrt) =>
+  parse(tokenize(s))
+    .solve()
+    .toDerivative(...(wrt.length === 0 ? ['z', 'z_1'] : wrt))
+    .solve()
 
 window.tokenize = tokenize
 window.parse = parse
 window.ast = ast
-window.Ast = s => parse(tokenize(s))
+window.derive = derive
+window.astRaw = s => parse(tokenize(s))

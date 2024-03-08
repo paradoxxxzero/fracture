@@ -40,7 +40,6 @@ const brot = (name, n, extra = {}) => ({
   params: {
     center: cx(),
     f: `z^${n} + c`,
-    f_prime: `${n} * z^${n - 1} * z'`.replace('^1', ''),
     f_perturb: `${pascal('Z', 'dz', n, 1)} + dc`,
     ...extra,
   },
@@ -97,7 +96,6 @@ export const presets = withDefaults([
     params: {
       ...brot('Mandelbar', 2).params,
       f: '~z^2 + c',
-      f_prime: "2 * ~z * z'",
       f_perturb: '~(2 * Z * dz + dz^2) + dc',
     },
   },
@@ -107,11 +105,9 @@ export const presets = withDefaults([
       center: cx(0.5, 0.5),
       transform: rotate(Math.PI),
       scale: 1.5,
-      f: '(|z.re| + |z.im|i)^2 + c',
-      f_prime:
-        "2 * z * (|z.re| + |z.im|i) * (sign(z.re) + sign(z.im) * i) * z'",
+      f: '(|re(z)| + |im(z)|i)^2 + c',
       f_perturb:
-        '(2 * dz.re * Z.re + dz.re * dz.re - 2 * Z.im * dz.im - dz.im * dz.im + 2 * ((Z.re * Z.im) |-| (Z.re * dz.im + dz.re * Z.im + dz.re * dz.im)) * i) + dc',
+        '(2 * re(dz) * re(Z) + re(dz) * re(dz) - 2 * im(Z) * im(dz) - im(dz) * im(dz) + 2 * ((re(Z) * im(Z)) |-| (re(Z) * im(dz) + re(dz) * im(Z) + re(dz) * im(dz))) * i) + dc',
     },
   },
   {
@@ -121,7 +117,6 @@ export const presets = withDefaults([
       scale: 4,
       transform: rotate(-Math.PI / 2),
       f: '(z + 1)^2 / c',
-      f_prime: "2 * (z + 1) / c * z'",
       usePerturbation: false, // TODO
       showDerivative: true,
       derivative: 80,
@@ -133,7 +128,6 @@ export const presets = withDefaults([
       center: cx(),
       scale: 6,
       f: 'c / (z + 1)^2',
-      f_prime: "- 2 * c / (z + 1)^3 * z'",
       derivative: 120,
       usePerturbation: false, // TODO
     },
@@ -148,7 +142,6 @@ export const presets = withDefaults([
       fixed: false,
       f: 'z^2 + c - 0.5 * z_1',
       useDerivative: false,
-      f_prime: "2 * z * z' - 0.5 * z_1 * z_1'",
       f_perturb: '2 * Z * dz + dz^2 + dc - 0.5 * dz_1',
     },
   },
@@ -158,10 +151,10 @@ export const presets = withDefaults([
       center: cx(),
       fixed: false,
       f: 'z - (z^3 - 1) / (3 * z^2) + c',
-      f_prime: "2(z^3 - 1) * z' / (3 * z^3)",
       f_perturb: '3 * Z^2 * dz + dc',
-      useDerivative: false, // TODO
       usePerturbation: false, // TODO
+      useDerivative: false,
+      derivative: 180,
       useRoots: true,
       convergent: true,
       divergent: false,
@@ -173,10 +166,9 @@ export const presets = withDefaults([
       center: cx(-0.5),
       point: cx(1),
       f: 'z - (z^3 - 1) / (3 * z^2) + c',
-      f_prime: "2(z^3 - 1) * z' / (3 * z^3)",
       f_perturb: '3 * Z^2 * dz + dc',
       roots: [cx(1), cx(-0.5, Math.sqrt(3) / 2), cx(-0.5, -Math.sqrt(3) / 2)],
-      useDerivative: false, // TODO
+      derivative: 180,
       usePerturbation: false, // TODO
       convergent: true,
       divergent: false,

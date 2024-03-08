@@ -296,7 +296,7 @@ void main(void) {
   for(int i = 0; i < iterations; i++) {
     #if defined(USE_DERIVATIVE) || SMOOTHING == 3
     vec2 zdct = zdc;
-    zdc = F_prime(z, c, zdc) + vec2(1., 0.);
+    zdc = F_prime(z, c, zdc, zdc_1) + vec2(1., 0.);
     zdc_1 = zdct;
     #endif
 
@@ -319,17 +319,17 @@ void main(void) {
 
     #ifdef USE_DERIVATIVE
     vec2 zdzt = zdz;
-    zdz = F_prime(z, c, zdz);
+    zdz = F_prime(z, c, zdz, zdz_1);
     zdz_1 = zdzt;
     #endif
 
     #ifdef USE_DERIVATIVE
     float zdzzdz = dot(zdz, zdz);
     if(zdzzdz < zdzmax) {
-        #ifdef SHOW_DERIVATIVE
+      #ifdef SHOW_DERIVATIVE
       float n = float(i) + 1.;
       col = color(n, .5);
-        #endif
+      #endif
       break;
     }
     #endif

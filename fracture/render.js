@@ -13,7 +13,7 @@ const preprocess = (rt, source) => {
         rt.fixed ? '#define FIXED' : '',
         rt.convergent ? '#define CONVERGENT' : '',
         rt.divergent ? '#define DIVERGENT' : '',
-        rt.useDerivative ? '#define USE_DERIVATIVE' : '',
+        rt.useDerivative && rt.f_prime ? '#define USE_DERIVATIVE' : '',
         rt.showDerivative ? '#define SHOW_DERIVATIVE' : '',
         rt.useSmoothing ? '#define USE_SMOOTHING' : '',
         rt.useDistanceEstimate ? '#define USE_DISTANCE_ESTIMATE' : '',
@@ -32,11 +32,16 @@ const preprocess = (rt, source) => {
         .join('\n')
     )
     .replace(/F\(z,\s*c\)/g, ast(rt.f).toShader())
-    .replace(
-      /F_prime\s*\(z,\s*c,\s*(.*)\)/g,
-      ast(rt.f_prime).toShader().replace('z_prime', '$1')
-    )
     .replace(/F\(Z,\s*dz,\s*dc\)/g, ast(rt.f_perturb).toShader())
+  if (rt.useDerivative && rt.f_prime) {
+    source = source.replace(
+      /F_prime\s*\(z,\s*c,\s*(.*?),\s*(.*?)\)/g,
+      ast(rt.f_prime)
+        .toShader()
+        .replace(/z_prime/g, '$1')
+        .replace(/z_1_prime/g, '$2')
+    )
+  }
 
   if (window.location.search.includes('debug')) {
     console.info(

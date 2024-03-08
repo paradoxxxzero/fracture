@@ -1,4 +1,5 @@
 import { defaultParams } from './default'
+import { derive } from './formula'
 
 export const filterParams = (maybeBadParams, changed = [], oldParams) => {
   const params = {
@@ -28,6 +29,17 @@ export const filterParams = (maybeBadParams, changed = [], oldParams) => {
       }
     }
   })
+  if (
+    (changed.includes('f') && !changed.includes('f_prime')) ||
+    params.f_prime === null
+  ) {
+    try {
+      params.f_prime = derive(params.f).toString()
+    } catch (e) {
+      badParams.push('f_prime')
+      console.warn(e)
+    }
+  }
   // if (changed.includes('type')) {
   //   ;[params.center, params.point] = [params.point, params.center]
   // }

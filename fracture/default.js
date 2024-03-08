@@ -37,7 +37,7 @@ export const defaultParams = {
     [0, 1],
   ],
   f: 'z^2 + c',
-  f_prime: "2 * z * z'",
+  f_prime: null, // Auto
   f_perturb: '2 * Z * dz + dz^2 + dc',
   ambiance: 'calm',
   useRoots: false,

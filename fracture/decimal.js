@@ -74,6 +74,9 @@ export class Decimal {
     return m(this._n - num._n, this.precision)
   }
   multiply(num) {
+    if (num instanceof Complex) {
+      return num.multiply(this)
+    }
     num = this.adapt(num)
     return m((this._n * num._n) / shift(this.precision), this.precision)
   }
@@ -97,7 +100,7 @@ export class Decimal {
     return m(this._n < 0 ? -this._n : this._n, this.precision)
   }
   sign() {
-    return this._n < 0 ? -1 : this._n > 0 ? 1 : 0
+    return m(this._n < 0 ? -1 : this._n > 0 ? 1 : 0)
   }
   neg() {
     this._n = -this._n
@@ -226,6 +229,9 @@ export class Complex {
     return new Complex(this.re.subtract(c.re), this.im.subtract(c.im))
   }
   multiply(c) {
+    if (c instanceof Decimal) {
+      return new Complex(this.re.multiply(c), this.im.multiply(c))
+    }
     return new Complex(
       this.re.multiply(c.re).subtract(this.im.multiply(c.im)),
       this.re.multiply(c.im).add(this.im.multiply(c.re))
@@ -349,7 +355,7 @@ export class Complex {
     return this.re.multiply(this.re).add(this.im.multiply(this.im))
   }
   abs() {
-    return this.norm2().sqrt()
+    return m(this.norm2().sqrt())
   }
   conj() {
     return cx(this.re, -this.im)
