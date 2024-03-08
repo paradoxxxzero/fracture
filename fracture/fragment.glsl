@@ -267,7 +267,7 @@ void main(void) {
   #endif
   vec2 z_1 = vec2(0.);
 
-  #ifdef USE_DERIVATIVE
+  #if defined(USE_DERIVATIVE) || SMOOTHING == 3
   float zdzmax = exp(-derivative * .15);
     #ifdef FIXED// Mandelbrot-like
   vec2 zdc = vec2(0., 0.);
@@ -294,7 +294,7 @@ void main(void) {
 
   vec3 col = vec3(0.);
   for(int i = 0; i < iterations; i++) {
-    #ifdef USE_DERIVATIVE
+    #if defined(USE_DERIVATIVE) || SMOOTHING == 3
     vec2 zdct = zdc;
     zdc = F_prime(z, c, zdc) + vec2(1., 0.);
     zdc_1 = zdct;
@@ -367,7 +367,7 @@ void main(void) {
         #if SMOOTHING == 2
       n = 10. * zexp;
         #endif
-      col = color(n));
+      col = color(n);
       break;
     }
       #endif
