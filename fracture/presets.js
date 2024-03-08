@@ -104,6 +104,7 @@ export const presets = withDefaults([
     params: {
       center: cx(0.5, 0.5),
       transform: rotate(Math.PI),
+      derivative: 100,
       scale: 1.5,
       f: '(|re(z)| + |im(z)|i)^2 + c',
       f_perturb:

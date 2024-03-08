@@ -84,6 +84,14 @@ export const uniformParams = {
   },
 
   iterations: '1i',
+  maxIterations: {
+    type: '2iv',
+    value: () => [0, 0],
+  },
+  orbit: {
+    type: '1i',
+    value: () => 0,
+  },
   bailin: '1f',
   bailout: '1f',
   derivative: '1f',

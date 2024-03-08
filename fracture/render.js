@@ -33,13 +33,18 @@ const preprocess = (rt, source) => {
     )
     .replace(/F\(z,\s*c\)/g, ast(rt.f).toShader())
     .replace(/F\(Z,\s*dz,\s*dc\)/g, ast(rt.f_perturb).toShader())
-  if (rt.useDerivative && rt.f_prime) {
+  if (rt.f_prime) {
     source = source.replace(
       /F_prime\s*\(z,\s*c,\s*(.*?),\s*(.*?)\)/g,
       ast(rt.f_prime)
         .toShader()
         .replace(/z_prime/g, '$1')
         .replace(/z_1_prime/g, '$2')
+    )
+  } else {
+    source = source.replace(
+      /F_prime\s*\(z,\s*c,\s*(.*?),\s*(.*?)\)/g,
+      'vec2(0)'
     )
   }
 

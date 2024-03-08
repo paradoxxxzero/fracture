@@ -20,6 +20,11 @@ uniform float hue;
 uniform float saturation;
 uniform float lightness;
 
+#ifdef PERTURB
+uniform sampler2D orbit;
+uniform ivec2 maxIterations;
+#endif
+
 vec3 hslToRgb(in vec3 c) {
   vec3 rgb = clamp(abs(mod(c.x * 6. + vec3(0., 4., 2.), 6.) - 3.) - 1., 0., 1.);
   return c.z + c.y * (rgb - 0.5) * (1. - abs(2. * c.z - 1.));
@@ -77,11 +82,6 @@ vec3 color(float t, float p) {
 vec3 color(float t) {
   return color(t, 0.);
 }
-
-#ifdef PERTURB
-uniform sampler2D orbit;
-uniform ivec2 maxIterations;
-#endif
 
 in vec2 uv;
 out vec4 fragColor;
@@ -266,6 +266,7 @@ void main(void) {
     #endif
   #endif
   vec2 z_1 = vec2(0.);
+  vec2 z_2 = vec2(0.);
 
   #if defined(USE_DERIVATIVE) || SMOOTHING == 3
   float zdzmax = exp(-derivative * .15);
@@ -311,23 +312,25 @@ void main(void) {
     #else
     z = F(z, c);
     #endif
+    z_2 = z_1;
     z_1 = zt;
 
     #if SMOOTHING == 2
     zexp += exp(-length(z) - .5 / (length(z - z_1)));
     #endif
 
-    #ifdef USE_DERIVATIVE
+    #ifdef USE_DERIVATIVE 
     vec2 zdzt = zdz;
     zdz = F_prime(z, c, zdz, zdz_1);
     zdz_1 = zdzt;
-    #endif
 
-    #ifdef USE_DERIVATIVE
     float zdzzdz = dot(zdz, zdz);
     if(zdzzdz < zdzmax) {
       #ifdef SHOW_DERIVATIVE
       float n = float(i) + 1.;
+      #if SMOOTHING == 2
+      n = 10. * zexp;
+      #endif
       col = color(n, .5);
       #endif
       break;
@@ -349,6 +352,9 @@ void main(void) {
         n += (log(BAILIN / prev)) / (log(diff / prev));
         #elif SMOOTHING == 2
         n = 10. * zexp;
+        #elif SMOOTHING == 3
+        float d = sqrt(dot(z, z) / dot(zdc, zdc)) * log(dot(z, z));
+        n = 130. / pow(d, .02);
         #endif
 
         col = color(n, r);
@@ -364,9 +370,15 @@ void main(void) {
     float z_z_1 = dot2(z - z_1);
     if(z_z_1 < BAILIN) {
       float n = float(i);
-        #if SMOOTHING == 2
+      #if SMOOTHING == 1
+      float p = log(dot2(z - z_1)) / log(dot2(z_1 - z_2));
+      n += (log(log(BAILIN)) - log(log(1. / dot2(z_1 - z)))) / log(p);
+      #elif SMOOTHING == 2
       n = 10. * zexp;
-        #endif
+      #elif SMOOTHING == 3
+      float d = sqrt(dot(z, z) / dot(zdc, zdc)) * log(dot(z, z));
+      n = 130. / pow(d, .02);
+      #endif
       col = color(n);
       break;
     }
@@ -394,7 +406,7 @@ void main(void) {
 
     #ifdef PERTURB
     // Rebasing
-    if(dot(z, z) < dot(dz, dz) || m >= max) {
+    if(zz < dot(dz, dz) || m >= max) {
       dz = z;
       m = 0;
       max = maxIterations.x;

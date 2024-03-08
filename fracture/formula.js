@@ -4,7 +4,7 @@ const tokens = {
   integer: /^[0-9]+/,
   operator: /^(\*\*|[+\-*/^]|\|-\|)/,
   unaryPrefix: /^~/,
-  unarySuffix: /^'/,
+  unarySuffix: /^['#]/,
   identifier: /^[a-zA-Z_][a-zA-Z0-9_]*'?/,
   pipe: /^\|/,
   lparen: /^\(/,
@@ -222,6 +222,15 @@ class BinaryOp {
       )
     }
     if (this.type === '^') {
+      if (
+        (this.left.type === 'number' ||
+          (this.left.type === 'identifier' &&
+            !wrt.includes(this.left.value))) &&
+        (this.right.type === 'number' ||
+          (this.right.type === 'identifier' && !wrt.includes(this.right.value)))
+      ) {
+        return this
+      }
       if (
         this.left.type === 'number' ||
         (this.left.type === 'identifier' && !wrt.includes(this.left.value))
@@ -478,6 +487,16 @@ class UnaryOp {
     const operand = this.operand.solve()
     if (this.type === '+') {
       return operand
+    }
+    if (this.type === "'") {
+      return this.operand.toDerivative('z', 'z_1', false).solve()
+    }
+    if (this.type === '#') {
+      return new BinaryOp(
+        '/',
+        this.operand,
+        this.operand.toDerivative('z', 'z_1', false)
+      ).solve()
     }
     if (this.type === '-' && operand.type === 'number') {
       return new Leaf('number', -operand.value)
@@ -763,6 +782,9 @@ class Leaf {
   }
   toDerivative(...wrt) {
     if (this.type === 'identifier' && wrt.includes(this.value)) {
+      if (wrt.slice(-1)[0] === false) {
+        return new Leaf('number', 1)
+      }
       return new Leaf('identifier', `${this.value}'`)
     }
     return this
