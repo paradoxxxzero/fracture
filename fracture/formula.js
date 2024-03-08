@@ -10,8 +10,6 @@ const tokens = {
   hash: /^#/,
   lparen: /^\(/,
   rparen: /^\)/,
-  lt: /^</,
-  gt: /^>/,
   comma: /^,/,
 }
 
@@ -35,7 +33,6 @@ const shaderBinary = {
   '/': 'cdiv',
   '^': 'cpow',
   '|-|': 'diffabs',
-  complex: 'vec2',
 }
 const shaderUnary = {
   '-': '-',
@@ -64,6 +61,26 @@ class BinaryOp {
     this.type = type
     this.left = left
     this.right = right
+  }
+  isPureReal() {
+    return (
+      (this.left.isPureReal() && this.right.isPureReal()) ||
+      (this.left.isPureImag() && this.right.isPureImag())
+    )
+  }
+
+  isPureImag() {
+    if (['+', '-'].includes(this.type)) {
+      return this.left.isPureImag() && this.right.isPureImag()
+    }
+    if (['*', '/'].includes(this.type)) {
+      // XOR here to keep pure imaginary numbers
+      return (
+        (this.left.isPureImag() && this.right.isPureReal()) ||
+        (this.left.isPureReal() && this.right.isPureImag())
+      )
+    }
+    return false
   }
 
   toTree() {
@@ -98,6 +115,7 @@ class BinaryOp {
     }
     return `${left} ${this.type} ${right}`
   }
+
   toShader() {
     if (
       this.type === '^' &&
@@ -123,19 +141,16 @@ class BinaryOp {
         return `cpow(${this.left.toShader()}, ${k})`
       }
     }
+
     return `${shaderBinary[this.type]}(${this.left.toShader()}, ${this.right.toShader()})`
   }
   toComplex() {
-    if (this.type === 'complex') {
-      return `cx(${this.left.toComplex()}, ${this.right.toComplex()})`
-    }
     return `(${this.left.toComplex()}).${complexBinary[this.type]}(${this.right.toComplex()})`
   }
   toDerivative(...wrt) {
     if (['+', '-'].includes(this.type)) {
       if (
         this.left.type === 'number' ||
-        this.left.type === 'complex' ||
         (this.left.type === 'identifier' && !wrt.includes(this.left.value))
       ) {
         return this.right.toDerivative(...wrt)
@@ -143,7 +158,6 @@ class BinaryOp {
 
       if (
         this.right.type === 'number' ||
-        this.right.type === 'complex' ||
         (this.right.type === 'identifier' && !wrt.includes(this.right.value))
       ) {
         return this.left.toDerivative(...wrt)
@@ -157,14 +171,12 @@ class BinaryOp {
     if (this.type === '*') {
       if (
         this.left.type === 'number' ||
-        this.left.type === 'complex' ||
         (this.left.type === 'identifier' && !wrt.includes(this.left.value))
       ) {
         return new BinaryOp('*', this.left, this.right.toDerivative(...wrt))
       }
       if (
         this.right.type === 'number' ||
-        this.right.type === 'complex' ||
         (this.right.type === 'identifier' && !wrt.includes(this.right.value))
       ) {
         return new BinaryOp('*', this.left.toDerivative(...wrt), this.right)
@@ -178,7 +190,6 @@ class BinaryOp {
     if (this.type === '/') {
       if (
         this.left.type === 'number' ||
-        this.left.type === 'complex' ||
         (this.left.type === 'identifier' && !wrt.includes(this.left.value))
       ) {
         return new BinaryOp(
@@ -189,7 +200,6 @@ class BinaryOp {
       }
       if (
         this.right.type === 'number' ||
-        this.right.type === 'complex' ||
         (this.right.type === 'identifier' && !wrt.includes(this.right.value))
       ) {
         return new BinaryOp(
@@ -215,7 +225,6 @@ class BinaryOp {
     if (this.type === '^') {
       if (
         this.left.type === 'number' ||
-        this.left.type === 'complex' ||
         (this.left.type === 'identifier' && !wrt.includes(this.left.value))
       ) {
         return new BinaryOp(
@@ -230,7 +239,6 @@ class BinaryOp {
       }
       if (
         this.right.type === 'number' ||
-        this.right.type === 'complex' ||
         (this.right.type === 'identifier' && !wrt.includes(this.right.value))
       ) {
         return new BinaryOp(
@@ -273,6 +281,42 @@ class BinaryOp {
   solve() {
     const left = this.left.solve()
     const right = this.right.solve()
+    if (this.type === '+') {
+      if (left.type === 'number' && left.value === 0) {
+        return right
+      }
+      if (right.type === 'number' && right.value === 0) {
+        return left
+      }
+    }
+    if (this.type === '-') {
+      if (right.type === 'number' && right.value === 0) {
+        return left
+      }
+    }
+
+    if (this.type === '*') {
+      if (
+        (left.type === 'number' && left.value === 0) ||
+        (right.type === 'number' && right.value === 0)
+      ) {
+        return new Leaf('number', 0)
+      }
+      if (left.type === 'number' && left.value === 1) {
+        return right
+      }
+      if (right.type === 'number' && right.value === 1) {
+        return left
+      }
+    }
+    if (this.type === '/') {
+      if (left.type === 'number' && left.value === 0) {
+        return new Leaf('number', 0)
+      }
+      if (right.type === 'number' && right.value === 1) {
+        return left
+      }
+    }
     if (
       this.type === '^' &&
       (right.type === 'number' ||
@@ -298,7 +342,84 @@ class BinaryOp {
         eval(`${left.value} ${this.type} ${right.value}`)
       )
     }
-    return new BinaryOp(this.type, left.solve(), right.solve())
+    if (left.type === 'complex' && right.isPureReal()) {
+      if (['+', '-'].includes(this.type)) {
+        return new Complex(
+          new BinaryOp(this.type, left.real, right),
+          left.imag
+        ).solve()
+      }
+      if (['*', '/'].includes(this.type)) {
+        return new Complex(
+          new BinaryOp(this.type, left.real, right),
+          new BinaryOp(this.type, left.imag, right)
+        ).solve()
+      }
+    }
+    if (left.isPureReal() && right.type === 'complex') {
+      if (['+', '-'].includes(this.type)) {
+        return new Complex(
+          new BinaryOp(this.type, left, right.real),
+          right.imag
+        ).solve()
+      }
+      if (['*', '/'].includes(this.type)) {
+        return new Complex(
+          new BinaryOp(this.type, left, right.real),
+          new BinaryOp(this.type, left, right.imag)
+        ).solve()
+      }
+    }
+    if (left.type === 'complex' && right.type === 'complex') {
+      if (['+', '-'].includes(this.type)) {
+        return new Complex(
+          new BinaryOp(this.type, left.real, right.real),
+          new BinaryOp(this.type, left.imag, right.imag)
+        ).solve()
+      }
+      if (this.type === '*') {
+        return new Complex(
+          new BinaryOp(
+            '-',
+            new BinaryOp('*', left.real, right.real),
+            new BinaryOp('*', left.imag, right.imag)
+          ),
+          new BinaryOp(
+            '+',
+            new BinaryOp('*', left.real, right.imag),
+            new BinaryOp('*', left.imag, right.real)
+          )
+        ).solve()
+      }
+      if (this.type === '/') {
+        const denominator = new BinaryOp(
+          '+',
+          new BinaryOp('^', right.real, 2),
+          new BinaryOp('^', right.imag, 2)
+        )
+        return new Complex(
+          new BinaryOp(
+            '/',
+            new BinaryOp(
+              '+',
+              new BinaryOp('*', left.real, right.real),
+              new BinaryOp('*', left.imag, right.imag)
+            ),
+            denominator
+          ),
+          new BinaryOp(
+            '/',
+            new BinaryOp(
+              '-',
+              new BinaryOp('*', left.imag, right.real),
+              new BinaryOp('*', left.real, right.imag)
+            ),
+            denominator
+          )
+        ).solve()
+      }
+    }
+    return new BinaryOp(this.type, left, right)
   }
 }
 
@@ -306,6 +427,12 @@ class UnaryOp {
   constructor(type, operand) {
     this.type = type
     this.operand = operand
+  }
+  isPureReal() {
+    return this.operand.isPureReal() || ['.re', '.im'].includes(this.type)
+  }
+  isPureImag() {
+    return ['+', '-', '~'].includes(this.type) && this.operand.isPureImag()
   }
 
   toTree() {
@@ -338,7 +465,10 @@ class UnaryOp {
   solve() {
     const operand = this.operand.solve()
     if (this.type === '+') {
-      return new Leaf('number', operand.value)
+      return operand
+    }
+    if (this.type === '-' && operand.type === 'number') {
+      return new Leaf('number', -operand.value)
     }
     return new UnaryOp(this.type, operand)
   }
@@ -346,8 +476,14 @@ class UnaryOp {
 
 class FunctionOp {
   constructor(name, args) {
-    this.name = name
+    this.name = name.toLowerCase()
     this.args = args
+  }
+  isPureReal() {
+    return ['abs', 're', 'im'].includes(this.name)
+  }
+  isPureImag() {
+    return false // FIXME: how?
   }
 
   toTree() {
@@ -509,25 +645,73 @@ class FunctionOp {
   }
 }
 
+class Complex {
+  constructor(real, imag) {
+    this.real = real
+    this.imag = imag
+    this.type = 'complex'
+  }
+  isPureReal() {
+    return false
+  }
+  isPureImag() {
+    return false
+  }
+
+  toTree() {
+    return `<complex: ${this.real.toTree()} + ${this.imag.toTree()}i>`
+  }
+  toString() {
+    return `${this.real.toString()} + ${this.imag.toString()}i`
+  }
+  toShader() {
+    return `vec2(${this.real.toShader()}, ${this.imag.toShader()})`
+  }
+  toComplex() {
+    return `cx(${this.real.toComplex()}, ${this.imag.toComplex()})`
+  }
+  toDerivative(...wrt) {
+    return new Complex(
+      this.real.toDerivative(...wrt),
+      this.imag.toDerivative(...wrt)
+    )
+  }
+  solve() {
+    return new Complex(this.real.solve(), this.imag.solve())
+  }
+}
+
 class Leaf {
   constructor(type, value) {
     this.type = type
     this.value = value
+  }
+  isPureReal() {
+    return this.type === 'number'
+  }
+  isPureImag() {
+    return this.type === 'identifier' && this.value === 'i'
   }
 
   toTree() {
     return `<${this.type}: ${this.value}>`
   }
   toString() {
-    return this.value
+    return `${this.value}`
   }
   toShader() {
+    if (this.isPureImag()) {
+      return 'vec2(0., 1.)'
+    }
     if (this.type === 'identifier') {
       return this.value.replace(/'/g, '_prime')
     }
     return `${this.value.toFixed(6)}`
   }
   toComplex() {
+    if (this.isPureImag()) {
+      return 'cx(0, 1)'
+    }
     if (this.type === 'identifier') {
       return this.value.replace(/'/g, '_prime')
     }
@@ -540,6 +724,9 @@ class Leaf {
     return this
   }
   solve() {
+    if (this.type === 'identifier' && this.value === 'i') {
+      return new Complex(new Leaf('number', 0), new Leaf('number', 1))
+    }
     return this
   }
 }
@@ -601,7 +788,7 @@ const parse = tokens => {
       ) {
         i++
         node = new BinaryOp('*', node, new Leaf('identifier', token.value))
-      } else if (['lparen', 'lt', 'identifier'].includes(token.type)) {
+      } else if (['lparen', 'identifier'].includes(token.type)) {
         node = new BinaryOp('*', node, factor())
       } else {
         break
@@ -661,19 +848,6 @@ const parse = tokens => {
       }
       i++
       return new UnaryOp('sign', node)
-    } else if (token.type === 'lt') {
-      i++
-      const node = expression()
-      if (tokens[i]?.type !== 'comma') {
-        throw new Error('Expected , at ' + tokens[i].start)
-      }
-      i++
-      const node2 = expression()
-      if (tokens[i]?.type !== 'gt') {
-        throw new Error('Expected > at ' + tokens[i].start)
-      }
-      i++
-      return new BinaryOp('complex', node, node2)
     } else if (token.type === 'unaryPrefix') {
       i++
       return new UnaryOp(token.value, factor())
@@ -713,8 +887,9 @@ const parse = tokens => {
   return ast
 }
 
-export const ast = s => parse(tokenize(s))
+export const ast = s => parse(tokenize(s)).solve()
 
 window.tokenize = tokenize
 window.parse = parse
 window.ast = ast
+window.Ast = s => parse(tokenize(s))

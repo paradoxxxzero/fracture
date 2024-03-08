@@ -107,10 +107,11 @@ export const presets = withDefaults([
       center: cx(0.5, 0.5),
       transform: rotate(Math.PI),
       scale: 1.5,
-      f: '<|z.re|, |z.im|>^2 + c',
-      f_prime: "2 * z * <|z.re|, |z.im|> * <#z.re#, #z.im#> * z'",
+      f: '(|z.re| + |z.im|i)^2 + c',
+      f_prime:
+        "2 * z * (|z.re| + |z.im|i) * (sign(z.re) + sign(z.im) * i) * z'",
       f_perturb:
-        '<2 * dz.re * Z.re + dz.re * dz.re - 2 * Z.im * dz.im - dz.im * dz.im, 2 * ((Z.re * Z.im) |-| (Z.re * dz.im + dz.re * Z.im + dz.re * dz.im))> + dc',
+        '(2 * dz.re * Z.re + dz.re * dz.re - 2 * Z.im * dz.im - dz.im * dz.im + 2 * ((Z.re * Z.im) |-| (Z.re * dz.im + dz.re * Z.im + dz.re * dz.im)) * i) + dc',
     },
   },
   {
