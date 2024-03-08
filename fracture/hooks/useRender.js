@@ -1,7 +1,23 @@
 import { useEffect } from 'react'
 import { recompile, render, updateUniforms } from '../render'
+import { getRoots } from '../../utils'
+import { allParams, compileParams, uniformParams } from '../default'
+
+const params = (runtime, keys) => keys.map(key => runtime[key])
 
 export const useRender = (runtime, setRuntime) => {
+  useEffect(() => {
+    setRuntime(runtime => {
+      if (runtime.useRoots) {
+        return {
+          ...runtime,
+          roots: getRoots(runtime.f),
+        }
+      }
+      return runtime
+    })
+  }, [runtime.f, runtime.useRoots, setRuntime])
+
   useEffect(() => {
     setRuntime(runtime => {
       return {
@@ -19,43 +35,16 @@ export const useRender = (runtime, setRuntime) => {
       updateUniforms(runtime)
       return runtime
     })
-  }, [
-    runtime.scale,
-    runtime.bailout,
-    runtime.bailin,
-    runtime.iterations,
-    runtime.maxIterations,
-    runtime.center,
-    runtime.transform,
-    runtime.point,
-    runtime.derivative,
-    runtime.smoothing,
-    runtime.contrast,
-    runtime.hue,
-    setRuntime,
-  ])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [...params(runtime, Object.keys(uniformParams)), setRuntime])
 
   useEffect(() => {
     setRuntime(runtime => {
       recompile(runtime)
       return runtime
     })
-  }, [
-    runtime.f,
-    runtime.f_prime,
-    runtime.f_perturb,
-    runtime.fixed,
-    runtime.roots,
-    runtime.convergent,
-    runtime.divergent,
-    runtime.ambiance,
-    runtime.perturb,
-    runtime.useDerivative,
-    runtime.showDerivative,
-    runtime.useDistanceEstimate,
-    runtime.useSmoothing,
-    setRuntime,
-  ])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [...params(runtime, compileParams), setRuntime])
 
   useEffect(() => {
     if (!runtime.gl.canvas) {
@@ -68,40 +57,16 @@ export const useRender = (runtime, setRuntime) => {
     resizeObserver.observe(runtime.gl.canvas, { box: 'content-box' })
 
     return () => resizeObserver.disconnect()
-  }, [runtime.gl.canvas])
+  }, [runtime, runtime.gl.canvas])
 
-  useEffect(() => {
-    setRuntime(runtime => {
-      render(runtime)
-      return runtime
-    })
+  useEffect(
+    () => {
+      setRuntime(runtime => {
+        render(runtime)
+        return runtime
+      })
+    },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    runtime.f,
-    runtime.f_prime,
-    runtime.f_perturb,
-    runtime.center,
-    runtime.scale,
-    runtime.derivative,
-    runtime.useDerivative,
-    runtime.useDistanceEstimate,
-    runtime.useSmoothing,
-    runtime.showDerivative,
-    runtime.perturb,
-    runtime.bailout,
-    runtime.bailin,
-    runtime.hue,
-    runtime.contrast,
-    runtime.transform,
-    runtime.iterations,
-    runtime.smoothing,
-    runtime.supersampling,
-    runtime.type,
-    runtime.point,
-    runtime.fixed,
-    runtime.ambiance,
-    runtime.roots,
-    runtime.convergent,
-    runtime.divergent,
-  ])
+    params(runtime, allParams)
+  )
 }

@@ -13,12 +13,13 @@ import {
   eyeIcon,
 } from '../icons'
 import Boolean from './Boolean.jsx'
+import Select from './Select.jsx'
 import { cx } from '../decimal.js'
 import ComplexFormula from './ComplexFormula.jsx'
 import { presets } from '../presets.js'
 import Presets from './Presets'
 import Float from './Float.jsx'
-import { ambiances } from '../default.js'
+import { ambiances, smoothings } from '../default.js'
 
 const getShowUI = () => {
   try {
@@ -43,14 +44,6 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
       closePresets()
     },
     [updateParams, closePresets]
-  )
-
-  const handleRawChange = useCallback(
-    event => {
-      const { name, value } = event.target
-      updateParams({ [name]: value })
-    },
-    [updateParams]
   )
 
   const handleChange = useCallback(
@@ -131,31 +124,54 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
       />
       <main className={runtime.error ? 'error ui' : 'ui'} title={runtime.error}>
         <div className="ui-row ui-row-top">
-          {['simple', 'advanced', 'full'].includes(showUI) ? (
-            <aside className="controls">
-              <div className="subcontrols">
-                <button className="button" onClick={handleReset}>
-                  {centerViewIcon}
-                </button>
-                <button
-                  className="button"
-                  onClick={() =>
-                    setRuntime({ ...runtime, lockCenter: !runtime.lockCenter })
-                  }
-                >
-                  {runtime.lockCenter ? lockIcon : unlockIcon}
-                </button>
-                <button
-                  className="button"
-                  onClick={() =>
-                    setRuntime({ ...runtime, moveCenter: !runtime.moveCenter })
-                  }
-                >
-                  {runtime.moveCenter ? moveCenterIcon : moveConstantIcon}
-                </button>
-              </div>
-            </aside>
-          ) : null}
+          <aside className="controls">
+            <div className="subcontrols">
+              <button className="button" onClick={handleUI}>
+                {eyeIcon}
+              </button>
+              {['simple', 'advanced', 'full'].includes(showUI) ? (
+                <>
+                  <button className="button" onClick={handleReset}>
+                    {centerViewIcon}
+                  </button>
+                  <button
+                    className="button"
+                    onClick={() =>
+                      setRuntime({
+                        ...runtime,
+                        moveCenter: !runtime.moveCenter,
+                      })
+                    }
+                  >
+                    {runtime.moveCenter ? moveCenterIcon : moveConstantIcon}
+                  </button>
+                  <button
+                    className="button"
+                    onClick={() => {
+                      updateParams({
+                        point: params.center,
+                        center: params.point,
+                        fixed: !params.fixed,
+                      })
+                    }}
+                  >
+                    {swapIcon}
+                  </button>
+                  <button
+                    className="button"
+                    onClick={() =>
+                      setRuntime({
+                        ...runtime,
+                        lockCenter: !runtime.lockCenter,
+                      })
+                    }
+                  >
+                    {runtime.lockCenter ? lockIcon : unlockIcon}
+                  </button>
+                </>
+              ) : null}
+            </div>
+          </aside>
           {['simple', 'advanced', 'full'].includes(showUI) ? (
             <aside className="formula">
               <ComplexFormula
@@ -184,14 +200,93 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
           ) : null}
         </div>
         <div className="ui-row ui-row-middle">
-          {['advanced', 'full'].includes(showUI) ? (
+          {['simple', 'advanced', 'full'].includes(showUI) ? (
             <aside className="view">
+              <Select
+                label="Ambiance"
+                name="ambiance"
+                value={params.ambiance}
+                options={ambiances}
+                onChange={handleChange}
+              />
+              <Select
+                label="Smoothing"
+                name="smoothing"
+                value={params.smoothing}
+                options={smoothings}
+                onChange={handleChange}
+              />
+              {['full'].includes(showUI) ? (
+                <Number
+                  name="offset"
+                  label="Offset"
+                  min={0}
+                  value={params.offset}
+                  onChange={handleChange}
+                />
+              ) : null}
+              {['full'].includes(showUI) ? (
+                <Number
+                  name="velocity"
+                  label="Velocity"
+                  min={0}
+                  value={params.velocity}
+                  onChange={handleChange}
+                />
+              ) : null}
+              {['full'].includes(showUI) ? (
+                <Number
+                  name="hue"
+                  label="Hue"
+                  min={0}
+                  max={360}
+                  value={params.hue}
+                  onChange={handleChange}
+                />
+              ) : null}
+              {['full'].includes(showUI) ? (
+                <Number
+                  name="saturation"
+                  label="Saturation"
+                  min={0}
+                  value={params.saturation}
+                  onChange={handleChange}
+                />
+              ) : null}
+              {['full'].includes(showUI) ? (
+                <Number
+                  name="lightness"
+                  label="Lightness"
+                  min={0}
+                  value={params.lightness}
+                  onChange={handleChange}
+                />
+              ) : null}
+              <Number
+                name="supersampling"
+                label="Supersampling"
+                min={0}
+                step={0.1}
+                value={params.supersampling}
+                onChange={handleChange}
+              />
+            </aside>
+          ) : null}
+          {['simple', 'advanced', 'full'].includes(showUI) ? (
+            <aside className="params">
               <Number
                 name="iterations"
                 label="Iterations"
                 min={0}
                 step={1}
                 value={params.iterations}
+                onChange={handleChange}
+              />
+              <Boolean
+                className="button"
+                label="Roots"
+                name="useRoots"
+                value={params.useRoots}
                 onChange={handleChange}
               />
               <Number
@@ -214,42 +309,6 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
                 toggler={params.divergent}
                 onChange={handleChange}
               />
-
-              <Number
-                name="smoothing"
-                label="Smoothing"
-                min={0}
-                value={params.smoothing}
-                togglerName="useSmoothing"
-                toggler={params.useSmoothing}
-                onChange={handleChange}
-              />
-              {['full'].includes(showUI) ? (
-                <Number
-                  name="contrast"
-                  label="Contrast"
-                  min={0}
-                  value={params.contrast}
-                  onChange={handleChange}
-                />
-              ) : null}
-              {['full'].includes(showUI) ? (
-                <Number
-                  name="hue"
-                  label="Hue"
-                  min={0}
-                  value={params.hue}
-                  onChange={handleChange}
-                />
-              ) : null}
-              <Number
-                name="supersampling"
-                label="Supersampling"
-                min={0}
-                step={0.1}
-                value={params.supersampling}
-                onChange={handleChange}
-              />
               <Number
                 name="derivative"
                 label="Derivative"
@@ -260,38 +319,23 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
                 onChange={handleChange}
               />
               {params.useDerivative ? (
-                <label className="boolean-label">
-                  <Boolean
-                    className="button"
-                    name="useDistanceEstimate"
-                    value={params.useDistanceEstimate}
-                    onChange={handleChange}
-                  />
-                  Distance Estimate
-                </label>
-              ) : null}
-              {params.useDerivative ? (
-                <label className="boolean-label">
-                  <Boolean
-                    className="button"
-                    name="showDerivative"
-                    value={params.showDerivative}
-                    onChange={handleChange}
-                  />
-                  Show Derivative
-                </label>
+                <Boolean
+                  label="Derivative"
+                  className="button"
+                  name="showDerivative"
+                  value={params.showDerivative}
+                  onChange={handleChange}
+                />
               ) : null}
               {showUI === 'full' ? (
-                <label className="boolean-label">
-                  <Boolean
-                    className="button"
-                    name="usePerturbation"
-                    allowNull
-                    value={params.usePerturbation}
-                    onChange={handleChange}
-                  />
-                  Use Perturbation
-                </label>
+                <Boolean
+                  label="Perturbation"
+                  className="button"
+                  name="usePerturbation"
+                  allowNull
+                  value={params.usePerturbation}
+                  onChange={handleChange}
+                />
               ) : null}
             </aside>
           ) : null}
@@ -307,16 +351,7 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
             </button>
           ) : null}
           {['advanced', 'full'].includes(showUI) && (
-            <aside className="parameters">
-              <label className="boolean-label">
-                <Boolean
-                  className="button"
-                  name="fixed"
-                  value={params.fixed}
-                  onChange={handleChange}
-                />
-                Fixed
-              </label>
+            <aside className="bounds">
               <Complex
                 name="center"
                 label="Center"
@@ -325,18 +360,6 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
                 maxWidth={null}
                 onChange={handleChange}
               />
-              <button
-                className="button"
-                onClick={() => {
-                  updateParams({
-                    point: params.center,
-                    center: params.point,
-                    fixed: !params.fixed,
-                  })
-                }}
-              >
-                {swapIcon}
-              </button>
               <Complex
                 name="point"
                 label="Point"
@@ -351,31 +374,22 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
                 value={params.scale}
                 onChange={handleChange}
               />
-              <label className="select-label">
-                Ambiance
-                <select
-                  name="ambiance"
-                  value={params.ambiance}
-                  onChange={handleRawChange}
-                >
-                  {ambiances.map(a => (
-                    <option key={a} value={a}>
-                      {a.replace(/_/g, ' ').replace(/./, c => c.toUpperCase())}
-                    </option>
-                  ))}
-                </select>
-              </label>
             </aside>
           )}
-          {showUI === 'empty' ? <div className="spacer" /> : null}
-          <button
-            className={`space-button button${
-              runtime.processing ? ' processing' : ''
-            }${showUI === 'empty' ? ' empty' : ''}`}
-            onClick={handleUI}
-          >
-            {eyeIcon}
-          </button>
+          {['simple', 'advanced', 'full'].includes(showUI) ? (
+            <button
+              className={`space-button button${
+                runtime.processing ? ' processing' : ''
+              }`}
+              onClick={() =>
+                updateParams({
+                  fixed: !params.fixed,
+                })
+              }
+            >
+              {params.fixed ? 'C' : 'Z'}
+            </button>
+          ) : null}
         </div>
       </main>
     </>

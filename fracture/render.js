@@ -1,5 +1,5 @@
 import { cx } from './decimal'
-import { ambiances } from './default'
+import { ambiances, smoothings, uniformParams } from './default'
 import { ast } from './formula'
 import fragmentSource from './fragment.glsl?raw'
 import vertexSource from './vertex.glsl?raw'
@@ -17,8 +17,8 @@ const preprocess = (rt, source) => {
         rt.showDerivative ? '#define SHOW_DERIVATIVE' : '',
         rt.useSmoothing ? '#define USE_SMOOTHING' : '',
         rt.useDistanceEstimate ? '#define USE_DISTANCE_ESTIMATE' : '',
-        rt.roots
-          ? `#define ROOTS\nvec2[] roots = vec2[](${rt.roots
+        rt.useRoots && rt.roots
+          ? `#define USE_ROOTS\nvec2[] roots = vec2[](${rt.roots
               .map(
                 r =>
                   `vec2(${r.re.toNumber().toFixed(12)}, ${r.im.toNumber().toFixed(12)})`
@@ -26,6 +26,7 @@ const preprocess = (rt, source) => {
               .join(', ')});`
           : '',
         `#define AMBIANCE ${ambiances.indexOf(rt.ambiance)}`,
+        `#define SMOOTHING ${smoothings.indexOf(rt.smoothing)}`,
       ]
         .filter(Boolean)
         .join('\n')
@@ -161,22 +162,11 @@ export const recompile = rt => {
   const { gl } = rt
   compileShader(rt, preprocess(rt, fragmentSource), rt.env.fragmentShader)
   linkProgram(rt)
-  rt.env.uniforms = {
-    orbit: gl.getUniformLocation(rt.env.program, 'orbit'),
-    bailout: gl.getUniformLocation(rt.env.program, 'bailout'),
-    bailin: gl.getUniformLocation(rt.env.program, 'bailin'),
-    iterations: gl.getUniformLocation(rt.env.program, 'iterations'),
-    maxIterations: gl.getUniformLocation(rt.env.program, 'maxIterations'),
-    center: gl.getUniformLocation(rt.env.program, 'center'),
-    point: gl.getUniformLocation(rt.env.program, 'point'),
-    transform: gl.getUniformLocation(rt.env.program, 'transform'),
-    scale: gl.getUniformLocation(rt.env.program, 'scale'),
-    aspect: gl.getUniformLocation(rt.env.program, 'aspect'),
-    derivative: gl.getUniformLocation(rt.env.program, 'derivative'),
-    smoothing: gl.getUniformLocation(rt.env.program, 'smoothing'),
-    contrast: gl.getUniformLocation(rt.env.program, 'contrast'),
-    hue: gl.getUniformLocation(rt.env.program, 'hue'),
-  }
+  rt.env.uniforms = Object.keys(uniformParams).reduce((acc, name) => {
+    acc[name] = gl.getUniformLocation(rt.env.program, name)
+    return acc
+  }, {})
+
   if (window.location.search.includes('debug')) {
     ;['f', 'f_prime', 'f_perturb'].forEach((name, i) => {
       const st = ast(rt[name])
@@ -190,21 +180,22 @@ export const recompile = rt => {
 export const updateUniforms = rt => {
   const { uniforms } = rt.env
 
-  uniforms.orbit && rt.gl.uniform1i(uniforms.orbit, 0)
-  uniforms.scale && rt.gl.uniform1f(uniforms.scale, rt.scale)
-  uniforms.bailin && rt.gl.uniform1f(uniforms.bailin, rt.bailin)
-  uniforms.bailout && rt.gl.uniform1f(uniforms.bailout, rt.bailout)
-  uniforms.smoothing && rt.gl.uniform1f(uniforms.smoothing, rt.smoothing / 1000)
-  uniforms.contrast && rt.gl.uniform1f(uniforms.contrast, rt.contrast / 100)
-  uniforms.hue && rt.gl.uniform1f(uniforms.hue, rt.hue / 360)
-  uniforms.iterations && rt.gl.uniform1i(uniforms.iterations, rt.iterations)
-  uniforms.center && rt.gl.uniform2fv(uniforms.center, rt.center.to2fv())
-  uniforms.transform &&
-    rt.gl.uniformMatrix2fv(uniforms.transform, false, rt.transform.flat(1))
-  uniforms.point && rt.gl.uniform2fv(uniforms.point, rt.point.to2fv())
-  uniforms.derivative && rt.gl.uniform1f(uniforms.derivative, rt.derivative)
-  uniforms.aspect &&
-    rt.gl.uniform1f(uniforms.aspect, rt.gl.canvas.width / rt.gl.canvas.height)
+  Object.entries(uniformParams).forEach(([name, params]) => {
+    if (typeof params === 'string') {
+      params = { type: params, value: v => v }
+    }
+    const { type, value } = params
+    const uniform = uniforms[name]
+    if (!uniform) {
+      return
+    }
+    const v = value(rt[name], rt)
+    if (type.startsWith('m')) {
+      rt.gl['uniformMatrix' + type.slice(1)](uniform, false, v)
+    } else {
+      rt.gl['uniform' + type](uniform, v)
+    }
+  })
 }
 
 export const resizeCanvasToDisplaySize = (canvas, sampling) => {

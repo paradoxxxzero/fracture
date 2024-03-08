@@ -159,9 +159,9 @@ export const presets = withDefaults([
       f: 'z - (z^3 - 1) / (3 * z^2) + c',
       f_prime: "2(z^3 - 1) * z' / (3 * z^3)",
       f_perturb: '3 * Z^2 * dz + dc',
-      roots: [cx(1), cx(-0.5, Math.sqrt(3) / 2), cx(-0.5, -Math.sqrt(3) / 2)],
       useDerivative: false, // TODO
       usePerturbation: false, // TODO
+      useRoots: true,
       convergent: true,
       divergent: false,
     },
@@ -181,13 +181,4 @@ export const presets = withDefaults([
       divergent: false,
     },
   },
-  // 'multibrot',
-  // 'multijulia',
-  // 'newton',
-  // 'nova',
-  // 'phoenix',
-  // 'mandelbar',
-  // "burning_ship",
-  // "tricorn",
-  // "celtic",
 ])

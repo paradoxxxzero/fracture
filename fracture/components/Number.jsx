@@ -117,15 +117,19 @@ export default function Number({
 
   return (
     <label className={`number ${valid ? 'valid' : 'invalid'}`}>
-      {label && <span className="number-label">{label}</span>}
-      {togglerName && (
-        <input
-          type="checkbox"
-          name={togglerName}
-          checked={toggler}
-          onChange={handleCheckBoxChange}
-        />
-      )}
+      {label || togglerName ? (
+        <div className="number-head">
+          {label && <span className="number-label">{label}</span>}
+          {togglerName && (
+            <input
+              type="checkbox"
+              name={togglerName}
+              checked={toggler}
+              onChange={handleCheckBoxChange}
+            />
+          )}
+        </div>
+      ) : null}
       {(!togglerName || toggler) && (
         <div className={`number-control${noPlusMinus ? ' noplusminus' : ''}`}>
           <input

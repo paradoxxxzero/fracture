@@ -171,7 +171,7 @@ select option {
   font-size: 2em;
 }
 
-.parameters {
+.bounds {
   display: flex;
   flex-wrap: wrap;
   font-size: 0.9em;
@@ -180,20 +180,24 @@ select option {
   justify-content: center;
 }
 
-.parameters label {
+.bounds label {
   margin: 0.2em 0.75em;
   color: rgba(255, 255, 255, 0.65);
   display: flex;
   align-items: center;
 }
 
-.parameters button {
-  font-size: 1.25em;
+.bounds .boolean-label input {
+  margin-left: 0.5em;
 }
 
-.parameters .number {
+.bounds .select-label select {
+  margin-left: 0.25em;
+}
+.bounds .number-control {
   font-size: 0.75em;
 }
+
 .formula {
   display: flex;
   flex-direction: column;
@@ -225,7 +229,8 @@ select option {
   outline: 2px solid red;
 }
 
-.view {
+.view,
+.params {
   display: flex;
   flex-direction: column;
   flex-wrap: wrap;
@@ -235,19 +240,35 @@ select option {
   display: flex;
   justify-content: center;
 }
-.view label {
+.view,
+.view .number {
+  align-items: flex-start;
+}
+.params,
+.params .number {
+  align-items: flex-end;
+}
+
+.view label,
+.params label {
   margin: 0.2em 0.75em;
   color: rgba(255, 255, 255, 0.65);
 }
-.view .boolean-label input {
-  margin-left: 0;
+.number {
+  display: flex;
 }
-
+.select-label {
+  display: flex;
+}
+.view .number,
+.params .number,
+.view .select-label,
+.params .select-label {
+  flex-direction: column;
+}
 .number-control {
   position: relative;
-  max-width: fit-content;
 }
-
 .number input {
   color: white;
   border: none;
@@ -303,7 +324,6 @@ select option {
 .number.invalid input {
   outline: 2px solid red;
 }
-
 .complex-control {
   position: relative;
   display: flex;
@@ -312,14 +332,6 @@ select option {
 .complex-inner-label {
   font-size: 1.5em;
   margin: 0 -0.5em;
-}
-
-.boolean-label input {
-  margin-left: 0.5em;
-}
-
-.select-label select {
-  margin-left: 0.25em;
 }
 
 .presets {

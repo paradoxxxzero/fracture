@@ -26,7 +26,7 @@ export default function Float({
       console.warn(e)
       setValid(false)
     }
-  }, [raw, value])
+  }, [decimal, raw, value])
 
   const [valid, setValid] = useState(true)
 

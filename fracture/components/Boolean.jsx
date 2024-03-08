@@ -1,12 +1,6 @@
 import { useCallback, useLayoutEffect, useRef } from 'react'
 
-export default function Boolean({
-  allowNull,
-  name,
-  value,
-  onChange,
-  ...props
-}) {
+export default function Boolean({ allowNull, name, label, value, onChange }) {
   const handleChange = useCallback(
     e => {
       let { name, checked } = e.target
@@ -34,12 +28,15 @@ export default function Boolean({
   }, [value, allowNull])
 
   return (
-    <input
-      type="checkbox"
-      ref={inputRef}
-      name={name}
-      checked={value || false}
-      onChange={handleChange}
-    />
+    <label className="boolean-label">
+      {label}
+      <input
+        type="checkbox"
+        ref={inputRef}
+        name={name}
+        checked={value || false}
+        onChange={handleChange}
+      />
+    </label>
   )
 }

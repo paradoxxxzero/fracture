@@ -3,57 +3,80 @@ precision highp float;
 
 ##CONFIG
 
+uniform vec2 center;
+uniform vec2 point;
+uniform float scale;
+uniform float aspect;
+uniform mat2 transform;
+
 uniform int iterations;
 uniform float bailin;
 uniform float bailout;
-uniform float scale;
-uniform float aspect;
 uniform float derivative;
-uniform vec2 center;
-uniform vec2 point;
-uniform mat2 transform;
-uniform float smoothing;
-uniform float contrast;
+
+uniform float offset;
+uniform float velocity;
 uniform float hue;
+uniform float saturation;
+uniform float lightness;
 
 vec3 hslToRgb(in vec3 c) {
   vec3 rgb = clamp(abs(mod(c.x * 6. + vec3(0., 4., 2.), 6.) - 3.) - 1., 0., 1.);
   return c.z + c.y * (rgb - 0.5) * (1. - abs(2. * c.z - 1.));
 }
+vec3 rgb2hsl(vec3 col) {
+  float eps = 1e-10;
+  float minc = min(col.r, min(col.g, col.b));
+  float maxc = max(col.r, max(col.g, col.b));
+  vec3 mask = step(col.grr, col.rgb) * step(col.bbg, col.rgb);
+  vec3 h = mask * (vec3(0.0, 2.0, 4.0) + (col.gbr - col.brg) / (maxc - minc + eps)) / 6.0;
+  return vec3(fract(1.0 + h.x + h.y + h.z),              // H
+  (maxc - minc) / (1.0 - abs(minc + maxc - 1.0) + eps),  // S
+  (minc + maxc) * 0.5);                           // L
+}
 
+vec3 hueAdjust(in vec3 col, in float p) {
+  vec3 hsl = rgb2hsl(col);
+  hsl.x += p + hue;
+  hsl.y *= saturation;
+  hsl.z *= lightness;
+  return hslToRgb(hsl);
+}
+
+// https://iquilezles.org/articles/palettes
+vec3 pal(in float t, in vec3 a, in vec3 b, in vec3 c, in vec3 d) {
+  return a + b * cos(offset + 6.28318 * (c * velocity * t + d));
+}
+
+vec3 ambiance(float t) {
+  return pal(t, 
 #if AMBIANCE == 0
-vec3 color(float t, float p) {
-  return 1. - contrast + contrast * cos(smoothing * t + 4. * hslToRgb(vec3(hue + p, 1., 0.875)));
-}
+  vec3(0.5, 0.5, 0.5), vec3(0.5, 0.5, 0.5), vec3(1.0, 1.0, 1.0), vec3(0.0, 0.10, 0.20)
 #elif AMBIANCE == 1
-vec3 color(float t, float p) {
-  t *= pow(smoothing, 1.5);
-  const vec3 c0 = vec3(-0.002136485053939582, -0.000749655052795221, -0.005386127855323933);
-  const vec3 c1 = vec3(0.2516605407371642, 0.6775232436837668, 2.494026599312351);
-  const vec3 c2 = vec3(8.353717279216625, -3.577719514958484, 0.3144679030132573);
-  const vec3 c3 = vec3(-27.66873308576866, 14.26473078096533, -13.64921318813922);
-  const vec3 c4 = vec3(52.17613981234068, -27.94360607168351, 12.94416944238394);
-  const vec3 c5 = vec3(-50.76852536473588, 29.04658282127291, 4.23415299384598);
-  const vec3 c6 = vec3(18.65570506591883, -11.48977351997711, -5.601961508734096);
-  t *= 2.;
-  if(t >= 1.) {
-    t = 2. - t;
-  }
-  return (contrast + .5) * (c0 + t * (c1 + t * (c2 + t * (c3 + t * (c4 + t * (c5 + t * c6))))));
-}
+  vec3(0.5, 0.5, 0.5), vec3(0.5, 0.5, 0.5), vec3(1.0, 1.0, 1.0), vec3(0.0, 0.33, 0.67)
 #elif AMBIANCE == 2
-vec3 color(float t, float p) {
-  return vec3(pow(t, .15));
-}
+  vec3(0.5, 0.5, 0.5), vec3(0.5, 0.5, 0.5), vec3(1.0, 1.0, 1.0), vec3(0.0, 0.10, 0.20)
 #elif AMBIANCE == 3
-vec3 color(float t, float p) {
-  return 1. - contrast + contrast * hslToRgb(vec3(hue + p + pow(t, .4), .7, .8));
-}
+  vec3(0.5, 0.5, 0.5), vec3(0.5, 0.5, 0.5), vec3(1.0, 1.0, 1.0), vec3(0.3, 0.20, 0.20)
+#elif AMBIANCE == 4
+  vec3(0.5, 0.5, 0.5), vec3(0.5, 0.5, 0.5), vec3(1.0, 1.0, 0.5), vec3(0.8, 0.90, 0.30)
+#elif AMBIANCE == 5
+  vec3(0.5, 0.5, 0.5), vec3(0.5, 0.5, 0.5), vec3(1.0, 0.7, 0.4), vec3(0.0, 0.15, 0.20)
+#elif AMBIANCE == 6
+  vec3(0.5, 0.5, 0.5), vec3(0.5, 0.5, 0.5), vec3(2.0, 1.0, 0.0), vec3(0.5, 0.20, 0.25)
+#elif AMBIANCE == 7
+  vec3(0.8, 0.5, 0.4), vec3(0.2, 0.4, 0.2), vec3(2.0, 1.0, 1.0), vec3(0.0, 0.25, 0.25)
 #endif
+  );
+}
+
+vec3 color(float t, float p) {
+  return hueAdjust(ambiance(t), p + hue);
+}
 
 vec3 color(float t) {
   return color(t, 0.);
-} 
+}
 
 #ifdef PERTURB
 uniform sampler2D orbit;
@@ -265,9 +288,11 @@ void main(void) {
   z = Z + dz;
   #endif
 
+  #if SMOOTHING == 2
   float zexp = 0.;
+  #endif
+
   vec3 col = vec3(0.);
-  float n = -.0;
   for(int i = 0; i < iterations; i++) {
     #ifdef USE_DERIVATIVE
     vec2 zdct = zdc;
@@ -288,6 +313,10 @@ void main(void) {
     #endif
     z_1 = zt;
 
+    #if SMOOTHING == 2
+    zexp += exp(-length(z) - .5 / (length(z - z_1)));
+    #endif
+
     #ifdef USE_DERIVATIVE
     vec2 zdzt = zdz;
     zdz = F_prime(z, c, zdz);
@@ -298,7 +327,7 @@ void main(void) {
     float zdzzdz = dot(zdz, zdz);
     if(zdzzdz < zdzmax) {
         #ifdef SHOW_DERIVATIVE
-      n = float(i) + 1.;
+      float n = float(i) + 1.;
       col = color(n, .5);
         #endif
       break;
@@ -306,59 +335,58 @@ void main(void) {
     #endif
 
     #ifdef CONVERGENT
-    zexp += exp(-length(z) - .5 / (length(z - z_1)));
-    float z_z_1 = dot2(z - z_1);
-    if(z_z_1 < BAILIN) {
-      #ifdef USE_SMOOTHING
-      col = color(10. * zexp);
-      #else
-      col = color(float(i));
-      #endif
+      #ifdef USE_ROOTS
+    bool broken = false;
+    for(int j = 0; j < roots.length(); j++) {
+      vec2 root = roots[j];
+      float diff = dot2(z - root);
+      if(diff < BAILIN) {
+        float r = float(j) / float(roots.length());
+        float n = float(i);
+
+        #if SMOOTHING == 1
+        float prev = dot2(z_1 - root);
+        n += (log(BAILIN / prev)) / (log(diff / prev));
+        #elif SMOOTHING == 2
+        n = 10. * zexp;
+        #endif
+
+        col = color(n, r);
+        broken = true;
+        break;
+      }
+    }
+    if(broken) {
       break;
     }
-    #endif
-    float zz = dot(z, z);
+      #else
 
-    // #ifdef ROOTS
-    // for(int j = 0; j < roots.length(); j++) {
-    //   vec2 root = roots[j];
-    //   float diff = dot2(z - root);
-    //   float eps = 1e-9;
-    //   if(diff < eps) {
-    //     float r = float(j) / float(roots.length());
-    //     n = float(i);
-    //     #ifdef USE_SMOOTHING
-    //     float prev = dot2(z_1 - root);
-    //     n += (log(eps / prev)) / (log(diff / prev));
-    //     #endif
-    //     col = 1. - contrast + contrast * cos(smoothing * n + 4. * hslToRgb(vec3(hue + r, 1., 0.875)));
-    //     break;
-    //   }
-    // }
-    // if(col.g > 0.) {
-    //   break;
-    // }
-    // #endif
+    float z_z_1 = dot2(z - z_1);
+    if(z_z_1 < BAILIN) {
+      float n = float(i);
+        #if SMOOTHING == 2
+      n = 10. * zexp;
+        #endif
+      col = color(n));
+      break;
+    }
+      #endif
+    #endif
 
     #ifdef DIVERGENT
+    float zz = dot(z, z);
     if(zz > BAILOUT) {
-      #ifdef USE_DISTANCE_ESTIMATE
-      float d = sqrt(zz / dot(zdc, zdc)) * log(zz);
-      // col = vec3(pow(2e4 * smoothing * d / scale, contrast));
-      // col = hslToRgb(vec3(pow(smoothing * d, .05), .5, .5));
-        #if AMBIANCE == 2
-      n = d;
-        #else
-      n = 130. / pow(d, .02);
-        #endif
-      #else
+      float n = float(i);
       // Smooth iteration count
-      n = float(i);
-        #ifdef USE_SMOOTHING
+      #if SMOOTHING == 1
       n -= log2(log2(zz)) - 4.0;
-        #endif
-
+      #elif SMOOTHING == 2
+      n = 10. * zexp;
+      #elif SMOOTHING == 3
+      float d = sqrt(zz / dot(zdc, zdc)) * log(zz);
+      n = 130. / pow(d, .02);
       #endif
+
       col = color(n);
       break;
     }
@@ -366,7 +394,7 @@ void main(void) {
 
     #ifdef PERTURB
     // Rebasing
-    if(zz < dot(dz, dz) || m >= max) {
+    if(dot(z, z) < dot(dz, dz) || m >= max) {
       dz = z;
       m = 0;
       max = maxIterations.x;
