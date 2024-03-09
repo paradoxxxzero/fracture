@@ -12,6 +12,7 @@ export const ambiances = [
   'day',
 ]
 export const smoothings = ['none', 'log', 'exp', 'distance']
+export const varyings = ['z', 'c', 'zc']
 
 export const defaultParams = {
   center: cx(-0.5),
@@ -30,7 +31,7 @@ export const defaultParams = {
   iterations: 1000,
   supersampling:
     window.devicePixelRatio > 2 ? window.devicePixelRatio / 2 : 1.1,
-  fixed: true,
+  varying: 'c',
   point: cx(),
   transform: [
     [1, 0],
@@ -52,7 +53,7 @@ export const compileParams = [
   'f',
   'f_prime',
   'f_perturb',
-  'fixed',
+  'varying',
   'useRoots',
   'roots',
   'convergent',

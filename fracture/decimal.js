@@ -66,10 +66,16 @@ export class Decimal {
     return num
   }
   add(num) {
+    if (num instanceof Complex) {
+      return num.add(this)
+    }
     num = this.adapt(num)
     return m(this._n + num._n, this.precision)
   }
   subtract(num) {
+    if (num instanceof Complex) {
+      return num.neg().add(this)
+    }
     num = this.adapt(num)
     return m(this._n - num._n, this.precision)
   }
@@ -80,7 +86,17 @@ export class Decimal {
     num = this.adapt(num)
     return m((this._n * num._n) / shift(this.precision), this.precision)
   }
+  divide(num) {
+    if (num instanceof Complex) {
+      return num.pow(-1).multiply(this)
+    }
+    num = this.adapt(num)
+    return m((this._n * shift(this.precision)) / num._n, this.precision)
+  }
   pow(num) {
+    if (num instanceof Complex) {
+      return num.pow(this)
+    }
     num = this.adapt(num)
     let res = this
     const k = num.toNumber()
@@ -90,11 +106,7 @@ export class Decimal {
       }
       return res
     }
-    return res.ln().multiply(num).exp()
-  }
-  divide(num) {
-    num = this.adapt(num)
-    return m((this._n * shift(this.precision)) / num._n, this.precision)
+    return res.log().multiply(num).exp()
   }
   abs() {
     return m(this._n < 0 ? -this._n : this._n, this.precision)
@@ -140,8 +152,8 @@ export class Decimal {
     }
     return y
   }
-  ln() {
-    // Full precision ln
+  log() {
+    // Full precision log
     const precision = this.precision
     let x = this
     let y = m(0, precision)
@@ -175,6 +187,18 @@ export class Decimal {
     }
     return y
   }
+  tan() {
+    // Full precision tan
+    const precision = this.precision
+    let x = this
+    let y = x
+    let sign = 1
+    for (let i = 3; i < approx; i += 2) {
+      y = y.add(x.pow(i).divide(i).multiply(sign))
+      sign *= -1
+    }
+    return y
+  }
   sinh() {
     // Full precision sinh
     const precision = this.precision
@@ -192,6 +216,30 @@ export class Decimal {
     let y = m(1, precision)
     for (let i = 2; i < approx; i += 2) {
       y = y.add(x.pow(i).divide(i))
+    }
+    return y
+  }
+  acos() {
+    // Full precision acos
+    const precision = this.precision
+    let x = this
+    let y = m(0, precision)
+    let sign = 1
+    for (let i = 1; i < approx; i += 2) {
+      y = y.add(x.pow(i).divide(i).multiply(sign))
+      sign *= -1
+    }
+    return y
+  }
+  asin() {
+    // Full precision asin
+    const precision = this.precision
+    let x = this
+    let y = m(0, precision)
+    let sign = 1
+    for (let i = 1; i < approx; i += 2) {
+      y = y.add(x.pow(i).divide(i).multiply(sign))
+      sign *= -1
     }
     return y
   }
@@ -223,21 +271,22 @@ export class Complex {
     this.im = im
   }
   add(c) {
+    c = cx(c)
     return new Complex(this.re.add(c.re), this.im.add(c.im))
   }
   subtract(c) {
+    c = cx(c)
     return new Complex(this.re.subtract(c.re), this.im.subtract(c.im))
   }
   multiply(c) {
-    if (c instanceof Decimal) {
-      return new Complex(this.re.multiply(c), this.im.multiply(c))
-    }
+    c = cx(c)
     return new Complex(
       this.re.multiply(c.re).subtract(this.im.multiply(c.im)),
       this.re.multiply(c.im).add(this.im.multiply(c.re))
     )
   }
   divide(c) {
+    c = cx(c)
     const d = c.re.multiply(c.re).add(c.im.multiply(c.im))
     return new Complex(
       this.re.multiply(c.re).add(this.im.multiply(c.im)).divide(d),
@@ -278,6 +327,11 @@ export class Complex {
     }
     return atan.subtract(Math.PI)
   }
+  sqrt() {
+    const r = this.abs().sqrt()
+    const theta = this.arg().divide(2)
+    return new Complex(r.multiply(theta.cos()), r.multiply(theta.sin()))
+  }
   cos() {
     return new Complex(
       this.re.cos().multiply(this.im.sinh()),
@@ -290,8 +344,58 @@ export class Complex {
       this.re.cos().multiply(this.im.sinh())
     )
   }
-  ln() {
-    return new Complex(this.abs().ln(), this.arg())
+  tan() {
+    return this.sin().divide(this.cos())
+  }
+  sinh() {
+    return new Complex(
+      this.re.sinh().multiply(this.im.cos()),
+      this.re.cosh().multiply(this.im.sin())
+    )
+  }
+  cosh() {
+    return new Complex(
+      this.re.cosh().multiply(this.im.cos()),
+      this.re.sinh().multiply(this.im.sin())
+    )
+  }
+  tanh() {
+    return this.sinh().divide(this.cosh())
+  }
+  asin() {
+    return this.multiply(this)
+      .neg()
+      .add(1)
+      .sqrt()
+      .add(this.im)
+      .log()
+      .neg()
+      .multiply(cx(0, 1))
+  }
+  acos() {
+    return this.multiply(this)
+      .neg()
+      .add(1)
+      .sqrt()
+      .add(this)
+      .log()
+      .neg()
+      .multiply(cx(0, 1))
+  }
+  atan() {
+    return this.add(cx(0, 1)).log().neg().multiply(cx(0, 0.5))
+  }
+  asinh() {
+    return this.multiply(this).add(1).sqrt().add(this).log()
+  }
+  acosh() {
+    return this.multiply(this).subtract(1).sqrt().add(this).log()
+  }
+  atanh() {
+    return this.add(1).divide(this.neg().add(1)).log().multiply(cx(0.5))
+  }
+  log() {
+    return new Complex(this.abs().log(), this.arg())
   }
   pow(k) {
     k = cx(k)
@@ -349,7 +453,7 @@ export class Complex {
     if (k.re.toNumber() === 0 && k.im.toNumber() === 0) {
       return cx(1)
     }
-    return this.ln().multiply(k).exp()
+    return this.log().multiply(k).exp()
   }
   norm2() {
     return this.re.multiply(this.re).add(this.im.multiply(this.im))

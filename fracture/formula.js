@@ -41,6 +41,21 @@ const shaderBinary = {
   '^': 'cpow',
   '|-|': 'diffabs',
 }
+const functionShader = {
+  sqrt: 'csqrt',
+  cos: 'ccos',
+  sin: 'csin',
+  tan: 'ctan',
+  acos: 'cacos',
+  asin: 'casin',
+  atan: 'catan',
+  cosh: 'ccosh',
+  sinh: 'csinh',
+  tanh: 'ctanh',
+  acosh: 'cacosh',
+  asinh: 'casinh',
+  atanh: 'catanh',
+}
 const shaderUnary = {
   '-': '-',
   '~': 'conj',
@@ -288,9 +303,9 @@ class BinaryOp {
       this.right.toDerivative(...wrt)
     )
   }
-  solve() {
-    const left = this.left.solve()
-    const right = this.right.solve()
+  simplify() {
+    const left = this.left.simplify()
+    const right = this.right.simplify()
     if (this.type === '+') {
       if (left.type === 'number' && left.value === 0) {
         return right
@@ -349,7 +364,7 @@ class BinaryOp {
           '^',
           left.left,
           new Leaf('number', left.right.value * k)
-        ).solve()
+        ).simplify()
       }
     }
     if (right.type === 'number' && left.type === 'number') {
@@ -365,13 +380,13 @@ class BinaryOp {
         return new Complex(
           new BinaryOp(this.type, left.real, right),
           left.imag
-        ).solve()
+        ).simplify()
       }
       if (['*', '/'].includes(this.type)) {
         return new Complex(
           new BinaryOp(this.type, left.real, right),
           new BinaryOp(this.type, left.imag, right)
-        ).solve()
+        ).simplify()
       }
     }
     if (left.isPureReal() && right.type === 'complex') {
@@ -379,13 +394,13 @@ class BinaryOp {
         return new Complex(
           new BinaryOp(this.type, left, right.real),
           right.imag
-        ).solve()
+        ).simplify()
       }
       if (['*', '/'].includes(this.type)) {
         return new Complex(
           new BinaryOp(this.type, left, right.real),
           new BinaryOp(this.type, left, right.imag)
-        ).solve()
+        ).simplify()
       }
     }
     if (left.type === 'complex' && right.type === 'complex') {
@@ -393,7 +408,7 @@ class BinaryOp {
         return new Complex(
           new BinaryOp(this.type, left.real, right.real),
           new BinaryOp(this.type, left.imag, right.imag)
-        ).solve()
+        ).simplify()
       }
       if (this.type === '*') {
         return new Complex(
@@ -407,7 +422,7 @@ class BinaryOp {
             new BinaryOp('*', left.real, right.imag),
             new BinaryOp('*', left.imag, right.real)
           )
-        ).solve()
+        ).simplify()
       }
       if (this.type === '/') {
         const denominator = new BinaryOp(
@@ -434,7 +449,7 @@ class BinaryOp {
             ),
             denominator
           )
-        ).solve()
+        ).simplify()
       }
     }
     return new BinaryOp(this.type, left, right)
@@ -483,20 +498,20 @@ class UnaryOp {
   toDerivative(...wrt) {
     return new UnaryOp(this.type, this.operand.toDerivative(...wrt))
   }
-  solve() {
-    const operand = this.operand.solve()
+  simplify() {
+    const operand = this.operand.simplify()
     if (this.type === '+') {
       return operand
     }
     if (this.type === "'") {
-      return this.operand.toDerivative('z', 'z_1', false).solve()
+      return operand.toDerivative('z', 'z_1', false).simplify()
     }
     if (this.type === '#') {
       return new BinaryOp(
         '/',
-        this.operand,
-        this.operand.toDerivative('z', 'z_1', false)
-      ).solve()
+        operand,
+        operand.toDerivative('z', 'z_1', false)
+      ).simplify()
     }
     if (this.type === '-' && operand.type === 'number') {
       return new Leaf('number', -operand.value)
@@ -523,7 +538,7 @@ class FunctionOp {
     return ['abs', 're', 'im'].includes(this.name)
   }
   isPureImag() {
-    return false // FIXME: how?
+    return false
   }
 
   toTree() {
@@ -539,7 +554,7 @@ class FunctionOp {
     if (this.name === 'im') {
       return `${this.args[0].toShader()}.y`
     }
-    return `${this.name}(${this.args.map(a => a.toShader()).join(', ')})`
+    return `${functionShader[this.name] || this.name}(${this.args.map(a => a.toShader()).join(', ')})`
   }
   toComplex() {
     const name = { re: 'real', im: 'imag' }[this.name] || this.name
@@ -695,6 +710,9 @@ class FunctionOp {
         this.args[0].toDerivative(...wrt)
       )
     }
+    if (this.name === 'sign') {
+      return new Leaf('number', 0)
+    }
 
     return new BinaryOp(
       '*',
@@ -702,8 +720,8 @@ class FunctionOp {
       this.args[0].toDerivative(...wrt)
     )
   }
-  solve() {
-    const args = this.args.map(a => a.solve())
+  simplify() {
+    const args = this.args.map(a => a.simplify())
     return new FunctionOp(this.name, args)
   }
 }
@@ -739,8 +757,8 @@ class Complex {
       this.imag.toDerivative(...wrt)
     )
   }
-  solve() {
-    return new Complex(this.real.solve(), this.imag.solve())
+  simplify() {
+    return new Complex(this.real.simplify(), this.imag.simplify())
   }
 }
 
@@ -789,7 +807,7 @@ class Leaf {
     }
     return this
   }
-  solve() {
+  simplify() {
     if (this.type === 'identifier' && this.value === 'i') {
       return new Complex(new Leaf('number', 0), new Leaf('number', 1))
     }
@@ -939,12 +957,12 @@ const parse = tokens => {
   return ast
 }
 
-export const ast = s => parse(tokenize(s)).solve()
+export const ast = s => parse(tokenize(s)).simplify()
 export const derive = (s, ...wrt) =>
   parse(tokenize(s))
-    .solve()
+    .simplify()
     .toDerivative(...(wrt.length === 0 ? ['z', 'z_1'] : wrt))
-    .solve()
+    .simplify()
 
 window.tokenize = tokenize
 window.parse = parse

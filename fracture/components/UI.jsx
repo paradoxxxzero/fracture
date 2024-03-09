@@ -19,7 +19,7 @@ import ComplexFormula from './ComplexFormula.jsx'
 import { presets } from '../presets.js'
 import Presets from './Presets'
 import Float from './Float.jsx'
-import { ambiances, smoothings } from '../default.js'
+import { ambiances, smoothings, varyings } from '../default.js'
 
 const getShowUI = () => {
   try {
@@ -72,12 +72,16 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
   )
 
   const handleReset = useCallback(() => {
-    updateParams({
-      center: cx(),
-      // point: cx(),
-      scale: 1.2,
-    })
-  }, [updateParams])
+    const newParams = {}
+    if (params.varying.includes('z')) {
+      newParams.center = cx()
+    }
+    if (params.varying.includes('c')) {
+      newParams.point = cx()
+    }
+    newParams.scale = 1.2
+    updateParams(newParams)
+  }, [params.varying, updateParams])
 
   useEffect(() => {
     const keydown = e => {
@@ -144,18 +148,6 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
                     }
                   >
                     {runtime.moveCenter ? moveCenterIcon : moveConstantIcon}
-                  </button>
-                  <button
-                    className="button"
-                    onClick={() => {
-                      updateParams({
-                        point: params.center,
-                        center: params.point,
-                        fixed: !params.fixed,
-                      })
-                    }}
-                  >
-                    {swapIcon}
                   </button>
                   <button
                     className="button"
@@ -383,11 +375,14 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
               }`}
               onClick={() =>
                 updateParams({
-                  fixed: !params.fixed,
+                  varying:
+                    varyings[
+                      (varyings.indexOf(params.varying) + 1) % varyings.length
+                    ] || 'c',
                 })
               }
             >
-              {params.fixed ? 'C' : 'Z'}
+              {params.varying}
             </button>
           ) : null}
         </div>

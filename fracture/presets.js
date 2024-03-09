@@ -49,7 +49,9 @@ const julia = (name, n, c, extra = {}) => ({
   name,
   params: {
     ...brot(name, n).params,
-    fixed: false,
+    derivative: 85,
+    velocity: 7,
+    varying: 'z',
     point: c,
     ...extra,
   },
@@ -60,6 +62,7 @@ const withDefaults = presets =>
     name,
     params: {
       ...defaultParams,
+      f_perturb: null,
       ...params,
     },
     subforms: subforms ? withDefaults(subforms) : [],
@@ -67,7 +70,7 @@ const withDefaults = presets =>
 
 export const presets = withDefaults([
   {
-    ...brot('Mandelbrot', 2, { center: cx(-0.5) }),
+    ...brot('Mandelbrot', 2, { point: cx(-0.5) }),
     subforms: [
       brot('Bibrot', 3),
       brot('Tribrot', 4),
@@ -81,13 +84,13 @@ export const presets = withDefaults([
     ],
   },
   {
-    ...julia('Julia', 2, cx(-0.7, 0.27015)),
+    ...julia('Julia 0 + .8i', 2, cx(0, 0.8)),
     subforms: [
-      julia('Julia 0 + .8i', 2, cx(0, 0.8)),
-      julia('Julia 0.355 + .355i', 2, cx(0.355, 0.355)),
-      julia('Bijulia -0.371594 + .662412i', 3, cx(-0.371594, 0.662412)),
-      julia('Trijulia -0.29053 - 0.450488i', 4, cx(-0.29053, -0.450488), {
-        derivative: 80,
+      julia('Julia -.7 + .27015', 2, cx(-0.7, 0.27015)),
+      julia('Julia .355 + .355i', 2, cx(0.355, 0.355)),
+      julia('Bijulia -.371594 + .662412i', 3, cx(-0.371594, 0.662412)),
+      julia('Trijulia -.29053 - .450488i', 4, cx(-0.29053, -0.450488), {
+        derivative: 175,
       }),
     ],
   },
@@ -114,11 +117,11 @@ export const presets = withDefaults([
   {
     name: 'Tearbrot',
     params: {
-      center: cx(0, 1),
+      center: cx(),
+      point: cx(0, 1),
       scale: 4,
       transform: rotate(-Math.PI / 2),
       f: '(z + 1)^2 / c',
-      usePerturbation: false, // TODO
       showDerivative: true,
       derivative: 80,
     },
@@ -130,7 +133,6 @@ export const presets = withDefaults([
       scale: 6,
       f: 'c / (z + 1)^2',
       derivative: 120,
-      usePerturbation: false, // TODO
     },
   },
   {
@@ -140,7 +142,7 @@ export const presets = withDefaults([
       point: cx(0.5667),
       scale: 1.5,
       transform: rotate(-Math.PI / 2),
-      fixed: false,
+      varying: 'z',
       f: 'z^2 + c - 0.5 * z_1',
       useDerivative: false,
       f_perturb: '2 * Z * dz + dz^2 + dc - 0.5 * dz_1',
@@ -150,10 +152,8 @@ export const presets = withDefaults([
     name: 'Newton',
     params: {
       center: cx(),
-      fixed: false,
+      varying: 'z',
       f: 'z - (z^3 - 1) / (3 * z^2) + c',
-      f_perturb: '3 * Z^2 * dz + dc',
-      usePerturbation: false, // TODO
       useDerivative: false,
       derivative: 180,
       useRoots: true,
@@ -164,15 +164,48 @@ export const presets = withDefaults([
   {
     name: 'Nova',
     params: {
-      center: cx(-0.5),
-      point: cx(1),
+      center: cx(1),
+      point: cx(-0.5),
       f: 'z - (z^3 - 1) / (3 * z^2) + c',
       f_perturb: '3 * Z^2 * dz + dc',
-      roots: [cx(1), cx(-0.5, Math.sqrt(3) / 2), cx(-0.5, -Math.sqrt(3) / 2)],
+      useDerivative: false,
       derivative: 180,
-      usePerturbation: false, // TODO
       convergent: true,
       divergent: false,
+    },
+  },
+  {
+    name: 'Frothy',
+    params: {
+      center: cx(0.5, 0),
+      point: cx(2 + 3e-2, -1e-2),
+      varying: 'z',
+      scale: 3,
+      f: 'z^2 - c*~z',
+      derivative: 180,
+    },
+  },
+  {
+    name: 'Magnet',
+    params: {
+      center: cx(),
+      point: cx(1),
+      scale: 3,
+      f: '((z^2 + c - 1) / (2z + c - 2))^2',
+      useDerivative: false,
+      derivative: 180,
+      convergent: true,
+    },
+  },
+  {
+    name: 'Tetrate',
+    params: {
+      center: cx(0.5),
+      point: cx(1),
+      scale: 3,
+      f: 'c^z',
+      useDerivative: false,
+      derivative: 180,
     },
   },
 ])

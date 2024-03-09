@@ -1,5 +1,5 @@
 import { cx } from './decimal'
-import { ambiances, smoothings, uniformParams } from './default'
+import { ambiances, smoothings, uniformParams, varyings } from './default'
 import { ast } from './formula'
 import fragmentSource from './fragment.glsl?raw'
 import vertexSource from './vertex.glsl?raw'
@@ -9,8 +9,7 @@ const preprocess = (rt, source) => {
     .replace(
       '##CONFIG',
       [
-        rt.perturb ? '#define PERTURB' : '',
-        rt.fixed ? '#define FIXED' : '',
+        rt.perturb && rt.f_perturb ? '#define PERTURB' : '',
         rt.convergent ? '#define CONVERGENT' : '',
         rt.divergent ? '#define DIVERGENT' : '',
         rt.useDerivative && rt.f_prime ? '#define USE_DERIVATIVE' : '',
@@ -25,6 +24,7 @@ const preprocess = (rt, source) => {
               )
               .join(', ')});`
           : '',
+        `#define VARYING ${varyings.indexOf(rt.varying)}`,
         `#define AMBIANCE ${ambiances.indexOf(rt.ambiance)}`,
         `#define SMOOTHING ${smoothings.indexOf(rt.smoothing)}`,
       ]
@@ -32,7 +32,7 @@ const preprocess = (rt, source) => {
         .join('\n')
     )
     .replace(/F\(z,\s*c\)/g, ast(rt.f).toShader())
-    .replace(/F\(Z,\s*dz,\s*dc\)/g, ast(rt.f_perturb).toShader())
+
   if (rt.f_prime) {
     source = source.replace(
       /F_prime\s*\(z,\s*c,\s*(.*?),\s*(.*?)\)/g,
@@ -46,6 +46,11 @@ const preprocess = (rt, source) => {
       /F_prime\s*\(z,\s*c,\s*(.*?),\s*(.*?)\)/g,
       'vec2(0)'
     )
+  }
+  if (rt.f_perturb) {
+    source = source.replace(/F\(Z,\s*dz,\s*dc\)/g, ast(rt.f_perturb).toShader())
+  } else {
+    source = source.replace(/F\(Z,\s*dz,\s*dc\)/g, 'vec2(0)')
   }
 
   if (window.location.search.includes('debug')) {
@@ -269,14 +274,16 @@ export const render = rt => {
   if (rt.perturb) {
     const orbit = new Float32Array(64 * 64 * 4)
     const max = [0, 0]
-    const center = multiply(rt.center, rt.transform)
-    if (rt.fixed) {
-      fillOrbit(rt, orbit, cx(), center, max)
-      fillOrbit(rt, orbit, rt.point, center, max, true)
-    } else {
-      fillOrbit(rt, orbit, cx(), rt.point, max)
-      fillOrbit(rt, orbit, center, rt.point, max, true)
-    }
+    const center = rt.varying.includes('c')
+      ? multiply(rt.center, rt.transform)
+      : rt.center
+    // if (rt.varying === 'c') {
+    //   fillOrbit(rt, orbit, cx(), center, max)
+    //   fillOrbit(rt, orbit, rt.point, center, max, true)
+    // } else {
+    fillOrbit(rt, orbit, cx(), rt.point, max)
+    fillOrbit(rt, orbit, center, rt.point, max, true)
+    // }
     gl.uniform2iv(rt.env.uniforms.maxIterations, max)
 
     gl.texImage2D(

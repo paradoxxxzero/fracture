@@ -40,19 +40,27 @@ export const useInteract = (runtime, updateParams) => {
   const shift = useCallback(
     (dx, dy, zoom) => {
       const aspect = runtime.gl.canvas.width / runtime.gl.canvas.height
-
       const width = local.current.scale * 2
-      if (!runtime.moveCenter && !zoom) {
+      if (runtime.varying.includes('c') === (zoom || runtime.moveCenter)) {
         local.current.point = local.current.point.add(
           cx(-dx * width * aspect, dy * width)
         )
-      } else {
+      }
+      if (
+        runtime.varying.includes('z') ===
+        (zoom || runtime.moveCenter || runtime.varying === 'zc')
+      ) {
         local.current.center = local.current.center.add(
           cx(-dx * width * aspect, dy * width)
         )
       }
     },
-    [runtime.gl.canvas.height, runtime.gl.canvas.width, runtime.moveCenter]
+    [
+      runtime.gl.canvas.height,
+      runtime.gl.canvas.width,
+      runtime.moveCenter,
+      runtime.varying,
+    ]
   )
 
   const rescale = useCallback(

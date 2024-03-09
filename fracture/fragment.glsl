@@ -25,19 +25,24 @@ uniform sampler2D orbit;
 uniform ivec2 maxIterations;
 #endif
 
-vec3 hslToRgb(in vec3 c) {
-  vec3 rgb = clamp(abs(mod(c.x * 6. + vec3(0., 4., 2.), 6.) - 3.) - 1., 0., 1.);
-  return c.z + c.y * (rgb - 0.5) * (1. - abs(2. * c.z - 1.));
+const float PI = 3.1415926535897932384626433832795;
+const float TAU = 6.283185307179586476925286766559;
+const float ETA = 1.5707963267948966192313216916398;
+const vec2 c1 = vec2(1., 0.);
+const vec2 ci = vec2(0., 1.);
+
+vec3 hsl2rgb(in vec3 c) {
+  vec3 rgb = clamp(abs(mod(c.x * 6.0 + vec3(0.0, 4.0, 2.0), 6.0) - 3.0) - 1.0, 0.0, 1.0);
+  return c.z + c.y * (rgb - 0.5) * (1.0 - abs(2.0 * c.z - 1.0));
 }
+
 vec3 rgb2hsl(vec3 col) {
   float eps = 1e-10;
   float minc = min(col.r, min(col.g, col.b));
   float maxc = max(col.r, max(col.g, col.b));
   vec3 mask = step(col.grr, col.rgb) * step(col.bbg, col.rgb);
   vec3 h = mask * (vec3(0.0, 2.0, 4.0) + (col.gbr - col.brg) / (maxc - minc + eps)) / 6.0;
-  return vec3(fract(1.0 + h.x + h.y + h.z),              // H
-  (maxc - minc) / (1.0 - abs(minc + maxc - 1.0) + eps),  // S
-  (minc + maxc) * 0.5);                           // L
+  return vec3(fract(1.0 + h.x + h.y + h.z), (maxc - minc) / (1.0 - abs(minc + maxc - 1.0) + eps), (minc + maxc) * 0.5);
 }
 
 vec3 hueAdjust(in vec3 col, in float p) {
@@ -45,7 +50,7 @@ vec3 hueAdjust(in vec3 col, in float p) {
   hsl.x += p + hue;
   hsl.y *= saturation;
   hsl.z *= lightness;
-  return hslToRgb(hsl);
+  return hsl2rgb(hsl);
 }
 
 // https://iquilezles.org/articles/palettes
@@ -165,9 +170,54 @@ vec2 clog(in vec2 z) {
   return vec2(log(length(z)), atan(z.y, z.x));
 }
 
-vec2 csin(in vec2 z) {
-  return cdiv(cexp(vec2(-z.y, z.x)) - cexp(vec2(z.y, -z.x)), vec2(0, 2.0));
+vec2 ccos(in vec2 z) {
+  return vec2(cos(z.x) * cosh(z.y), -sin(z.x) * sinh(z.y));
 }
+
+vec2 csin(in vec2 z) {
+  return vec2(sin(z.x) * cosh(z.y), cos(z.x) * sinh(z.y));
+}
+
+vec2 ctan(in vec2 z) {
+  return cdiv(csin(z), ccos(z));
+}
+
+vec2 cacos(in vec2 z) {
+  return cmul(-ci, clog(cadd(z, cmul(ci, csqrt(csub(c1, cmul(z, z)))))));
+}
+
+vec2 casin(in vec2 z) {
+  return cmul(-ci, clog(cadd(cmul(z, ci), csqrt(csub(c1, cmul(z, z))))));
+}
+
+vec2 catan(in vec2 z) {
+  return cmul(ci * .5, clog(cdiv(cadd(ci, z), csub(ci, z))));
+}
+
+vec2 ccosh(in vec2 z) {
+  return cdiv(cadd(cexp(z), cexp(cmul(-ci, z))), 2.0);
+}
+
+vec2 csinh(in vec2 z) {
+  return cdiv(cexp(z) - cexp(cmul(-ci, z)), 2.0);
+}
+
+vec2 ctanh(in vec2 z) {
+  return cdiv(csinh(z), ccosh(z));
+}
+
+vec2 cacosh(in vec2 z) {
+  return clog(cadd(z, csqrt(csub(cmul(z, z), c1))));
+}
+
+vec2 casinh(in vec2 z) {
+  return clog(cadd(z, csqrt(cadd(cmul(z, z), c1))));
+}
+
+vec2 catanh(in vec2 z) {
+  return cmul(vec2(0.5, 0.), clog(cdiv(cadd(c1, z), csub(c1, z))));
+}
+
 vec2 cpow(in vec2 z, in vec2 k) {
   return cexp(cmul(k, clog(z)));
 }
@@ -248,23 +298,30 @@ void main(void) {
 
   #ifdef PERTURB
   vec2 z = vec2(0.);
-    #ifdef FIXED// Mandelbrot-like
   vec2 dz = vec2(0.);
-  vec2 dc = p * transform;
-    #else // Julia-like
-  vec2 dz = p * transform;
   vec2 dc = vec2(0.);
+    #if VARYING == 0 || VARYING == 2
+  dz += p; // Mandelbrot-like
+  dz *= transform;
+    #endif
+    #if VARYING == 1 || VARYING == 2 
+  dc += p; // Julia-like
+  dc *= transform;
     #endif
   vec2 dz_1 = vec2(0.);
   #else
-    #ifdef FIXED// Mandelbrot-like
-  vec2 z = point;
-  vec2 c = (center + p) * transform;
-    #else // Julia-like
-  vec2 z = (center + p) * transform;
+  vec2 z = center;
   vec2 c = point;
+    #if VARYING == 0 || VARYING == 2
+  z += p; // Mandelbrot-like
+  z *= transform;
+    #endif
+    #if VARYING == 1 || VARYING == 2 
+  c += p; // Julia-like
+  c *= transform;
     #endif
   #endif
+
   vec2 z_1 = vec2(0.);
   vec2 z_2 = vec2(0.);
 
@@ -349,7 +406,7 @@ void main(void) {
 
         #if SMOOTHING == 1
         float prev = dot2(z_1 - root);
-        n += (log(BAILIN / prev)) / (log(diff / prev));
+        n += log(BAILIN / prev) / log(diff / prev);
         #elif SMOOTHING == 2
         n = 10. * zexp;
         #elif SMOOTHING == 3
@@ -371,8 +428,9 @@ void main(void) {
     if(z_z_1 < BAILIN) {
       float n = float(i);
       #if SMOOTHING == 1
-      float p = log(dot2(z - z_1)) / log(dot2(z_1 - z_2));
-      n += (log(log(BAILIN)) - log(log(1. / dot2(z_1 - z)))) / log(p);
+      float diff = dot2(z - z_1);
+      float prev = dot2(z_1 - z_2);
+      n += log(BAILIN / prev) / log(diff / prev);
       #elif SMOOTHING == 2
       n = 10. * zexp;
       #elif SMOOTHING == 3
@@ -404,9 +462,15 @@ void main(void) {
     }
     #endif
 
+    #if !defined(CONVERGENT) && !defined(DIVERGENT)
+    // Domain coloring of z:
+    col = smoothstep(0., 1., hsl2rgb(vec3(atan(z.y, z.x) / TAU, 1., 2. * atan(length(z)) / PI)));
+    break;
+    #endif
+
     #ifdef PERTURB
     // Rebasing
-    if(zz < dot(dz, dz) || m >= max) {
+    if(dot(z, z) < dot(dz, dz) || m >= max) {
       dz = z;
       m = 0;
       max = maxIterations.x;
