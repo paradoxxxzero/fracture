@@ -277,13 +277,15 @@ export const render = rt => {
     const center = rt.varying.includes('c')
       ? multiply(rt.center, rt.transform)
       : rt.center
-    // if (rt.varying === 'c') {
-    //   fillOrbit(rt, orbit, cx(), center, max)
-    //   fillOrbit(rt, orbit, rt.point, center, max, true)
-    // } else {
-    fillOrbit(rt, orbit, cx(), rt.point, max)
-    fillOrbit(rt, orbit, center, rt.point, max, true)
-    // }
+    const point = rt.varying.includes('z')
+      ? multiply(rt.point, rt.transform)
+      : rt.point
+    try {
+      fillOrbit(rt, orbit, cx(), point, max)
+      fillOrbit(rt, orbit, center, point, max, true)
+    } catch (e) {
+      console.warn(e)
+    }
     gl.uniform2iv(rt.env.uniforms.maxIterations, max)
 
     gl.texImage2D(

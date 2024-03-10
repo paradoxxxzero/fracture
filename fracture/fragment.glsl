@@ -55,7 +55,7 @@ vec3 hueAdjust(in vec3 col, in float p) {
 
 // https://iquilezles.org/articles/palettes
 vec3 pal(in float t, in vec3 a, in vec3 b, in vec3 c, in vec3 d) {
-  return a + b * cos(offset + 6.28318 * (c * velocity * t + d));
+  return a + b * cos(offset + TAU * (c * velocity * t + d));
 }
 
 vec3 ambiance(float t) {
@@ -65,7 +65,7 @@ vec3 ambiance(float t) {
 #elif AMBIANCE == 1
   vec3(0.5, 0.5, 0.5), vec3(0.5, 0.5, 0.5), vec3(1.0, 1.0, 1.0), vec3(0.0, 0.33, 0.67)
 #elif AMBIANCE == 2
-  vec3(0.5, 0.5, 0.5), vec3(0.5, 0.5, 0.5), vec3(1.0, 1.0, 1.0), vec3(0.0, 0.10, 0.20)
+  vec3(0.5, 0.5, 0.5), vec3(0.5, 0.5, 0.5), vec3(1.0, 1.0, 1.0), vec3(0.4, 0.60, 0.05)
 #elif AMBIANCE == 3
   vec3(0.5, 0.5, 0.5), vec3(0.5, 0.5, 0.5), vec3(1.0, 1.0, 1.0), vec3(0.3, 0.20, 0.20)
 #elif AMBIANCE == 4
@@ -464,7 +464,20 @@ void main(void) {
 
     #if !defined(CONVERGENT) && !defined(DIVERGENT)
     // Domain coloring of z:
-    col = smoothstep(0., 1., hsl2rgb(vec3(atan(z.y, z.x) / TAU, 1., 2. * atan(length(z)) / PI)));
+    float h = atan(z.y, z.x) / TAU;
+    float s = 1.;
+    #if AMBIANCE == 0
+    float l = 2. * atan(length(z)) / PI;
+    #elif AMBIANCE == 1
+    float zz = dot(z, z);
+    float l = zz / (zz + 1.);
+    #elif AMBIANCE == 2
+    float l = 1. - exp(-length(z));
+    #else
+    float l = 1. - pow(2., -length(z));
+    #endif
+
+    col = smoothstep(0., 1., hsl2rgb(vec3(h, s, l)));
     break;
     #endif
 

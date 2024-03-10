@@ -56,6 +56,14 @@ const functionShader = {
   asinh: 'casinh',
   atanh: 'catanh',
 }
+const opFunctions = {
+  '+': (a, b) => a + b,
+  '-': (a, b) => a - b,
+  '*': (a, b) => a * b,
+  '/': (a, b) => a / b,
+  '^': (a, b) => a ** b,
+}
+
 const shaderUnary = {
   '-': '-',
   '~': 'conj',
@@ -369,11 +377,7 @@ class BinaryOp {
     }
     if (right.type === 'number' && left.type === 'number') {
       const op = this.type === '^' ? '**' : this.type
-      return new Leaf(
-        'number',
-        // eslint-disable-next-line no-eval
-        eval(`${left.value} ${op} ${right.value}`)
-      )
+      return new Leaf('number', opFunctions[op](left.value, right.value))
     }
     if (left.type === 'complex' && right.isPureReal()) {
       if (['+', '-'].includes(this.type)) {

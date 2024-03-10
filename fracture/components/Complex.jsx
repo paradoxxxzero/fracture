@@ -1,4 +1,5 @@
 import { cx } from '../decimal'
+import { backspaceIcon } from '../icons'
 import Float from './Float'
 
 export default function Complex({
@@ -54,6 +55,13 @@ export default function Complex({
             {...props}
           />
           <span className="complex-inner-label">i</span>
+          <button
+            type="button"
+            onClick={() => onChange(name, cx(0, 0))}
+            className="button"
+          >
+            {backspaceIcon}
+          </button>
         </div>
       )}
     </label>
