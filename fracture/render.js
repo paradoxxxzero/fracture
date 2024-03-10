@@ -2,6 +2,7 @@ import { cx } from './decimal'
 import { ambiances, smoothings, uniformParams, varyings } from './default'
 import { ast } from './formula'
 import fragmentSource from './fragment.glsl?raw'
+import includesSource from './includes.glsl?raw'
 import vertexSource from './vertex.glsl?raw'
 
 const preprocess = (rt, source) => {
@@ -31,6 +32,7 @@ const preprocess = (rt, source) => {
         .filter(Boolean)
         .join('\n')
     )
+    .replace('#include includes', includesSource)
     .replace(/F\(z,\s*c\)/g, ast(rt.f).toShader())
 
   if (rt.f_prime) {

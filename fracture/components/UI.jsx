@@ -1,25 +1,22 @@
 import { useCallback, useEffect, useState } from 'react'
 
-import Number from './Number.jsx'
-import Complex from './Complex.jsx'
+import { ambiances, smoothings, varyings } from '../default.js'
 import {
-  centerViewIcon,
+  eyeIcon,
   lockIcon,
-  unlockIcon,
   moveCenterIcon,
   moveConstantIcon,
-  swapIcon,
   presetsIcon,
-  eyeIcon,
+  unlockIcon,
 } from '../icons'
-import Boolean from './Boolean.jsx'
-import Select from './Select.jsx'
-import { cx } from '../decimal.js'
-import ComplexFormula from './ComplexFormula.jsx'
 import { presets } from '../presets.js'
-import Presets from './Presets'
+import Boolean from './Boolean.jsx'
+import Complex from './Complex.jsx'
+import ComplexFormula from './ComplexFormula.jsx'
 import Float from './Float.jsx'
-import { ambiances, smoothings, varyings } from '../default.js'
+import Number from './Number.jsx'
+import Presets from './Presets'
+import Select from './Select.jsx'
 
 const getShowUI = () => {
   try {
@@ -70,18 +67,6 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
       }),
     []
   )
-
-  const handleReset = useCallback(() => {
-    const newParams = {}
-    if (params.varying.includes('z')) {
-      newParams.center = cx()
-    }
-    if (params.varying.includes('c')) {
-      newParams.point = cx()
-    }
-    newParams.scale = 1.2
-    updateParams(newParams)
-  }, [params.varying, updateParams])
 
   useEffect(() => {
     const keydown = e => {
@@ -135,9 +120,6 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
               </button>
               {['simple', 'advanced', 'full'].includes(showUI) ? (
                 <>
-                  <button className="button" onClick={handleReset}>
-                    {centerViewIcon}
-                  </button>
                   <button
                     className="button"
                     onClick={() =>
