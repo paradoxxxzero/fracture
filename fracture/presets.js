@@ -38,7 +38,6 @@ const pascal = (a, b, n, s = 0) => {
 const brot = (name, n, extra = {}) => ({
   name,
   params: {
-    center: cx(),
     f: `z^${n} + c`,
     f_perturb: `${pascal('Z', 'dz', n, 1)} + dc`,
     ...extra,
@@ -105,7 +104,7 @@ export const presets = withDefaults([
   {
     name: 'Burningship',
     params: {
-      center: cx(0.5, 0.5),
+      point: cx(0.5, 0.5),
       transform: rotate(Math.PI),
       derivative: 100,
       scale: 1.5,
@@ -117,19 +116,19 @@ export const presets = withDefaults([
   {
     name: 'Tearbrot',
     params: {
-      center: cx(),
       point: cx(0, 1),
       scale: 4,
       transform: rotate(-Math.PI / 2),
       f: '(z + 1)^2 / c',
       showDerivative: true,
       derivative: 80,
+      f_perturb:
+        '(C * dz^2 + 2 * C * dz * Z + 2 * C * dz - dc * Z^2 - 2 * dc * Z - dc) / (C * (C + dc))',
     },
   },
   {
     name: 'Moonbrot',
     params: {
-      center: cx(),
       scale: 6,
       f: 'c / (z + 1)^2',
       derivative: 120,
@@ -138,7 +137,6 @@ export const presets = withDefaults([
   {
     name: 'Phoenix',
     params: {
-      center: cx(),
       point: cx(0.5667),
       scale: 1.5,
       transform: rotate(-Math.PI / 2),
@@ -151,11 +149,9 @@ export const presets = withDefaults([
   {
     name: 'Newton',
     params: {
-      center: cx(),
       varying: 'z',
       f: 'z - (z^3 - 1) / (3 * z^2) + c',
       useDerivative: false,
-      derivative: 180,
       useRoots: true,
       convergent: true,
       divergent: false,
@@ -169,7 +165,19 @@ export const presets = withDefaults([
       f: 'z - (z^3 - 1) / (3 * z^2) + c',
       f_perturb: '3 * Z^2 * dz + dc',
       useDerivative: false,
-      derivative: 180,
+      convergent: true,
+      divergent: false,
+    },
+  },
+  {
+    name: 'Nova2',
+    params: {
+      center: cx(1),
+      point: cx(-0.5),
+      f: '(2/3 * z^3 - 2 * z - 1)/(z + 1)^2 + 1 + c',
+      f_perturb:
+        '1/3 * ((12 * dz + 1)/(Z + dz + 1)^2 + 2 * dz - 1 / (Z - 1)^2) + dc',
+      useDerivative: false,
       convergent: true,
       divergent: false,
     },
@@ -182,18 +190,16 @@ export const presets = withDefaults([
       varying: 'z',
       scale: 3,
       f: 'z^2 - c*~z',
-      derivative: 180,
+      f_perturb: 'dz^2 + 2 * dz * Z - C * ~dz - dc * ~Z - dc * ~dz',
     },
   },
   {
     name: 'Magnet',
     params: {
-      center: cx(),
       point: cx(1),
       scale: 3,
       f: '((z^2 + c - 1) / (2z + c - 2))^2',
       useDerivative: false,
-      derivative: 180,
       convergent: true,
     },
   },
@@ -205,7 +211,15 @@ export const presets = withDefaults([
       scale: 3,
       f: 'c^z',
       useDerivative: false,
-      derivative: 180,
+    },
+  },
+  {
+    name: 'Celtic',
+    params: {
+      point: cx(-0.7),
+      scale: 2,
+      f: '|re(z^2)| + i * im(z^2) + c',
+      useDerivative: false,
     },
   },
 ])

@@ -17,11 +17,10 @@ const shift = precision => {
   }
   return shifts[precision]
 }
-
 const floatPrecision = 16
-const approx = 10
+const approx = 16
 export class Decimal {
-  constructor(value, precision) {
+  constructor(value = 0, precision) {
     if (typeof value === 'bigint') {
       this._n = value
       this.precision = precision || floatPrecision
@@ -97,15 +96,14 @@ export class Decimal {
     if (num instanceof Complex) {
       return num.pow(this)
     }
-    num = this.adapt(num)
     let res = this
-    const k = num.toNumber()
-    if (k % 1 === 0) {
-      for (let i = 1; i < k; i++) {
-        res = res.multiply(res)
+    if (num % 1 === 0) {
+      for (let i = 1; i < num; i++) {
+        res = res.multiply(this)
       }
       return res
     }
+    num = this.adapt(num)
     return res.log().multiply(num).exp()
   }
   abs() {
@@ -152,17 +150,30 @@ export class Decimal {
     }
     return y
   }
-  log() {
-    // Full precision log
-    const precision = this.precision
+  frexp() {
     let x = this
-    let y = m(0, precision)
+    let e = m()
+    while (x.gt(m(1))) {
+      x = x.divide(2)
+      e = e.add(1)
+    }
+    return [x, e]
+  }
+  log() {
+    // Compute approximation of log(x)
+    // Decompose x = 2^e * p
+    // log(x) = e * log(2) + log(p)
+    const precision = this.precision
+    const [p, e] = this.frexp()
+    // Compute log(p) using Taylor series
+    let x = p.subtract(1)
+    let y = m()
     let sign = 1
-    for (let i = 1; i < approx; i++) {
+    for (let i = 1; i < precision; i++) {
       y = y.add(x.pow(i).divide(i).multiply(sign))
       sign *= -1
     }
-    return y
+    return y.add(e.multiply(LN2(precision)))
   }
   cos() {
     // Full precision cos
@@ -243,9 +254,26 @@ export class Decimal {
     }
     return y
   }
+  toExp() {}
   eq(num) {
     num = this.adapt(num)
     return this._n === num._n
+  }
+  gt(num) {
+    num = this.adapt(num)
+    return this._n > num._n
+  }
+  lt(num) {
+    num = this.adapt(num)
+    return this._n < num._n
+  }
+  gte(num) {
+    num = this.adapt(num)
+    return this._n >= num._n
+  }
+  lte(num) {
+    num = this.adapt(num)
+    return this._n <= num._n
   }
   toNumber() {
     return Number(this._n) / Number(shift(this.precision))
@@ -490,6 +518,11 @@ export class Complex {
   }
 }
 
+const LN2 = p =>
+  m(
+    '0.6931471805599453094172321214581765680755001343602552541206800094933936219696947156058633269964186875420014810205706857336855202357581305570326707516350759619307275708283714351903070386238916734711233501153644979552391204751726815749320651555247341395258829504530070953263666426541042391578149520437404303855008019441706416715186447128399681717845469570262716310645461502572074024816377733896385506952606683411372738737229289564935470257626520988596932019650585547647033067936544325476327449512504060694381471046899465',
+    p
+  )
 export const cx = (re = 0, im = 0) =>
   re instanceof Complex ? re : new Complex(m(re), m(im))
 

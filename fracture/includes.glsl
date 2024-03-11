@@ -259,7 +259,7 @@ float diffabs(in float X, in float x) {
 
 #ifdef PERTURB
 vec2 fetchRef(in int n, in bool shift) {
-  vec4 tex = texelFetch(orbit, ivec2(n % 64, n / 64), 0);
+  vec4 tex = texelFetch(orbit, ivec2(n % 128, n / 128), 0);
   return shift ? tex.zw : tex.xy;
 }
 #endif

@@ -1,4 +1,4 @@
-import { cx } from './decimal'
+import { cx, m } from './decimal'
 import { ambiances, smoothings, uniformParams, varyings } from './default'
 import { ast } from './formula'
 import fragmentSource from './fragment.glsl?raw'
@@ -151,8 +151,8 @@ export const initializeGl = (rt, onContextLost, onContextRestored) => {
     gl.TEXTURE_2D,
     0,
     gl.RGBA32F,
-    64,
-    64,
+    128,
+    128,
     0,
     gl.RGBA,
     gl.FLOAT,
@@ -242,6 +242,7 @@ const fillOrbit = (rt, orbit, z, c, max, shift) => {
   const [a, b] = shift ? [2, 3] : [0, 1]
   // eslint-disable-next-line no-new-func
   const F = new Function('z', 'c', 'z_1', `return ${ast(rt.f).toComplex()}`)
+  const bailout = m(rt.bailout)
   let i = 0
   let z_1 = cx()
   for (; i < rt.iterations; i++) {
@@ -251,7 +252,7 @@ const fillOrbit = (rt, orbit, z, c, max, shift) => {
     z = F(z, c, z_1)
     z_1 = prev_z
 
-    if (z.norm2().toNumber() >= rt.bailout) {
+    if (z.norm2().gte(bailout)) {
       break
     }
   }
@@ -274,12 +275,12 @@ export const render = rt => {
 
   // TODO: In useProcess / worker + only in prevention if still in viewPort
   if (rt.perturb) {
-    const orbit = new Float32Array(64 * 64 * 4)
+    const orbit = new Float32Array(128 * 128 * 4)
     const max = [0, 0]
-    const center = rt.varying.includes('c')
+    const center = rt.varying.includes('z')
       ? multiply(rt.center, rt.transform)
       : rt.center
-    const point = rt.varying.includes('z')
+    const point = rt.varying.includes('c')
       ? multiply(rt.point, rt.transform)
       : rt.point
     try {
@@ -294,8 +295,8 @@ export const render = rt => {
       gl.TEXTURE_2D,
       0,
       gl.RGBA32F,
-      64,
-      64,
+      128,
+      128,
       0,
       gl.RGBA,
       gl.FLOAT,

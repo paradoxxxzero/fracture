@@ -34,8 +34,10 @@ void main(void) {
 
   #ifdef PERTURB
   vec2 z = vec2(0.);
+  vec2 c = vec2(0.);
   vec2 dz = vec2(0.);
   vec2 dc = vec2(0.);
+  vec2 C = point;
     #if VARYING == 0 || VARYING == 2
   dz += p; // Mandelbrot-like
   dz *= transform;
@@ -80,6 +82,7 @@ void main(void) {
   int max = maxIterations.y;
   vec2 Z = fetchRef(m, shift);
   z = Z + dz;
+  c = C + dc;
   #endif
 
   #if SMOOTHING == 2

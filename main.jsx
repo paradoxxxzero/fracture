@@ -6,6 +6,7 @@ import { defaultParams } from './fracture/default.js'
 import { filterParams } from './fracture/params.js'
 import { arrayEquals } from './utils.js'
 import { Complex } from './fracture/decimal.js'
+import { presets } from './fracture/presets.js'
 // import 'https://greggman.github.io/webgl-lint/webgl-lint.js'
 
 const complexReplacer = (key, value) =>
@@ -27,7 +28,12 @@ const parseParams = () => {
       location.hash = ''
     }
   }
-  return filterParams(defaultParams).params
+  const allPresets = presets
+    .map(p =>
+      p.subforms ? p.subforms.map(s => s.params).concat(p.params) : p.params
+    )
+    .flat(1)
+  return filterParams(allPresets[~~(allPresets.length * Math.random())]).params
 }
 const syncParams = (params, replace = false) => {
   const hash = '#' + btoa(JSON.stringify(params, complexReplacer))

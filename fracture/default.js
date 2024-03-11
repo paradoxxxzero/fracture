@@ -15,11 +15,13 @@ export const smoothings = ['none', 'log', 'exp', 'distance']
 export const varyings = ['z', 'c', 'zc']
 
 export const defaultParams = {
-  center: cx(-0.5),
+  center: cx(),
+  point: cx(),
   scale: 1.2,
+  varying: 'c',
   usePerturbation: null, // Auto
   useDerivative: true,
-  derivative: 50,
+  derivative: 100,
   useDistanceEstimate: false,
   showDerivative: false,
   smoothing: 'log',
@@ -31,15 +33,13 @@ export const defaultParams = {
   iterations: 1000,
   supersampling:
     window.devicePixelRatio > 2 ? window.devicePixelRatio / 2 : 1.1,
-  varying: 'c',
-  point: cx(),
   transform: [
     [1, 0],
     [0, 1],
   ],
   f: 'z^2 + c',
   f_prime: null, // Auto
-  f_perturb: '2 * Z * dz + dz^2 + dc',
+  f_perturb: null,
   ambiance: 'calm',
   useRoots: false,
   convergent: false,
