@@ -263,3 +263,14 @@ vec2 fetchRef(in int n, in bool shift) {
   return shift ? tex.zw : tex.xy;
 }
 #endif
+
+float aafract(float x) {
+  float v = fract(x);
+  float w = length(vec2(dFdx(x), dFdy(x)));
+  return v < 1. - w ? v / (1. - w) : (1. - v) / w;
+}
+
+float aastep(float x) {
+  float w = length(vec2(dFdx(x), dFdy(x)));
+  return smoothstep(.7, -.7, (abs(fract(x - .25) - .5) - .25) / w);
+}

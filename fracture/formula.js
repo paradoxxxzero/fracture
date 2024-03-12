@@ -599,7 +599,11 @@ class FunctionOp {
       return new BinaryOp(
         '/',
         this.args[0].toDerivative(...wrt),
-        new BinaryOp('^', new FunctionOp('cos', this.args), 2)
+        new BinaryOp(
+          '^',
+          new FunctionOp('cos', this.args),
+          new Leaf('number', 2)
+        )
       )
     }
     if (this.name === 'asin') {
@@ -611,7 +615,7 @@ class FunctionOp {
           new BinaryOp(
             '-',
             new Leaf('number', 1),
-            new BinaryOp('^', this.args[0], 2)
+            new BinaryOp('^', this.args[0], new Leaf('number', 2))
           ),
           new Leaf('number', 0.5)
         )
@@ -626,7 +630,7 @@ class FunctionOp {
           new BinaryOp(
             '-',
             new Leaf('number', 1),
-            new BinaryOp('^', this.args[0], 2)
+            new BinaryOp('^', this.args[0], new Leaf('number', 2))
           ),
           new Leaf('number', 0.5)
         )
@@ -639,7 +643,7 @@ class FunctionOp {
         new BinaryOp(
           '+',
           new Leaf('number', 1),
-          new BinaryOp('^', this.args[0], 2)
+          new BinaryOp('^', this.args[0], new Leaf('number', 2))
         )
       )
     }
@@ -661,7 +665,11 @@ class FunctionOp {
       return new BinaryOp(
         '/',
         this.args[0].toDerivative(...wrt),
-        new BinaryOp('^', new FunctionOp('cosh', this.args), 2)
+        new BinaryOp(
+          '^',
+          new FunctionOp('cosh', this.args),
+          new Leaf('number', 2)
+        )
       )
     }
     if (this.name === 'asinh') {
@@ -670,7 +678,11 @@ class FunctionOp {
         this.args[0].toDerivative(...wrt),
         new BinaryOp(
           '^',
-          new BinaryOp('+', new BinaryOp('^', this.args[0], 2), 1),
+          new BinaryOp(
+            '+',
+            new BinaryOp('^', this.args[0], new Leaf('number', 2)),
+            1
+          ),
           new Leaf('number', 0.5)
         )
       )
@@ -681,7 +693,11 @@ class FunctionOp {
         this.args[0].toDerivative(...wrt),
         new BinaryOp(
           '^',
-          new BinaryOp('-', new BinaryOp('^', this.args[0], 2), 1),
+          new BinaryOp(
+            '-',
+            new BinaryOp('^', this.args[0], new Leaf('number', 2)),
+            1
+          ),
           new Leaf('number', 0.5)
         )
       )
@@ -690,7 +706,11 @@ class FunctionOp {
       return new BinaryOp(
         '/',
         this.args[0].toDerivative(...wrt),
-        new BinaryOp('-', 1, new BinaryOp('^', this.args[0], 2))
+        new BinaryOp(
+          '-',
+          1,
+          new BinaryOp('^', this.args[0], new Leaf('number', 2))
+        )
       )
     }
     if (this.name === 'log2') {

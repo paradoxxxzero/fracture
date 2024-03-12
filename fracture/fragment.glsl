@@ -115,7 +115,7 @@ void main(void) {
     zexp += exp(-length(z) - .5 / (length(z - z_1)));
     #endif
 
-    #ifdef USE_DERIVATIVE 
+    #if defined(USE_DERIVATIVE) && (defined(CONVERGENT) || defined(DIVERGENT))
     vec2 zdzt = zdz;
     zdz = F_prime(z, c, zdz, zdz_1);
     zdz_1 = zdzt;
@@ -202,21 +202,49 @@ void main(void) {
     #endif
 
     #if !defined(CONVERGENT) && !defined(DIVERGENT)
+    const float gridWidth = .004;
     // Domain coloring of z:
     float h = atan(z.y, z.x) / TAU;
     float s = 1.;
-    #if AMBIANCE == 0
+      #if AMBIANCE < 4
+    float l = .5;
+      #elif AMBIANCE == 4
+    float ll = log2(length(z));
+    float l = .3 + .4 * aafract(ll);
+      #elif AMBIANCE == 5
     float l = 2. * atan(length(z)) / PI;
-    #elif AMBIANCE == 1
-    float zz = dot(z, z);
-    float l = zz / (zz + 1.);
-    #elif AMBIANCE == 2
+      #elif AMBIANCE == 6
     float l = 1. - exp(-length(z));
-    #else
+      #else
     float l = 1. - pow(2., -length(z));
-    #endif
+      #endif
 
     col = smoothstep(0., 1., hsl2rgb(vec3(h, s, l)));
+      #ifdef USE_DERIVATIVE 
+    float res = 50. / derivative;
+        #if AMBIANCE == 2 || AMBIANCE == 3
+    res *= scale * scale;
+        #endif
+
+    vec2 d = mod(z, 2. * res);
+    d = min(d, 2. * res - d);
+
+    vec2 der = vec2(scale);
+    vec2 der_1 = vec2(0.);
+    vec2 ztt = z;
+    z = z_1;
+    float dd = length(F_prime(z, c, der, der_1));
+    z = ztt;
+    col = mix(col, vec3(0.), smoothstep(gridWidth * dd, 0., min(d.x, d.y)) * .45);
+
+        #if AMBIANCE == 0 || AMBIANCE == 3
+    float lz = length(z);
+    float dl = mod(lz, 2. * res);
+    dl = min(dl, 2. * res - dl);
+    col = mix(col, vec3(1.), smoothstep(gridWidth * dd, 0., dl) * .45);
+        #endif
+
+      #endif
     break;
     #endif
 
