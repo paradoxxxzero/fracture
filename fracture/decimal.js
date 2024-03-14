@@ -425,6 +425,7 @@ export class Complex {
   log() {
     return new Complex(this.abs().log(), this.arg())
   }
+
   pow(k) {
     k = cx(k)
     if (k.im.toNumber() === 0) {
@@ -497,6 +498,28 @@ export class Complex {
   }
   imag() {
     return this.im
+  }
+  //TODO
+  gamma() {
+    return this
+  }
+  psi() {
+    return this
+  }
+  beta(w) {
+    return this
+  }
+  zeta() {
+    return this
+  }
+  cn() {
+    return this
+  }
+  sn() {
+    return this
+  }
+  dn() {
+    return this
   }
   toString() {
     return `complex: <${this.re}+${this.im}i>`

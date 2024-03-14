@@ -63,7 +63,7 @@ void main(void) {
   vec2 z_1 = vec2(0.);
   vec2 z_2 = vec2(0.);
 
-  #if defined(USE_DERIVATIVE) || SMOOTHING == 3
+  #if defined(USE_DERIVATIVE) || SMOOTHING >= 3
   float zdzmax = exp(-derivative * .15);
     #ifdef FIXED// Mandelbrot-like
   vec2 zdc = vec2(0., 0.);
@@ -91,9 +91,9 @@ void main(void) {
 
   vec3 col = vec3(0.);
   for(int i = 0; i < iterations; i++) {
-    #if defined(USE_DERIVATIVE) || SMOOTHING == 3
+    #if defined(USE_DERIVATIVE) || SMOOTHING >= 3
     vec2 zdct = zdc;
-    zdc = F_prime(z, c, zdc, zdc_1) + vec2(1., 0.);
+    zdc = F_prime_c(z, c, zdc, zdc_1);
     zdc_1 = zdct;
     #endif
 
@@ -117,14 +117,16 @@ void main(void) {
 
     #if defined(USE_DERIVATIVE) && (defined(CONVERGENT) || defined(DIVERGENT))
     vec2 zdzt = zdz;
-    zdz = F_prime(z, c, zdz, zdz_1);
+    zdz = F_prime_z(z, c, zdz, zdz_1);
     zdz_1 = zdzt;
 
     float zdzzdz = dot(zdz, zdz);
     if(zdzzdz < zdzmax) {
       #ifdef SHOW_DERIVATIVE
       float n = float(i) + 1.;
-      #if SMOOTHING == 2
+      #if SMOOTHING == 1
+      // n -= log2(1. / log2(1. / zdzzdz));
+      #elif SMOOTHING == 2
       n = 10. * zexp;
       #endif
       col = color(n, .5);
@@ -148,8 +150,11 @@ void main(void) {
         n += log(BAILIN / prev) / log(diff / prev);
         #elif SMOOTHING == 2
         n = 10. * zexp;
-        #elif SMOOTHING == 3
+        #elif SMOOTHING >= 3
         float d = sqrt(dot(z, z) / dot(zdc, zdc)) * log(dot(z, z));
+        #if SMOOTHING == 4
+        d /= scale;
+        #endif
         n = 130. / pow(d, .02);
         #endif
 
@@ -172,8 +177,11 @@ void main(void) {
       n += log(BAILIN / prev) / log(diff / prev);
       #elif SMOOTHING == 2
       n = 10. * zexp;
-      #elif SMOOTHING == 3
+      #elif SMOOTHING >= 3
       float d = sqrt(dot(z, z) / dot(zdc, zdc)) * log(dot(z, z));
+        #if SMOOTHING == 4
+      d /= scale;
+        #endif
       n = 130. / pow(d, .02);
       #endif
       col = color(n);
@@ -191,8 +199,11 @@ void main(void) {
       n -= log2(log2(zz)) - 4.0;
       #elif SMOOTHING == 2
       n = 10. * zexp;
-      #elif SMOOTHING == 3
+      #elif SMOOTHING >= 3
       float d = sqrt(zz / dot(zdc, zdc)) * log(zz);
+        #if SMOOTHING == 4
+      d /= scale;
+        #endif
       n = 130. / pow(d, .02);
       #endif
 
@@ -202,29 +213,24 @@ void main(void) {
     #endif
 
     #if !defined(CONVERGENT) && !defined(DIVERGENT)
-    const float gridWidth = .004;
+    const float gridWidth = .0025;
     // Domain coloring of z:
-    float h = atan(z.y, z.x) / TAU;
-    float s = 1.;
-      #if AMBIANCE < 4
-    float l = .5;
-      #elif AMBIANCE == 4
+    float h = (atan(z.y, z.x) + PI) / TAU;
+    // float s = 1.;
+    // float l = .5;
     float ll = log2(length(z));
     float l = .3 + .4 * aafract(ll);
-      #elif AMBIANCE == 5
-    float l = 2. * atan(length(z)) / PI;
-      #elif AMBIANCE == 6
-    float l = 1. - exp(-length(z));
-      #else
-    float l = 1. - pow(2., -length(z));
-      #endif
+    // float l = 2. * atan(length(z)) / PI;
+    // float l = 1. - exp(-length(z));
+    // float l = 1. - pow(2., -length(z));
 
-    col = smoothstep(0., 1., hsl2rgb(vec3(h, s, l)));
+    // col = smoothstep(0., 1., hsl2rgb(vec3(h, s, l)));
+    col = color(h * 100.) * l;
       #ifdef USE_DERIVATIVE 
     float res = 50. / derivative;
-        #if AMBIANCE == 2 || AMBIANCE == 3
-    res *= scale * scale;
-        #endif
+    //     #if AMBIANCE == 2 || AMBIANCE == 3
+    // res *= scale * scale;
+    //     #endif
 
     vec2 d = mod(z, 2. * res);
     d = min(d, 2. * res - d);
@@ -233,15 +239,15 @@ void main(void) {
     vec2 der_1 = vec2(0.);
     vec2 ztt = z;
     z = z_1;
-    float dd = length(F_prime(z, c, der, der_1));
+    float dd = length(F_prime_z(z, c, der, der_1));
     z = ztt;
-    col = mix(col, vec3(0.), smoothstep(gridWidth * dd, 0., min(d.x, d.y)) * .45);
+    col = mix(col, vec3(0.), smoothstep(gridWidth * dd, 0., min(d.x, d.y)));
 
-        #if AMBIANCE == 0 || AMBIANCE == 3
+        #ifdef SHOW_DERIVATIVE
     float lz = length(z);
     float dl = mod(lz, 2. * res);
     dl = min(dl, 2. * res - dl);
-    col = mix(col, vec3(1.), smoothstep(gridWidth * dd, 0., dl) * .45);
+    col = mix(col, vec3(1.), smoothstep(gridWidth * dd, 0., dl));
         #endif
 
       #endif

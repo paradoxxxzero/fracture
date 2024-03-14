@@ -150,7 +150,7 @@ export const presets = withDefaults([
     name: 'Newton',
     params: {
       varying: 'z',
-      f: 'z - (z^3 - 1) / (3 * z^2) + c',
+      f: 'z - (z^3 - 1)# + c',
       useDerivative: false,
       useRoots: true,
       convergent: true,
@@ -162,21 +162,7 @@ export const presets = withDefaults([
     params: {
       center: cx(1),
       point: cx(-0.5),
-      f: 'z - (z^3 - 1) / (3 * z^2) + c',
-      f_perturb: '3 * Z^2 * dz + dc',
-      useDerivative: false,
-      convergent: true,
-      divergent: false,
-    },
-  },
-  {
-    name: 'Nova2',
-    params: {
-      center: cx(1),
-      point: cx(-0.5),
-      f: '(2/3 * z^3 - 2 * z - 1)/(z + 1)^2 + 1 + c',
-      f_perturb:
-        '1/3 * ((12 * dz + 1)/(Z + dz + 1)^2 + 2 * dz - 1 / (Z - 1)^2) + dc',
+      f: 'z - (z^3 - 1)# + c',
       useDerivative: false,
       convergent: true,
       divergent: false,

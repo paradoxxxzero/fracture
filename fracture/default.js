@@ -1,17 +1,17 @@
 import { cx } from './decimal'
 import './formula'
 
-export const ambiances = [
-  'calm',
-  'stormy',
-  'surreal',
-  'psychedelic',
-  'sunset',
-  'night',
-  'dawn',
-  'day',
+export const palettes = [
+  'yellow_blue',
+  'rainbow',
+  'red_green',
+  'yellow_green',
+  'orange_purple',
+  'yellow_purple',
+  'pink_green',
+  'pink_yellow',
 ]
-export const smoothings = ['none', 'log', 'exp', 'distance']
+export const smoothings = ['none', 'log', 'exp', 'distance', 'distance_scaled']
 export const varyings = ['z', 'c', 'zc']
 
 export const defaultParams = {
@@ -38,9 +38,10 @@ export const defaultParams = {
     [0, 1],
   ],
   f: 'z^2 + c',
-  f_prime: null, // Auto
+  f_prime_z: null, // Auto
+  f_prime_c: null, // Auto
   f_perturb: null,
-  ambiance: 'calm',
+  palette: 'yellow_blue',
   useRoots: false,
   convergent: false,
   bailin: -6,
@@ -51,14 +52,15 @@ export const defaultParams = {
 export const allParams = Object.keys(defaultParams)
 export const compileParams = [
   'f',
-  'f_prime',
+  'f_prime_z',
+  'f_prime_c',
   'f_perturb',
   'varying',
   'useRoots',
   'roots',
   'convergent',
   'divergent',
-  'ambiance',
+  'palette',
   'perturb',
   'useDerivative',
   'showDerivative',

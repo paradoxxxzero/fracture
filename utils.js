@@ -41,52 +41,49 @@ export const arrayEquals = (a, b) => {
   )
 }
 
-export const getRoots = (f, c = cx()) => {
+export const newtonMethod = (z0, F, c, iters = 100, eps = 1e-6) => {
+  // F should be in the form of z => z - f(z) / f'(z) (+ c)
+  // Use Newton's method to find the root of f(z) = 0
+  let z = z0
+  let z_1 = cx()
+  for (let i = 0; i < iters; i++) {
+    let prev_z = z
+    z = F(z, c, z_1)
+    z_1 = prev_z
+    if (z.subtract(z_1).norm2() < eps) {
+      return z
+    }
+  }
+}
+
+export const getRoots = (
+  f,
+  c = cx(),
+  iters = 10,
+  step = 0.5,
+  size = 3.5,
+  eps = 1e-6
+) => {
   // Use Newton's method to find the roots of f(x)
 
   // eslint-disable-next-line no-new-func
   const F = new Function('z', 'c', 'z_1', `return ${ast(f).toComplex()}`)
-  const bounds = {
-    xmin: -2,
-    xmax: 2,
-    ymin: -2,
-    ymax: 2,
-  }
-  const EPSILON = 1e-6
-  const MAX_ITERATIONS = 100
-  const tries = 30
   const roots = []
-
-  for (let i = 0; i < tries; i++) {
-    for (let j = 0; j < tries; j++) {
-      let z = cx(
-        bounds.xmin + ((bounds.xmax - bounds.xmin) * i) / tries,
-        bounds.ymin + ((bounds.ymax - bounds.ymin) * j) / tries
-      )
-      let z_1 = cx()
-      for (let k = 0; k < MAX_ITERATIONS; k++) {
-        let prev_z = z
-        try {
-          z = F(z, c, z_1)
-        } catch (e) {
-          break
+  for (let re = -size; re < size; re += step) {
+    for (let im = -size; im < size; im += step) {
+      let z = cx(re, im)
+      try {
+        let root = newtonMethod(z, F, c, iters, eps)
+        if (root && !roots.some(r => r.subtract(root).norm2() < eps)) {
+          roots.push(root)
         }
-        z_1 = prev_z
-        if (z.subtract(z_1).norm2() < EPSILON) {
-          if (
-            roots.every(
-              (
-                z => r =>
-                  r.subtract(z).norm2() > EPSILON
-              )(z)
-            )
-          ) {
-            roots.push(z)
-          }
-          break
-        }
+      } catch (e) {
+        continue
       }
     }
   }
+
   return roots
 }
+
+window.getRoots = getRoots

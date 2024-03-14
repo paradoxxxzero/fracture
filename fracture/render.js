@@ -1,5 +1,5 @@
 import { cx, m } from './decimal'
-import { ambiances, smoothings, uniformParams, varyings } from './default'
+import { palettes, smoothings, uniformParams, varyings } from './default'
 import { ast } from './formula'
 import fragmentSource from './fragment.glsl?raw'
 import includesSource from './includes.glsl?raw'
@@ -13,11 +13,13 @@ const preprocess = (rt, source) => {
         rt.perturb && rt.f_perturb ? '#define PERTURB' : '',
         rt.convergent ? '#define CONVERGENT' : '',
         rt.divergent ? '#define DIVERGENT' : '',
-        rt.useDerivative && rt.f_prime ? '#define USE_DERIVATIVE' : '',
+        rt.useDerivative && rt.f_prime_z && rt.f_prime_c
+          ? '#define USE_DERIVATIVE'
+          : '',
         rt.showDerivative ? '#define SHOW_DERIVATIVE' : '',
         rt.useSmoothing ? '#define USE_SMOOTHING' : '',
         rt.useDistanceEstimate ? '#define USE_DISTANCE_ESTIMATE' : '',
-        rt.useRoots && rt.roots
+        rt.useRoots && rt.roots?.length
           ? `#define USE_ROOTS\nvec2[] roots = vec2[](${rt.roots
               .map(
                 r =>
@@ -26,7 +28,7 @@ const preprocess = (rt, source) => {
               .join(', ')});`
           : '',
         `#define VARYING ${varyings.indexOf(rt.varying)}`,
-        `#define AMBIANCE ${ambiances.indexOf(rt.ambiance)}`,
+        `#define PALETTE ${palettes.indexOf(rt.palette)}`,
         `#define SMOOTHING ${smoothings.indexOf(rt.smoothing)}`,
       ]
         .filter(Boolean)
@@ -35,17 +37,31 @@ const preprocess = (rt, source) => {
     .replace('#include includes', includesSource)
     .replace(/F\(z,\s*c\)/g, ast(rt.f).toShader())
 
-  if (rt.f_prime) {
+  if (rt.f_prime_z) {
     source = source.replace(
-      /F_prime\s*\(z,\s*c,\s*(.*?),\s*(.*?)\)/g,
-      ast(rt.f_prime)
+      /F_prime_z\s*\(z,\s*c,\s*(.*?),\s*(.*?)\)/g,
+      ast(rt.f_prime_z)
         .toShader()
         .replace(/z_prime/g, '$1')
         .replace(/z_1_prime/g, '$2')
     )
   } else {
     source = source.replace(
-      /F_prime\s*\(z,\s*c,\s*(.*?),\s*(.*?)\)/g,
+      /F_prime_z\s*\(z,\s*c,\s*(.*?),\s*(.*?)\)/g,
+      'vec2(0)'
+    )
+  }
+  if (rt.f_prime_c) {
+    source = source.replace(
+      /F_prime_c\s*\(z,\s*c,\s*(.*?),\s*(.*?)\)/g,
+      ast(rt.f_prime_c)
+        .toShader()
+        .replace(/z_prime/g, '$1')
+        .replace(/z_1_prime/g, '$2')
+    )
+  } else {
+    source = source.replace(
+      /F_prime_c\s*\(z,\s*c,\s*(.*?),\s*(.*?)\)/g,
       'vec2(0)'
     )
   }
@@ -185,7 +201,7 @@ export const recompile = rt => {
   }, {})
 
   if (window.location.search.includes('debug')) {
-    ;['f', 'f_prime', 'f_perturb'].forEach((name, i) => {
+    ;['f', 'f_prime_z', 'f_prime_c', 'f_perturb'].forEach((name, i) => {
       const st = ast(rt[name])
       console.info(name, st.toShader(), st.toComplex())
     })

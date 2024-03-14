@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 
-import { ambiances, smoothings, varyings } from '../default.js'
+import { palettes, smoothings, varyings } from '../default.js'
 import {
   eyeIcon,
   lockIcon,
@@ -156,9 +156,17 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
               />
               {params.useDerivative ? (
                 <ComplexFormula
-                  label="F'(z, z', c) ="
-                  name="f_prime"
-                  value={runtime.f_prime}
+                  label="dF(z, z', c)/dz ="
+                  name="f_prime_z"
+                  value={runtime.f_prime_z}
+                  onChange={handleChange}
+                />
+              ) : null}
+              {params.useDerivative ? (
+                <ComplexFormula
+                  label="dF(z, z', c)/dc ="
+                  name="f_prime_c"
+                  value={runtime.f_prime_c}
                   onChange={handleChange}
                 />
               ) : null}
@@ -177,10 +185,10 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
           {['simple', 'advanced', 'full'].includes(showUI) ? (
             <aside className="view">
               <Select
-                label="Ambiance"
-                name="ambiance"
-                value={params.ambiance}
-                options={ambiances}
+                label="Palette"
+                name="palette"
+                value={params.palette}
+                options={palettes}
                 onChange={handleChange}
               />
               <Select

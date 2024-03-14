@@ -30,13 +30,24 @@ export const filterParams = (maybeBadParams, changed = [], oldParams) => {
     }
   })
   if (
-    (changed.includes('f') && !changed.includes('f_prime')) ||
-    params.f_prime === null
+    (changed.includes('f') && !changed.includes('f_prime_z')) ||
+    params.f_prime_z === null
   ) {
     try {
-      params.f_prime = derive(params.f).toString()
+      params.f_prime_z = derive(params.f, ['z', 'z_1']).toString()
     } catch (e) {
-      badParams.push('f_prime')
+      badParams.push('f_prime_z')
+      console.warn(e)
+    }
+  }
+  if (
+    (changed.includes('f') && !changed.includes('f_prime_c')) ||
+    params.f_prime_c === null
+  ) {
+    try {
+      params.f_prime_c = derive(params.f, ['z', 'z_1'], ['c']).toString()
+    } catch (e) {
+      badParams.push('f_prime_c')
       console.warn(e)
     }
   }
