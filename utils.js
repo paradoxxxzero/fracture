@@ -55,35 +55,3 @@ export const newtonMethod = (z0, F, c, iters = 100, eps = 1e-6) => {
     }
   }
 }
-
-export const getRoots = (
-  f,
-  c = cx(),
-  iters = 10,
-  step = 0.5,
-  size = 3.5,
-  eps = 1e-6
-) => {
-  // Use Newton's method to find the roots of f(x)
-
-  // eslint-disable-next-line no-new-func
-  const F = new Function('z', 'c', 'z_1', `return ${ast(f).toComplex()}`)
-  const roots = []
-  for (let re = -size; re < size; re += step) {
-    for (let im = -size; im < size; im += step) {
-      let z = cx(re, im)
-      try {
-        let root = newtonMethod(z, F, c, iters, eps)
-        if (root && !roots.some(r => r.subtract(root).norm2() < eps)) {
-          roots.push(root)
-        }
-      } catch (e) {
-        continue
-      }
-    }
-  }
-
-  return roots
-}
-
-window.getRoots = getRoots

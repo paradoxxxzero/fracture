@@ -136,41 +136,14 @@ void main(void) {
     #endif
 
     #ifdef CONVERGENT
-      #ifdef USE_ROOTS
-    bool broken = false;
-    for(int j = 0; j < roots.length(); j++) {
-      vec2 root = roots[j];
-      float diff = dot2(z - root);
-      if(diff < BAILIN) {
-        float r = float(j) / float(roots.length());
-        float n = float(i);
-
-        #if SMOOTHING == 1
-        float prev = dot2(z_1 - root);
-        n += log(BAILIN / prev) / log(diff / prev);
-        #elif SMOOTHING == 2
-        n = 10. * zexp;
-        #elif SMOOTHING >= 3
-        float d = sqrt(dot(z, z) / dot(zdc, zdc)) * log(dot(z, z));
-        #if SMOOTHING == 4
-        d /= scale;
-        #endif
-        n = 130. / pow(d, .02);
-        #endif
-
-        col = color(n, r);
-        broken = true;
-        break;
-      }
-    }
-    if(broken) {
-      break;
-    }
-      #else
-
     float z_z_1 = dot2(z - z_1);
     if(z_z_1 < BAILIN) {
       float n = float(i);
+      float r = 0.;
+      #ifdef USE_ROOTS
+      r = carg(z) / TAU;
+      #endif
+
       #if SMOOTHING == 1
       float diff = dot2(z - z_1);
       float prev = dot2(z_1 - z_2);
@@ -184,16 +157,20 @@ void main(void) {
         #endif
       n = 130. / pow(d, .02);
       #endif
-      col = color(n);
+      col = color(n, r);
       break;
     }
-      #endif
     #endif
 
     #ifdef DIVERGENT
     float zz = dot(z, z);
     if(zz > BAILOUT) {
       float n = float(i);
+      float r = 0.;
+      #ifdef USE_ROOTS
+      r = carg(z) / TAU;
+      #endif
+
       // Smooth iteration count
       #if SMOOTHING == 1
       n -= log2(log2(zz)) - 4.0;
@@ -207,7 +184,7 @@ void main(void) {
       n = 130. / pow(d, .02);
       #endif
 
-      col = color(n);
+      col = color(n, r);
       break;
     }
     #endif
@@ -216,15 +193,10 @@ void main(void) {
     const float gridWidth = .0025;
     // Domain coloring of z:
     float h = (atan(z.y, z.x) + PI) / TAU;
-    // float s = 1.;
-    // float l = .5;
     float ll = log2(length(z));
     float l = .3 + .4 * aafract(ll);
     // float l = 2. * atan(length(z)) / PI;
-    // float l = 1. - exp(-length(z));
-    // float l = 1. - pow(2., -length(z));
 
-    // col = smoothstep(0., 1., hsl2rgb(vec3(h, s, l)));
     col = color(h * 100.) * l;
       #ifdef USE_DERIVATIVE 
     float res = 50. / derivative;

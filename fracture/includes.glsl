@@ -153,6 +153,13 @@ vec2 cexp(in vec2 z) {
   return exp(z.x) * expi(z.y);
 }
 
+float cnorm(in vec2 z) {
+  return length(z);
+}
+float carg(in vec2 z) {
+  return atan(z.y, z.x);
+}
+
 vec2 csqrt(in vec2 z) {
   float r = length(z);
   return vec2(sqrt(0.5 * (r + z.x)), sign(z.y) * sqrt(0.5 * (r - z.x)));

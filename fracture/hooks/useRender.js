@@ -1,23 +1,10 @@
 import { useEffect } from 'react'
 import { recompile, render, updateUniforms } from '../render'
-import { getRoots } from '../../utils'
 import { allParams, compileParams, uniformParams } from '../default'
 
 const params = (runtime, keys) => keys.map(key => runtime[key])
 
 export const useRender = (runtime, setRuntime) => {
-  useEffect(() => {
-    setRuntime(runtime => {
-      if (runtime.useRoots) {
-        return {
-          ...runtime,
-          roots: getRoots(runtime.f),
-        }
-      }
-      return runtime
-    })
-  }, [runtime.f, runtime.useRoots, setRuntime])
-
   useEffect(() => {
     setRuntime(runtime => {
       return {

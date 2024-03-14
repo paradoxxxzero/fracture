@@ -57,7 +57,6 @@ export const compileParams = [
   'f_perturb',
   'varying',
   'useRoots',
-  'roots',
   'convergent',
   'divergent',
   'palette',

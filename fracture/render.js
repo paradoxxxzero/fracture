@@ -19,14 +19,7 @@ const preprocess = (rt, source) => {
         rt.showDerivative ? '#define SHOW_DERIVATIVE' : '',
         rt.useSmoothing ? '#define USE_SMOOTHING' : '',
         rt.useDistanceEstimate ? '#define USE_DISTANCE_ESTIMATE' : '',
-        rt.useRoots && rt.roots?.length
-          ? `#define USE_ROOTS\nvec2[] roots = vec2[](${rt.roots
-              .map(
-                r =>
-                  `vec2(${r.re.toNumber().toFixed(12)}, ${r.im.toNumber().toFixed(12)})`
-              )
-              .join(', ')});`
-          : '',
+        rt.useRoots ? '#define USE_ROOTS' : '',
         `#define VARYING ${varyings.indexOf(rt.varying)}`,
         `#define PALETTE ${palettes.indexOf(rt.palette)}`,
         `#define SMOOTHING ${smoothings.indexOf(rt.smoothing)}`,
