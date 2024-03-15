@@ -141,7 +141,16 @@ void main(void) {
       float n = float(i);
       float r = 0.;
       #ifdef USE_ROOTS
-      r = carg(z) / TAU;
+      if(abs(z.y) < BAILIN) {
+        z.y = 0.;
+        if(abs(z.x) < BAILIN) {
+          z.x = 0.;
+        }
+      }
+      float l = length(z);
+      if(l > .002) {
+        r = (mod(atan(z.y, z.x) + l * TAU, TAU)) / (TAU);
+      }
       #endif
 
       #if SMOOTHING == 1
@@ -168,7 +177,7 @@ void main(void) {
       float n = float(i);
       float r = 0.;
       #ifdef USE_ROOTS
-      r = carg(z) / TAU;
+      r = carg(z) / (cnorm(z) * TAU);
       #endif
 
       // Smooth iteration count
@@ -190,7 +199,7 @@ void main(void) {
     #endif
 
     #if !defined(CONVERGENT) && !defined(DIVERGENT)
-    const float gridWidth = .0025;
+    const float gridWidth = .001;
     // Domain coloring of z:
     float h = (atan(z.y, z.x) + PI) / TAU;
     float ll = log2(length(z));
@@ -220,8 +229,13 @@ void main(void) {
     float dl = mod(lz, 2. * res);
     dl = min(dl, 2. * res - dl);
     col = mix(col, vec3(1.), smoothstep(gridWidth * dd, 0., dl));
-        #endif
 
+        #endif
+      #endif
+      #ifndef USE_ROOTS
+    float llz = .5 * log(dot2(z));
+    col = mix(col, vec3(0.), smoothstep(4., 0., llz + 4.));
+    col = mix(col, vec3(1.), smoothstep(3., 1.5, 8. - llz));
       #endif
     break;
     #endif

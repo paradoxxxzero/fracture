@@ -40,12 +40,23 @@ export default function ComplexFormula({
         ]
         // eslint-disable-next-line no-new-func
         const F = new Function(...params, `return ${ast(newRaw).toComplex()}`)
-        const args = params.map(p => cx(Math.random()))
+        const args = params.map(p => cx(Math.random(), Math.random()))
         F(...args)
       } catch (e) {
-        console.warn(e)
-        setValid(false)
-        return
+        if (e instanceof SyntaxError) {
+          console.warn('Syntax error in formula', e)
+          setValid(false)
+          return
+        }
+        if (
+          e.toString().includes('undeclared identifier') ||
+          e.toString().includes('is not defined') ||
+          e.toString().includes('is not a function')
+        ) {
+          console.warn('Undeclared identifier in formula', e)
+          setValid(false)
+          return
+        }
       }
       setValid(true)
       onChange(name, newRaw)

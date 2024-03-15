@@ -65,6 +65,8 @@ const functionShader = {
   sn: 'csn',
   cn: 'ccn',
   dn: 'cdn',
+  arg: 'carg',
+  norm: 'length',
 }
 const opFunctions = {
   '+': (a, b) => a + b,
@@ -615,6 +617,15 @@ class FunctionOp {
       .join(', ')})`
   }
   toDerivative(wrt_funs, wrt_vars) {
+    if (this.args.length === 0) {
+      if (this.name === 're') {
+        return new Leaf('number', 1)
+      }
+      if (this.name === 'im') {
+        return new Leaf('number', 0)
+      }
+      return this
+    }
     if (this.name === 'log') {
       return new BinaryOp(
         '/',
@@ -789,6 +800,44 @@ class FunctionOp {
         this.args[0].toDerivative(wrt_funs, wrt_vars)
       )
     }
+    if (this.name === 'sn') {
+      return new BinaryOp(
+        '*',
+        new BinaryOp(
+          '*',
+          new FunctionOp('cn', this.args),
+          new FunctionOp('dn', this.args)
+        ),
+        this.args[0].toDerivative(wrt_funs, wrt_vars)
+      )
+    }
+    if (this.name === 'cn') {
+      return new BinaryOp(
+        '*',
+        new BinaryOp(
+          '*',
+          new UnaryOp('-', new FunctionOp('sn', this.args)),
+          new FunctionOp('dn', this.args)
+        ),
+        this.args[0].toDerivative(wrt_funs, wrt_vars)
+      )
+    }
+    if (this.name === 'dn') {
+      return new BinaryOp(
+        '*',
+        new BinaryOp(
+          '*',
+          new BinaryOp(
+            '*',
+            new UnaryOp('-', this.args[1] || new Leaf('number', 0.8)),
+            new FunctionOp('sn', this.args)
+          ),
+          new FunctionOp('cn', this.args)
+        ),
+        this.args[0].toDerivative(wrt_funs, wrt_vars)
+      )
+    }
+
     if (this.name === 'gamma') {
       return new BinaryOp(
         '*',
@@ -923,7 +972,7 @@ const readToken = (input, i) => {
       return new Token(type, text, i, i + text.length)
     }
   }
-  throw new Error('Tokenization error at index ' + i + ' in ' + input)
+  throw new SyntaxError('Tokenization error at index ' + i + ' in ' + input)
 }
 
 const tokenize = input => {
@@ -945,6 +994,9 @@ const parse = tokens => {
     let node = term()
     while (i < tokens.length) {
       const token = tokens[i]
+      if (!token) {
+        throw new SyntaxError('Unexpected EOF')
+      }
       if (
         token.type === 'operator' &&
         ['+', '-', '|-|'].includes(token.value)
@@ -961,6 +1013,9 @@ const parse = tokens => {
     let node = exponentiation()
     while (i < tokens.length) {
       const token = tokens[i]
+      if (!token) {
+        throw new SyntaxError('Unexpected EOF')
+      }
       if (token.type === 'operator' && ['*', '/'].includes(token.value)) {
         i++
         node = new BinaryOp(token.value, node, exponentiation())
@@ -976,6 +1031,9 @@ const parse = tokens => {
     let node = suffix()
     while (i < tokens.length) {
       const token = tokens[i]
+      if (!token) {
+        throw new SyntaxError('Unexpected EOF')
+      }
       if (token.type === 'operator' && ['^', '**'].includes(token.value)) {
         i++
         node = new BinaryOp('^', node, exponentiation())
@@ -989,6 +1047,9 @@ const parse = tokens => {
     let node = factor()
     while (i < tokens.length) {
       const token = tokens[i]
+      if (!token) {
+        throw new SyntaxError('Unexpected EOF')
+      }
       if (token.type === 'unarySuffix') {
         i++
         node = new UnaryOp(token.value, node)
@@ -1000,19 +1061,22 @@ const parse = tokens => {
   }
   const factor = () => {
     const token = tokens[i]
+    if (!token) {
+      throw new SyntaxError('Unexpected EOF')
+    }
     if (token.type === 'lparen') {
       i++
       const node = expression()
-      if (tokens[i].type !== 'rparen') {
-        throw new Error('Expected ) at ' + tokens[i].start)
+      if (tokens[i]?.type !== 'rparen') {
+        throw new SyntaxError('Expected ) at ' + (tokens[i]?.start || 'EOF'))
       }
       i++
       return node
     } else if (token.type === 'pipe') {
       i++
       const node = expression()
-      if (tokens[i].type !== 'pipe') {
-        throw new Error('Expected | at ' + tokens[i].start)
+      if (tokens[i]?.type !== 'pipe') {
+        throw new SyntaxError('Expected | at ' + (tokens[i]?.start || 'EOF'))
       }
       i++
       return new FunctionOp('abs', [node])
@@ -1034,7 +1098,7 @@ const parse = tokens => {
         while (tokens[i]?.type !== 'rparen') {
           args.push(expression())
           if (!tokens[i]) {
-            throw new Error('Expected ) at EOF')
+            throw new SyntaxError('Expected ) at EOF')
           }
           if (tokens[i]?.type === 'comma') {
             i++
@@ -1045,12 +1109,12 @@ const parse = tokens => {
       }
       return identifier
     } else {
-      throw new Error(`Unexpected token ${token}`)
+      throw new SyntaxError(`Unexpected token ${token}`)
     }
   }
   const ast = expression()
   if (i !== tokens.length) {
-    throw new Error(`Unexpected EOF ${tokens[i]}`)
+    throw new SyntaxError(`Unexpected EOF ${tokens[i]}`)
   }
   return ast
 }

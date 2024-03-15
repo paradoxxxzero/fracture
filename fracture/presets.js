@@ -1,5 +1,5 @@
 import { cx } from './decimal'
-import { defaultParams } from './default'
+import { defaultParams, smoothings } from './default'
 
 const rotate = o => [
   [Math.cos(o), -Math.sin(o)],
@@ -52,6 +52,33 @@ const julia = (name, n, c, extra = {}) => ({
     velocity: 7,
     varying: 'z',
     point: c,
+    ...extra,
+  },
+})
+
+const newt = (name, f, g, extra = {}) => ({
+  name,
+  params: {
+    varying: 'z',
+    f: `z - ${g ? `${g} * ` : ''}(${f})# + c`,
+    iterations: 75,
+    useDerivative: false,
+    useRoots: true,
+    convergent: true,
+    divergent: false,
+    ...extra,
+  },
+})
+
+const nova = (name, f, g, extra = {}) => ({
+  name,
+  params: {
+    center: cx(1),
+    point: cx(-0.5),
+    f: `z - ${g ? `${g} * ` : ''}(${f})# + c`,
+    useDerivative: false,
+    convergent: true,
+    divergent: false,
     ...extra,
   },
 })
@@ -147,26 +174,46 @@ export const presets = withDefaults([
     },
   },
   {
-    name: 'Newton',
-    params: {
-      varying: 'z',
-      f: 'z - (z^3 - 1)# + c',
-      useDerivative: false,
-      useRoots: true,
-      convergent: true,
-      divergent: false,
-    },
+    ...newt('Newton', 'z^3 - 1'),
+    subforms: [
+      newt('Newton', 'z^4 - 1'),
+      newt('Newton', 'z^3 - 2z + 2'),
+      newt('Newton', 'z^8 + 15z^4 - 16'),
+      newt('Newton', 'z^5 - 3i * z^3 - (5 + 2i) * z^2 + 3z + 1'),
+      newt('Newton', 'z^6 + z^3 - 1'),
+      newt('Newton', 'sin(z)', null, { center: cx(Math.PI / 2) }),
+      newt('Newton', 'cosh(z) - 1'),
+      newt('Newton', 'z^4 * sin(z) - 1'),
+      newt('Newton generalized', 'z^3 - 1', -0.5, {
+        divergent: true,
+        convergent: false,
+        smoothing: 'exp',
+        velocity: 75,
+      }),
+      newt('Newton generalized', 'z^2 - 1', '(1 + i)', {
+        divergent: true,
+        convergent: false,
+        smoothing: 'exp',
+        velocity: 75,
+        bailout: 1.5,
+        iterations: 100,
+        useRoots: false,
+      }),
+      newt('Newton generalized', 'z^(4 + 3i) - 1', 2, {
+        center: cx(1, 0.25),
+        scale: 0.05,
+      }),
+    ],
   },
   {
-    name: 'Nova',
-    params: {
-      center: cx(1),
-      point: cx(-0.5),
-      f: 'z - (z^3 - 1)# + c',
-      useDerivative: false,
-      convergent: true,
-      divergent: false,
-    },
+    ...nova('Nova', 'z^3 - 1'),
+    subforms: [
+      nova('Nova', 'z^4 - 1'),
+      nova('Nova', 'z^3 - 2z + 2'),
+      nova('Nova', 'z^8 + 15z^4 - 16'),
+      nova('Nova', 'z^6 + z^3 - 1'),
+      nova('Nova', 'z^4 * sin(z) - 1'),
+    ],
   },
   {
     name: 'Frothy',

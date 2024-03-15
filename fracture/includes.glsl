@@ -225,6 +225,9 @@ vec2 cpow(in vec2 z, in float k) {
 }
 vec2 cpow(in vec2 z, in int k) {
   vec2 w = vec2(1., 0.);
+  if(abs(k) > 10) {
+    return cpow(z, float(k));
+  }
   if(k < 0) {
     z = cinv(z);
     k = -k;
@@ -334,6 +337,16 @@ vec2 cdn(vec2 z, float k2) {
   sncndn(z.y, 1.0 - k2, snv, cnv, dnv);
   float a = 1.0 / (1.0 - dnu * dnu * snv * snv);
   return a * vec2(dnu * cnv * dnv, -k2 * snu * cnu * snv);
+}
+
+vec2 csn(vec2 z) {
+  return csn(z, .8);
+}
+vec2 ccn(vec2 z) {
+  return ccn(z, .8);
+}
+vec2 cdn(vec2 z) {
+  return cdn(z, .8);
 }
 
 vec2 cgamma(in vec2 z) {

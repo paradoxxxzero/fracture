@@ -195,6 +195,9 @@ export const recompile = rt => {
 
   if (window.location.search.includes('debug')) {
     ;['f', 'f_prime_z', 'f_prime_c', 'f_perturb'].forEach((name, i) => {
+      if (!rt[name]) {
+        return
+      }
       const st = ast(rt[name])
       console.info(name, st.toShader(), st.toComplex())
     })

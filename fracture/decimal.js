@@ -19,6 +19,7 @@ const shift = precision => {
 }
 const floatPrecision = 16
 const approx = 16
+
 export class Decimal {
   constructor(value = 0, precision) {
     if (typeof value === 'bigint') {
@@ -328,9 +329,6 @@ export class Complex {
     const r = this.re.exp()
     return new Complex(this.im.cos().multiply(r), this.im.sin().multiply(r))
   }
-  arg() {
-    return this.atan2()
-  }
   atan2() {
     // Full precision atan2
     const { re, im } = this
@@ -471,7 +469,7 @@ export class Complex {
         }
         let res = this
         for (let i = 1; i < p; i++) {
-          res = res.multiply(res)
+          res = res.multiply(this)
         }
         return res
       }
@@ -487,8 +485,11 @@ export class Complex {
   norm2() {
     return this.re.multiply(this.re).add(this.im.multiply(this.im))
   }
-  abs() {
+  norm() {
     return m(this.norm2().sqrt())
+  }
+  arg() {
+    return this.atan2()
   }
   conj() {
     return cx(this.re, -this.im)
@@ -546,8 +547,8 @@ const LN2 = p =>
     '0.6931471805599453094172321214581765680755001343602552541206800094933936219696947156058633269964186875420014810205706857336855202357581305570326707516350759619307275708283714351903070386238916734711233501153644979552391204751726815749320651555247341395258829504530070953263666426541042391578149520437404303855008019441706416715186447128399681717845469570262716310645461502572074024816377733896385506952606683411372738737229289564935470257626520988596932019650585547647033067936544325476327449512504060694381471046899465',
     p
   )
-export const cx = (re = 0, im = 0) =>
-  re instanceof Complex ? re : new Complex(m(re), m(im))
+export const cx = (re = 0, im = 0, p = null) =>
+  re instanceof Complex ? re : new Complex(m(re, p), m(im, p))
 
 window.m = m
 window.cx = cx
