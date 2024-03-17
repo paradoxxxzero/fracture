@@ -107,6 +107,13 @@ export class Decimal {
     num = this.adapt(num)
     return res.log().multiply(num).exp()
   }
+  tetra(num) {
+    let res = m(1)
+    for (let i = 0; i < num; i++) {
+      res = this.pow(res)
+    }
+    return res
+  }
   abs() {
     return m(this._n < 0 ? -this._n : this._n, this.precision)
   }
@@ -482,6 +489,13 @@ export class Complex {
     }
     return this.log().multiply(k).exp()
   }
+  tetra(num) {
+    let res = cx(1)
+    for (let i = 0; i < num; i++) {
+      res = this.pow(res)
+    }
+    return res
+  }
   norm2() {
     return this.re.multiply(this.re).add(this.im.multiply(this.im))
   }
@@ -499,28 +513,6 @@ export class Complex {
   }
   imag() {
     return this.im
-  }
-  //TODO
-  gamma() {
-    return this
-  }
-  psi() {
-    return this
-  }
-  beta(w) {
-    return this
-  }
-  zeta() {
-    return this
-  }
-  cn() {
-    return this
-  }
-  sn() {
-    return this
-  }
-  dn() {
-    return this
   }
   toString() {
     return `complex: <${this.re}+${this.im}i>`

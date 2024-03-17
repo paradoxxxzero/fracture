@@ -2,7 +2,7 @@ const tokens = {
   whitespace: /^\s+/,
   float: /^([0-9]+([.][0-9]*)?|[.][0-9]+)/,
   integer: /^[0-9]+/,
-  operator: /^(\*\*|[+\-*/^]|\|-\|)/,
+  operator: /^(\*\*|[+\-*/]|\^{1,2}|\|-\|)/,
   unaryPrefix: /^~/,
   unarySuffix: /^['#]/,
   identifier: /^[a-zA-Z_][a-zA-Z0-9_]*'?/,
@@ -18,6 +18,7 @@ const precedence = {
   '/': 4,
   '~': 5,
   '^': 6,
+  '^^': 6,
 }
 
 class Token {
@@ -39,9 +40,11 @@ const shaderBinary = {
   '*': 'cmul',
   '/': 'cdiv',
   '^': 'cpow',
+  '^^': 'ctetra',
   '|-|': 'diffabs',
 }
-const functionShader = {
+
+export const functionShader = {
   sqrt: 'csqrt',
   cos: 'ccos',
   sin: 'csin',
@@ -57,11 +60,13 @@ const functionShader = {
   atanh: 'catanh',
   log: 'clog',
   exp: 'cexp',
-  abs: 'cabs',
+  abs: 'cnorm',
   beta: 'cbeta',
   gamma: 'cgamma',
   zeta: 'czeta',
+  "zeta'": 'cdzeta',
   psi: 'cpsi',
+  phi: 'cphi',
   sn: 'csn',
   cn: 'ccn',
   dn: 'cdn',
@@ -74,6 +79,13 @@ const opFunctions = {
   '*': (a, b) => a * b,
   '/': (a, b) => a / b,
   '^': (a, b) => a ** b,
+  '^^': (a, b) => {
+    let result = 1
+    for (let i = 0; i < b; i++) {
+      result = a ** result
+    }
+    return result
+  },
 }
 
 const shaderUnary = {
@@ -88,6 +100,7 @@ const complexBinary = {
   '*': 'multiply',
   '/': 'divide',
   '^': 'pow',
+  '^^': 'tetra',
 }
 const complexUnary = {
   '-': 'neg',
@@ -137,7 +150,7 @@ class BinaryOp {
       (this.left instanceof BinaryOp &&
         precedence[this.left.type] < precedence[this.type]) ||
       (precedence[this.left.type] === precedence[this.type] &&
-        ['-', '/', '^'].includes(this.type))
+        ['-', '/', '^', '^^'].includes(this.type))
     ) {
       left = `(${left})`
     }
@@ -145,11 +158,11 @@ class BinaryOp {
       (this.right instanceof BinaryOp &&
         precedence[this.right.type] < precedence[this.type]) ||
       (precedence[this.right.type] === precedence[this.type] &&
-        ['-', '/', '^'].includes(this.type))
+        ['-', '/', '^', '^^'].includes(this.type))
     ) {
       right = `(${right})`
     }
-    if (this.type === '^') {
+    if (['^', '^^'].includes(this.type)) {
       return `${left}${this.type}${right}`
     }
     return `${left} ${this.type} ${right}`
@@ -333,21 +346,63 @@ class BinaryOp {
       }
       return new BinaryOp(
         '*',
-        this,
         new BinaryOp(
-          '*',
-          new FunctionOp('log', [this.left]),
+          '^',
+          this.left,
+          new BinaryOp('-', this.right, new Leaf('number', 1))
+        ),
+        new BinaryOp(
+          '+',
           new BinaryOp(
             '*',
             this.right,
-            new BinaryOp(
-              '^',
-              this.left,
-              new BinaryOp('-', this.right, new Leaf('number', 1))
-            )
+            this.left.toDerivative(wrt_funs, wrt_vars)
+          ),
+          new BinaryOp(
+            '*',
+            new BinaryOp('*', this.left, new FunctionOp('log', [this.left])),
+            this.right.toDerivative(wrt_funs, wrt_vars)
           )
         )
       )
+    }
+    if (this.type === '^^') {
+      if (
+        (this.left.type === 'number' ||
+          (this.left.type === 'identifier' &&
+            !wrt.includes(this.left.value))) &&
+        (this.right.type === 'number' ||
+          (this.right.type === 'identifier' && !wrt.includes(this.right.value)))
+      ) {
+        return this
+      }
+      const tetrationDerivative = (expr, n) =>
+        n <= 1
+          ? new Leaf('number', 1)
+          : new BinaryOp(
+              '*',
+              new BinaryOp('^^', expr, new Leaf('number', n)),
+              new BinaryOp(
+                '+',
+                new BinaryOp(
+                  '*',
+                  tetrationDerivative(expr, n - 1),
+                  new FunctionOp('log', [expr])
+                ),
+                new BinaryOp(
+                  '*',
+                  new BinaryOp('^^', expr, new Leaf('number', n - 1)),
+                  new BinaryOp('/', new Leaf('number', 1), expr)
+                )
+              )
+            )
+      if (this.right.type === 'number') {
+        return new BinaryOp(
+          '*',
+          this.left.toDerivative(wrt_funs, wrt_vars),
+          tetrationDerivative(this.left, this.right.value)
+        )
+      }
     }
 
     return new BinaryOp(
@@ -418,6 +473,24 @@ class BinaryOp {
           left.left,
           new Leaf('number', left.right.value * k)
         ).simplify()
+      }
+    }
+    if (
+      this.type === '^^' &&
+      (right.type === 'number' ||
+        (right instanceof UnaryOp && right.operand.type === 'number'))
+    ) {
+      let k = 0
+      if (right instanceof UnaryOp) {
+        k = right.operand.value * (right.type === '-' ? -1 : 1)
+      } else {
+        k = right.value
+      }
+      if (k === 0) {
+        return new Leaf('number', 1)
+      }
+      if (k === 1) {
+        return left
       }
     }
     if (right.type === 'number' && left.type === 'number') {
@@ -515,7 +588,7 @@ class UnaryOp {
     this.operand = operand
   }
   isPureReal() {
-    return this.operand.isPureReal() || ['.re', '.im'].includes(this.type)
+    return this.operand.isPureReal()
   }
   isPureImag() {
     return ['+', '-', '~'].includes(this.type) && this.operand.isPureImag()
@@ -610,7 +683,8 @@ class FunctionOp {
     return `${functionShader[this.name] || this.name}(${this.args.map(a => a.toShader()).join(', ')})`
   }
   toComplex() {
-    const name = { re: 'real', im: 'imag' }[this.name] || this.name
+    let name = { re: 'real', im: 'imag' }[this.name] || this.name
+    name = name.replace("'", '_prime')
     return `${this.args[0].toComplex()}.${name}(${this.args
       .slice(1)
       .map(a => a.toComplex())
@@ -837,7 +911,6 @@ class FunctionOp {
         this.args[0].toDerivative(wrt_funs, wrt_vars)
       )
     }
-
     if (this.name === 'gamma') {
       return new BinaryOp(
         '*',
@@ -850,10 +923,9 @@ class FunctionOp {
       )
     }
     if (['re', 'im'].includes(this.name)) {
-      return new BinaryOp(
-        '*',
-        new FunctionOp(this.name, this.args),
-        this.args[0].toDerivative(wrt_funs, wrt_vars)
+      return new FunctionOp(
+        this.name,
+        this.args.map(a => a.toDerivative(wrt_funs, wrt_vars))
       )
     }
     if (this.name === 'sign') {
@@ -955,9 +1027,9 @@ class Leaf {
     return this
   }
   simplify() {
-    if (this.type === 'identifier' && this.value === 'i') {
-      return new Complex(new Leaf('number', 0), new Leaf('number', 1))
-    }
+    // if (this.type === 'identifier' && this.value === 'i') {
+    //   return new Complex(new Leaf('number', 0), new Leaf('number', 1))
+    // }
     return this
   }
 }
@@ -1034,9 +1106,16 @@ const parse = tokens => {
       if (!token) {
         throw new SyntaxError('Unexpected EOF')
       }
-      if (token.type === 'operator' && ['^', '**'].includes(token.value)) {
+      if (
+        token.type === 'operator' &&
+        ['^', '**', '^^'].includes(token.value)
+      ) {
         i++
-        node = new BinaryOp('^', node, exponentiation())
+        node = new BinaryOp(
+          token.value === '**' ? '^' : token.value,
+          node,
+          exponentiation()
+        )
       } else {
         break
       }

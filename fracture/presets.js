@@ -1,5 +1,5 @@
 import { cx } from './decimal'
-import { defaultParams, smoothings } from './default'
+import { defaultParams, smoothings, palettes } from './default'
 
 const rotate = o => [
   [Math.cos(o), -Math.sin(o)],
@@ -79,6 +79,20 @@ const nova = (name, f, g, extra = {}) => ({
     useDerivative: false,
     convergent: true,
     divergent: false,
+    ...extra,
+  },
+})
+
+const domain = (name, f, extra = {}) => ({
+  name,
+  params: {
+    f,
+    varying: 'z',
+    palette: 'rainbow',
+    divergent: false,
+    useDerivative: true,
+    showDerivative: true,
+    scale: 2.5,
     ...extra,
   },
 })
@@ -181,6 +195,7 @@ export const presets = withDefaults([
       newt('Newton', 'z^8 + 15z^4 - 16'),
       newt('Newton', 'z^5 - 3i * z^3 - (5 + 2i) * z^2 + 3z + 1'),
       newt('Newton', 'z^6 + z^3 - 1'),
+      newt('Newton', 'z^^3 - 1'),
       newt('Newton', 'sin(z)', null, { center: cx(Math.PI / 2) }),
       newt('Newton', 'cosh(z) - 1'),
       newt('Newton', 'z^4 * sin(z) - 1'),
@@ -254,5 +269,20 @@ export const presets = withDefaults([
       f: '|re(z^2)| + i * im(z^2) + c',
       useDerivative: false,
     },
+  },
+  {
+    ...domain('Domain coloring', 'z + c'),
+    subforms: [
+      domain('Domain coloring', 'z^2 + c'),
+      domain('Domain coloring', 'sin(z) + c', { scale: 3 }),
+      domain('Domain coloring', 'tan(z) + c'),
+      domain('Domain coloring', '(z^3 - 2 * z + i) / (z^2 + 1) + c'),
+      domain('Domain coloring', 'gamma(z) + c'),
+      domain('Domain coloring', 'zeta(z) + c'),
+      domain('Domain coloring', 'cn(z, .5) + c'),
+      domain('Domain coloring', 'sn(z, .5) + c'),
+      domain('Domain coloring', 'dn(z, .5) + c'),
+      domain('Domain coloring', 'z^^3 + c'),
+    ],
   },
 ])

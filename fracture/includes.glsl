@@ -145,6 +145,9 @@ float cdiv(in float k, in float w) {
 vec2 conj(in vec2 z) {
   return vec2(z.x, -z.y);
 }
+float conj(in float k) {
+  return k;
+}
 
 vec2 expi(in float x) {
   return vec2(cos(x), sin(x));
@@ -152,73 +155,130 @@ vec2 expi(in float x) {
 vec2 cexp(in vec2 z) {
   return exp(z.x) * expi(z.y);
 }
+float cexp(in float k) {
+  return exp(k);
+}
 
 float cnorm(in vec2 z) {
   return length(z);
 }
+float cnorm(in float k) {
+  return abs(k);
+}
 float carg(in vec2 z) {
   return atan(z.y, z.x);
+}
+float carg(in float k) {
+  return sign(k) * ETA;
 }
 
 vec2 csqrt(in vec2 z) {
   float r = length(z);
   return vec2(sqrt(0.5 * (r + z.x)), sign(z.y) * sqrt(0.5 * (r - z.x)));
 }
+float csqrt(in float k) {
+  return sqrt(k);
+}
 
 vec2 clog(in vec2 z) {
   return vec2(log(length(z)), atan(z.y, z.x));
+}
+float clog(in float k) {
+  return log(k);
 }
 
 vec2 ccos(in vec2 z) {
   return vec2(cos(z.x) * cosh(z.y), -sin(z.x) * sinh(z.y));
 }
+float ccos(in float k) {
+  return cos(k);
+}
 
 vec2 csin(in vec2 z) {
   return vec2(sin(z.x) * cosh(z.y), cos(z.x) * sinh(z.y));
+}
+float csin(in float k) {
+  return sin(k);
 }
 
 vec2 ctan(in vec2 z) {
   return cdiv(csin(z), ccos(z));
 }
+float ctan(in float k) {
+  return tan(k);
+}
 
 vec2 cacos(in vec2 z) {
   return cmul(-ci, clog(cadd(z, cmul(ci, csqrt(csub(c1, cmul(z, z)))))));
+}
+float cacos(in float k) {
+  return acos(k);
 }
 
 vec2 casin(in vec2 z) {
   return cmul(-ci, clog(cadd(cmul(z, ci), csqrt(csub(c1, cmul(z, z))))));
 }
+float casin(in float k) {
+  return asin(k);
+}
 
 vec2 catan(in vec2 z) {
   return cmul(ci * .5, clog(cdiv(cadd(ci, z), csub(ci, z))));
+}
+float catan(in float k) {
+  return atan(k);
 }
 
 vec2 ccosh(in vec2 z) {
   return cdiv(cadd(cexp(z), cexp(cmul(-ci, z))), 2.0);
 }
+float ccosh(in float k) {
+  return cosh(k);
+}
 
 vec2 csinh(in vec2 z) {
   return cdiv(cexp(z) - cexp(cmul(-ci, z)), 2.0);
+}
+float csinh(in float k) {
+  return sinh(k);
 }
 
 vec2 ctanh(in vec2 z) {
   return cdiv(csinh(z), ccosh(z));
 }
+float ctanh(in float k) {
+  return tanh(k);
+}
 
 vec2 cacosh(in vec2 z) {
   return clog(cadd(z, csqrt(csub(cmul(z, z), c1))));
+}
+float cacosh(in float k) {
+  return acosh(k);
 }
 
 vec2 casinh(in vec2 z) {
   return clog(cadd(z, csqrt(cadd(cmul(z, z), c1))));
 }
+float casinh(in float k) {
+  return asinh(k);
+}
 
 vec2 catanh(in vec2 z) {
   return cmul(vec2(0.5, 0.), clog(cdiv(cadd(c1, z), csub(c1, z))));
 }
+float catanh(in float k) {
+  return atanh(k);
+}
 
 vec2 cpow(in vec2 z, in vec2 k) {
   return cexp(cmul(k, clog(z)));
+}
+float cpow(in float z, in float k) {
+  return pow(z, k);
+}
+vec2 cpow(in float k, in vec2 z) {
+  return cpow(vec2(k, 0.), z);
 }
 vec2 cpow(in vec2 z, in float k) {
   return cexp(k * clog(z));
@@ -242,32 +302,80 @@ vec2 cpow(in vec2 z, in int k) {
 vec2 cpow0(in vec2 z) {
   return vec2(1., 0.);
 }
+float cpow0(in float z) {
+  return 1.;
+}
 vec2 cpow1(in vec2 z) {
+  return z;
+}
+float cpow1(in float z) {
   return z;
 }
 vec2 cpow2(in vec2 z) {
   return cmul(z, z);
 }
+float cpow2(in float z) {
+  return z * z;
+}
 vec2 cpow3(in vec2 z) {
+  return cmul(z, cpow2(z));
+}
+float cpow3(in float z) {
   return cmul(z, cpow2(z));
 }
 vec2 cpow4(in vec2 z) {
   return cmul(cpow2(z), cpow2(z));
 }
+float cpow4(in float z) {
+  return cmul(cpow2(z), cpow2(z));
+}
 vec2 cpow5(in vec2 z) {
+  return cmul(z, cpow4(z));
+}
+float cpow5(in float z) {
   return cmul(z, cpow4(z));
 }
 vec2 cpow6(in vec2 z) {
   return cpow2(cpow3(z));
 }
+float cpow6(in float z) {
+  return cpow2(cpow3(z));
+}
 vec2 cpow7(in vec2 z) {
+  return cmul(z, cpow6(z));
+}
+float cpow7(in float z) {
   return cmul(z, cpow6(z));
 }
 vec2 cpow8(in vec2 z) {
   return cpow2(cpow4(z));
 }
+float cpow8(in float z) {
+  return cpow2(cpow4(z));
+}
 vec2 cpow9(in vec2 z) {
   return cmul(z, cpow8(z));
+}
+float cpow9(in float z) {
+  return cmul(z, cpow8(z));
+}
+vec2 ctetra(in vec2 z, in int n) {
+  vec2 w = vec2(1., 0.);
+  for(int i = 0; i < n; i++) {
+    w = cpow(z, w);
+  }
+  return w;
+}
+float ctetra(in float z, in int n) {
+  float k = 1.;
+  for(int i = 0; i < n; i++) {
+    k = pow(z, k);
+  }
+  return k;
+}
+
+vec2 ctetra(in vec2 z, in float n) {
+  return ctetra(z, int(n));
 }
 
 void sncndn(
@@ -361,26 +469,41 @@ vec2 cgamma(in vec2 z) {
   return ((z.x > 1.0) ? (w) : (PI * cinv(cmul(w, csin(PI * z)))));
 }
 
-vec2 cpsi(in vec2 z, in int n) {
-  // Abramowitz and Stegun 6.4.11
-
-  return vec2(1.);
-}
-
 vec2 cpsi(in vec2 z) {
-  return cpsi(z, 1);
+  // Digamma function
+  return vec2(1., 0.);
 }
 
 vec2 cbeta(in vec2 z, in vec2 w) {
   return cdiv(cgamma(z) * cgamma(w), cgamma(cadd(z, w)));
 }
 
-vec2 czeta(vec2 z) {
+vec2 czeta(in vec2 z) {
   vec2 sum = vec2(0);
   for(float i = 1.; i < 30.; ++i) {
-    sum += sin(-z.y * log(i) - vec2(1.57, 0.)) / pow(i, z.x);
+    sum += sin(-z.y * log(i) - vec2(ETA, 0.)) / pow(i, z.x);
   }
   return sum;
+}
+
+vec2 cdzeta(in vec2 z) {
+  vec2 sum = vec2(0);
+  for(float i = 1.; i < 30.; ++i) {
+    sum += -log(i) * cos(-z.y * log(i) - vec2(ETA, 0.)) / pow(i, z.x);
+  }
+  return sum;
+}
+
+vec2 cphi(in vec2 z, in vec2 s, in float a) {
+  // Lerch Phi function
+  vec2 sum = vec2(0);
+  for(float i = 0.; i < 50.; ++i) {
+    sum += cdiv(cpow(z, i), cpow(a + i, s));
+  }
+  return sum;
+}
+vec2 cphi(in float k, in vec2 s, in float a) {
+  return cphi(vec2(k, 0.), s, a);
 }
 
 float diffabs(in float X, in float x) {

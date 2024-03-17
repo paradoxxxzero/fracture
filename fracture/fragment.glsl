@@ -199,11 +199,11 @@ void main(void) {
     #endif
 
     #if !defined(CONVERGENT) && !defined(DIVERGENT)
-    const float gridWidth = .001;
+    const float gridWidth = .002;
     // Domain coloring of z:
     float h = (atan(z.y, z.x) + PI) / TAU;
     float ll = log2(length(z));
-    float l = .3 + .4 * aafract(ll);
+    float l = 1. - .7 * aafract(ll);
     // float l = 2. * atan(length(z)) / PI;
 
     col = color(h * 100.) * l;

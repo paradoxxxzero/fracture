@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { cx } from '../decimal'
-import { ast } from '../formula'
+import { ast, functionShader } from '../formula'
 
 export default function ComplexFormula({
   name,
@@ -48,10 +48,23 @@ export default function ComplexFormula({
           setValid(false)
           return
         }
+        const err = e.toString()
+        if (err.includes('is not a function')) {
+          const funcName = err
+            .match(/(.+) is not a function/)[1]
+            .split('.')
+            .slice(-1)[0]
+            .replace('_prime', "'")
+          if (!Object.keys(functionShader).includes(funcName)) {
+            console.warn('Unknown function in formula', e)
+            setValid(false)
+            return
+          }
+        }
+
         if (
-          e.toString().includes('undeclared identifier') ||
-          e.toString().includes('is not defined') ||
-          e.toString().includes('is not a function')
+          err.includes('undeclared identifier') ||
+          err.includes('is not defined')
         ) {
           console.warn('Undeclared identifier in formula', e)
           setValid(false)
