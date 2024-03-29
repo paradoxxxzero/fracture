@@ -565,7 +565,7 @@ vec2 cbeta(in vec2 z, in vec2 w) {
 }
 
 vec2 cdbeta(in vec2 z, in vec2 w) {
-  return cdiv(cgamma(z) * cgamma(w) * (cpsi(z) + cpsi(w) - cpsi(cadd(z, w))), cgamma(cadd(z, w)));
+  return cmul(cbeta(z, w), csub(cpsi(z), cpsi(cadd(z, w))));
 }
 
 vec2 cphi(in vec2 z, in vec2 s, in float a) {
