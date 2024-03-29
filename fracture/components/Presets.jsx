@@ -16,14 +16,13 @@ export default function Presets({
     setRawSearch(e.target.value)
     debounce(setSearch(e.target.value), 50)
   }, [])
-
+  if (!open) {
+    return null
+  }
   return (
     <>
-      <div
-        className={`presets-overlay ${open ? 'shown' : 'hidden'}`}
-        onClick={closePresets}
-      />
-      <div className={`presets ${open ? 'shown' : 'hidden'}`}>
+      <div className="presets-overlay" onClick={closePresets} />
+      <div className="presets">
         <div className="presets-modal">
           <div className="presets-header">
             <div className="presets-search">

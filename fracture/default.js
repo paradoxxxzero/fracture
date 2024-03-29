@@ -26,7 +26,7 @@ export const defaultParams = {
   showDerivative: false,
   smoothing: 'log',
   offset: 80,
-  velocity: 10,
+  velocity: 100,
   hue: 0,
   saturation: 100,
   lightness: 100,
@@ -77,8 +77,11 @@ export const uniformParams = {
   },
   scale: '1f',
   aspect: {
-    type: '1f',
-    value: (_, rt) => rt.gl.canvas.width / rt.gl.canvas.height,
+    type: '2fv',
+    value: (_, rt) => [
+      rt.gl.canvas.width / rt.gl.canvas.height,
+      1 / Math.max(rt.gl.canvas.width, rt.gl.canvas.height),
+    ],
   },
   transform: {
     type: 'm2fv',

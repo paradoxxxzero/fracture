@@ -1,4 +1,5 @@
 import { memo, useEffect, useState } from 'react'
+import Preview from './Preview'
 
 const getNodeText = node => {
   if (['string', 'number'].includes(typeof node)) {
@@ -28,6 +29,7 @@ export default memo(function Preset({
 }) {
   const [visible, setVisible] = useState(true)
   const [open, setOpen] = useState(false)
+
   useEffect(() => {
     if (!search) {
       setVisible(true)
@@ -73,9 +75,25 @@ export default memo(function Preset({
               {open ? '-' : '+'}
             </button>
           ) : null}
-          <span className="preset-name">{name}</span>
-          <span className="preset-spacer" />
-          <code className="preset-formula">{params.f}</code>
+          <div className="preset-content-preview">
+            <div className="preset-content">
+              <span className="preset-name">{name}</span>
+              <code className="preset-formula">
+                <span className="preset-assignment">F(z, c) = </span>
+                {params.f}
+              </code>
+              {/* <code className="preset-derivative_z">
+                <span className="preset-assignment">dF(z, z', c)/dz = </span>
+                {params.f_prime_z}
+              </code> */}
+              <code className="preset-derivative_c">
+                <span className="preset-assignment">dF(z, z', c)/dc = </span>
+                {params.f_prime_c}
+              </code>
+              {/* <code className="preset-perturb">{params.f_perturb}</code> */}
+            </div>
+            <Preview params={params} />
+          </div>
         </div>
       </div>
       {open &&

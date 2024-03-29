@@ -47,7 +47,7 @@ vec3 hueAdjust(in vec3 col, in float p) {
 
 // https://iquilezles.org/articles/palettes
 vec3 cosPalette(in float t, in vec3 a, in vec3 b, in vec3 c, in vec3 d) {
-  return a + b * cos(offset + TAU * (c * velocity * t + d));
+  return a + b * cos(offset + TAU * (c * velocity * .1 * t + d));
 }
 
 vec3 palette(float t) {
@@ -79,9 +79,6 @@ vec3 color(float t, float p) {
 vec3 color(float t) {
   return color(t, 0.);
 }
-
-in vec2 uv;
-out vec4 fragColor;
 
 float dot2(in vec2 z) {
   return dot(z, z);
@@ -457,27 +454,6 @@ vec2 cdn(vec2 z) {
   return cdn(z, .8);
 }
 
-vec2 cgamma(in vec2 z) {
-  float LG = 5.65;
-  float[] P = float[](2.506628275635, 225.525584619175, -268.295973841305, 80.9030806934622, -5.007578639705, 0.0114684895435);
-
-  vec2 zz = (z.x > 1.0) ? (z) : (vec2(1.0, 0.0) - z);
-  vec2 sum = vec2(P[0], 0.0) + P[1] * cinv(zz + vec2(1.0, 0.0)) + P[2] * cinv(zz + vec2(2.0, 0.0)) + P[3] * cinv(zz + vec2(3.0, 0.0)) + P[4] * cinv(zz + vec2(4.0, 0.0)) + P[5] * cinv(zz + vec2(5.0, 0.0));
-  vec2 zh = zz + vec2(LG, 0.0);
-  vec2 w = cexp(clog(sum) + cmul(zz + vec2(0.5, 0.0), clog(zh)) - clog(zz) - zh);
-
-  return ((z.x > 1.0) ? (w) : (PI * cinv(cmul(w, csin(PI * z)))));
-}
-
-vec2 cpsi(in vec2 z) {
-  // Digamma function
-  return vec2(1., 0.);
-}
-
-vec2 cbeta(in vec2 z, in vec2 w) {
-  return cdiv(cgamma(z) * cgamma(w), cgamma(cadd(z, w)));
-}
-
 vec2 czeta(in vec2 z) {
   vec2 sum = vec2(0);
   for(float i = 1.; i < 30.; ++i) {
@@ -492,6 +468,104 @@ vec2 cdzeta(in vec2 z) {
     sum += -log(i) * cos(-z.y * log(i) - vec2(ETA, 0.)) / pow(i, z.x);
   }
   return sum;
+}
+
+vec2 czeta(in vec2 z, in vec2 a) {
+  // Hurwitz Zeta function
+  return czeta(z + a) - czeta(z);
+
+}
+vec2 czeta(in vec2 z, in float a) {
+  return czeta(z, vec2(a, 0.));
+}
+vec2 czeta(in float k, in vec2 a) {
+  return czeta(vec2(k, 0.), a);
+}
+
+vec2 cgamma(in vec2 z) {
+  float LG = 5.65;
+  float[] P = float[](2.506628275635, 225.525584619175, -268.295973841305, 80.9030806934622, -5.007578639705, 0.0114684895435);
+
+  vec2 zz = (z.x > 1.0) ? (z) : (vec2(1.0, 0.0) - z);
+  vec2 sum = vec2(P[0], 0.0) + P[1] * cinv(zz + vec2(1.0, 0.0)) + P[2] * cinv(zz + vec2(2.0, 0.0)) + P[3] * cinv(zz + vec2(3.0, 0.0)) + P[4] * cinv(zz + vec2(4.0, 0.0)) + P[5] * cinv(zz + vec2(5.0, 0.0));
+  vec2 zh = zz + vec2(LG, 0.0);
+  vec2 w = cexp(clog(sum) + cmul(zz + vec2(0.5, 0.0), clog(zh)) - clog(zz) - zh);
+
+  return ((z.x > 1.0) ? (w) : (PI * cinv(cmul(w, csin(PI * z)))));
+}
+
+vec2 _cpsi_asymptotic(in vec2 z) {
+  // Digamma function
+  float[] B = float[](0.166666666666666667, -0.0333333333333333333, 0.0238095238095238095, -0.0333333333333333333, 0.0757575757575757576, -0.253113553113553114, 1.16666666666666667, -7.09215686274509804, 54.9711779448621554, -529.124242424242424, 6192.12318840579710, -86580.2531135531136, 1425517.16666666667, -27298231.0678160920, 601580873.900642368, -15116315767.0921569);
+  vec2 rzz = cdiv(cinv(z), z);
+  vec2 zfac = vec2(1., 0.);
+  vec2 term = vec2(0.);
+  vec2 res = csub(clog(z), .5 * cinv(z));
+
+  for(int i = 1; i < 17; i++) {
+    zfac = cmul(zfac, rzz);
+    term = -cmul(B[i - 1], zfac / (2. * float(i)));
+    res = cadd(res, term);
+    if(cnorm(term) < 2.220446092504131e-16 * cnorm(res)) {
+      break;
+    }
+  }
+  return res;
+}
+vec2 _forward_rec(in vec2 z, in vec2 s, in int n) {
+  vec2 res = s;
+  for(int i = 0; i < n; i++) {
+    res = cadd(res, cinv(cadd(z, vec2(float(i), 0.))));
+  }
+  return res;
+}
+vec2 _backward_rec(in vec2 z, in vec2 s, in int n) {
+  vec2 res = s;
+  for(int i = 1; i < n + 1; i++) {
+    res = csub(res, cinv(csub(z, vec2(float(i), 0.))));
+  }
+  return res;
+}
+
+vec2 cpsi(in vec2 z) {
+  float absz = cnorm(z);
+  vec2 res = vec2(0.);
+  float smallabsz = 14.;
+
+  if(z.x < 0. && abs(z.y) < smallabsz) {
+    res = csub(res, PI * cdiv(ccos(PI * z), csin(PI * z)));
+    z = csub(vec2(1., 0.), z);
+    absz = cnorm(z);
+  }
+
+  if(absz < 0.5) {
+    res = csub(res, cinv(z));
+    z = cadd(vec2(1., 0.), z);
+    absz = cnorm(z);
+  }
+
+  if(absz > smallabsz) {
+    res = cadd(res, _cpsi_asymptotic(z));
+  } else if(z.x >= 0.) {
+    int n = int(smallabsz - absz) + 1;
+    res = cadd(res, _backward_rec(cadd(z, vec2(float(n), 0.)), _cpsi_asymptotic(cadd(z, vec2(float(n), 0.))), n));
+  } else {
+    int n = int(smallabsz - absz) - 1;
+    res = cadd(res, _forward_rec(csub(z, vec2(float(n), 0.)), _cpsi_asymptotic(csub(z, vec2(float(n), 0.))), n));
+  }
+  return res;
+}
+
+vec2 cdgamma(in vec2 z) {
+  return cmul(cgamma(z), cpsi(z));
+}
+
+vec2 cbeta(in vec2 z, in vec2 w) {
+  return cdiv(cgamma(z) * cgamma(w), cgamma(cadd(z, w)));
+}
+
+vec2 cdbeta(in vec2 z, in vec2 w) {
+  return cdiv(cgamma(z) * cgamma(w) * (cpsi(z) + cpsi(w) - cpsi(cadd(z, w))), cgamma(cadd(z, w)));
 }
 
 vec2 cphi(in vec2 z, in vec2 s, in float a) {

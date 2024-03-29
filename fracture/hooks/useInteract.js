@@ -106,7 +106,7 @@ export const useInteract = (runtime, updateParams) => {
     let pinch = null
 
     const onDown = e => {
-      if (e.button !== 0 || e.target.tagName !== 'CANVAS') {
+      if (e.button !== 0 || e.target.id !== 'webgl2') {
         return
       }
 
@@ -171,7 +171,7 @@ export const useInteract = (runtime, updateParams) => {
 
   useEffect(() => {
     const handleWheel = e => {
-      if (e.target.tagName !== 'CANVAS') {
+      if (e.target.id !== 'webgl2') {
         return
       }
       const delta = -e.deltaY / window.innerWidth

@@ -27,7 +27,7 @@ input {
 
 :root,
 body,
-canvas,
+#webgl2,
 #root {
   margin: 0;
   width: 100%;
@@ -340,6 +340,7 @@ select option {
 }
 
 .presets {
+  display: flex;
   position: absolute;
   left: 50%;
   top: 50%;
@@ -432,13 +433,6 @@ select option {
   padding: 0.25em 0.5em;
 }
 
-.presets.shown {
-  display: flex;
-}
-.presets.hidden,
-.presets-overlay.hidden {
-  display: none;
-}
 .presets-list {
   flex: 1;
   overflow-y: auto;
@@ -479,10 +473,47 @@ select option {
 .preset.sub:hover {
   background-color: rgba(255, 255, 255, 0.15);
 }
+
 .preset-header {
   flex: 1;
   display: flex;
   align-items: center;
+}
+.preset-content-preview {
+  flex: 1;
+  display: flex;
+  justify-content: space-between;
+}
+@media screen and (max-width: 800px) {
+  .preset-content-preview {
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+}
+.preview {
+  object-fit: contain;
+}
+.preset-content {
+  display: flex;
+  flex-direction: column;
+  margin: auto 0.5em;
+  vertical-align: middle;
+  align-self: baseline;
+}
+.preset-name {
+  font-size: 1.5em;
+}
+.preset-assignment {
+  opacity: 0.7;
+}
+.preset-formula {
+  font-size: 1em;
+}
+.preset-formula,
+.preset-derivative_z,
+.preset-derivative_c {
+  font-size: 0.85em;
 }
 .preset-name-only {
   margin-left: 2.5em;
@@ -499,10 +530,10 @@ select option {
   padding: 0.75em 1em;
   top: 1em;
   left: -1em;
+  cursor: pointer;
 }
-.preset-name {
-  margin: auto 0.5em;
-  vertical-align: middle;
+.preset-toggle:hover {
+  background-color: #333333;
 }
 .presets-list .space {
   font-size: 1.5em;

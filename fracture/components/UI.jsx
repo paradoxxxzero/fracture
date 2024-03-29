@@ -119,30 +119,30 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
                 {eyeIcon}
               </button>
               {['simple', 'advanced', 'full'].includes(showUI) ? (
-                <>
-                  <button
-                    className="button"
-                    onClick={() =>
-                      setRuntime({
-                        ...runtime,
-                        moveCenter: !runtime.moveCenter,
-                      })
-                    }
-                  >
-                    {runtime.moveCenter ? moveCenterIcon : moveConstantIcon}
-                  </button>
-                  <button
-                    className="button"
-                    onClick={() =>
-                      setRuntime({
-                        ...runtime,
-                        lockCenter: !runtime.lockCenter,
-                      })
-                    }
-                  >
-                    {runtime.lockCenter ? lockIcon : unlockIcon}
-                  </button>
-                </>
+                <button
+                  className="button"
+                  onClick={() =>
+                    setRuntime({
+                      ...runtime,
+                      moveCenter: !runtime.moveCenter,
+                    })
+                  }
+                >
+                  {runtime.moveCenter ? moveCenterIcon : moveConstantIcon}
+                </button>
+              ) : null}
+              {['advanced', 'full'].includes(showUI) ? (
+                <button
+                  className="button"
+                  onClick={() =>
+                    setRuntime({
+                      ...runtime,
+                      lockCenter: !runtime.lockCenter,
+                    })
+                  }
+                >
+                  {runtime.lockCenter ? lockIcon : unlockIcon}
+                </button>
               ) : null}
             </div>
           </aside>
@@ -154,7 +154,7 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
                 value={params.f}
                 onChange={handleChange}
               />
-              {params.useDerivative ? (
+              {['advanced', 'full'].includes(showUI) && params.useDerivative ? (
                 <ComplexFormula
                   label="dF(z, z', c)/dz ="
                   name="f_prime_z"
@@ -162,7 +162,7 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
                   onChange={handleChange}
                 />
               ) : null}
-              {params.useDerivative ? (
+              {['advanced', 'full'].includes(showUI) && params.useDerivative ? (
                 <ComplexFormula
                   label="dF(z, z', c)/dc ="
                   name="f_prime_c"
@@ -170,7 +170,7 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
                   onChange={handleChange}
                 />
               ) : null}
-              {runtime.perturb ? (
+              {['advanced', 'full'].includes(showUI) && runtime.perturb ? (
                 <ComplexFormula
                   label="F(Z, dz, dc) ="
                   name="f_perturb"
@@ -264,43 +264,51 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
                 value={params.iterations}
                 onChange={handleChange}
               />
-              <Boolean
-                className="button"
-                label="Roots"
-                name="useRoots"
-                value={params.useRoots}
-                onChange={handleChange}
-              />
-              <Number
-                name="bailin"
-                label="Bailin"
-                min={-Infinity}
-                step={0.1}
-                value={params.bailin}
-                togglerName="convergent"
-                toggler={params.convergent}
-                onChange={handleChange}
-              />
-              <Number
-                name="bailout"
-                label="Bailout"
-                min={-Infinity}
-                step={0.1}
-                value={params.bailout}
-                togglerName="divergent"
-                toggler={params.divergent}
-                onChange={handleChange}
-              />
-              <Number
-                name="derivative"
-                label="Derivative"
-                min={0}
-                value={params.derivative}
-                togglerName="useDerivative"
-                toggler={params.useDerivative}
-                onChange={handleChange}
-              />
-              {params.useDerivative ? (
+              {['advanced', 'full'].includes(showUI) ? (
+                <Boolean
+                  className="button"
+                  label="Roots"
+                  name="useRoots"
+                  value={params.useRoots}
+                  onChange={handleChange}
+                />
+              ) : null}
+              {['advanced', 'full'].includes(showUI) ? (
+                <Number
+                  name="bailin"
+                  label="Bailin"
+                  min={-Infinity}
+                  step={0.1}
+                  value={params.bailin}
+                  togglerName="convergent"
+                  toggler={params.convergent}
+                  onChange={handleChange}
+                />
+              ) : null}
+              {['advanced', 'full'].includes(showUI) ? (
+                <Number
+                  name="bailout"
+                  label="Bailout"
+                  min={-Infinity}
+                  step={0.1}
+                  value={params.bailout}
+                  togglerName="divergent"
+                  toggler={params.divergent}
+                  onChange={handleChange}
+                />
+              ) : null}
+              {['advanced', 'full'].includes(showUI) ? (
+                <Number
+                  name="derivative"
+                  label="Derivative"
+                  min={0}
+                  value={params.derivative}
+                  togglerName="useDerivative"
+                  toggler={params.useDerivative}
+                  onChange={handleChange}
+                />
+              ) : null}
+              {['advanced', 'full'].includes(showUI) && params.useDerivative ? (
                 <Boolean
                   label="Derivative"
                   className="button"

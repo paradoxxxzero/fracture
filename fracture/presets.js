@@ -1,5 +1,6 @@
 import { cx } from './decimal'
-import { defaultParams, smoothings, palettes } from './default'
+import { defaultParams } from './default'
+import { derive } from './formula'
 
 const rotate = o => [
   [Math.cos(o), -Math.sin(o)],
@@ -49,7 +50,7 @@ const julia = (name, n, c, extra = {}) => ({
   params: {
     ...brot(name, n).params,
     derivative: 85,
-    velocity: 7,
+    velocity: 70,
     varying: 'z',
     point: c,
     ...extra,
@@ -104,6 +105,9 @@ const withDefaults = presets =>
       ...defaultParams,
       f_perturb: null,
       ...params,
+      f_prime_z: params.f_prime_z || derive(params.f, ['z', 'z_1']).toString(),
+      f_prime_c:
+        params.f_prime_c || derive(params.f, ['z', 'z_1'], ['c']).toString(),
     },
     subforms: subforms ? withDefaults(subforms) : [],
   }))
@@ -112,6 +116,14 @@ export const presets = withDefaults([
   {
     ...brot('Mandelbrot', 2, { point: cx(-0.5) }),
     subforms: [
+      brot('Minibrot', 2, {
+        point: cx(-1.71121, 0.00002),
+        scale: 0.00085,
+        smoothing: 'distance_scaled',
+        velocity: 70,
+        saturation: 0,
+        lightness: 250,
+      }),
       brot('Bibrot', 3),
       brot('Tribrot', 4),
       brot('Quadribrot', 5),
@@ -121,6 +133,18 @@ export const presets = withDefaults([
       brot('Octibrot', 9),
       brot('Nonibrot', 10),
       brot('Decabrot', 11),
+      brot('Invbibrot', -2, {
+        center: cx(10),
+        convergent: true,
+        scale: 3,
+        derivative: 250,
+      }),
+      brot('Invtribrot', -3, {
+        center: cx(10),
+        convergent: true,
+        scale: 3,
+        derivative: 350,
+      }),
     ],
   },
   {
@@ -151,8 +175,50 @@ export const presets = withDefaults([
       scale: 1.5,
       f: '(|re(z)| + |im(z)|i)^2 + c',
       f_perturb:
-        '(2 * re(dz) * re(Z) + re(dz) * re(dz) - 2 * im(Z) * im(dz) - im(dz) * im(dz) + 2 * ((re(Z) * im(Z)) |-| (re(Z) * im(dz) + re(dz) * im(Z) + re(dz) * im(dz))) * i) + dc',
+        '(2 * re(dz) * re(Z) + re(dz) * re(dz) - 2 * im(Z) * im(dz) - im(dz) * im(dz) + 2 * (diffabs((re(Z) * im(Z)), (re(Z) * im(dz) + re(dz) * im(Z) + re(dz) * im(dz)))) * i) + dc',
     },
+    subforms: [
+      {
+        name: 'Miniship',
+        params: {
+          point: cx(1.85982, 0.004584),
+          transform: rotate(Math.PI),
+          derivative: 100,
+          smoothing: 'distance_scaled',
+          scale: 0.008069,
+          velocity: 62,
+          lightness: 300,
+          saturation: 0,
+          f: '(|re(z)| + |im(z)|i)^2 + c',
+          f_perturb:
+            '(2 * re(dz) * re(Z) + re(dz) * re(dz) - 2 * im(Z) * im(dz) - im(dz) * im(dz) + 2i * diffabs((re(Z) * im(Z)), (re(Z) * im(dz) + re(dz) * im(Z) + re(dz) * im(dz)))) + dc',
+        },
+      },
+      {
+        name: 'Bird of Prey',
+        params: {
+          transform: rotate((-3 * Math.PI) / 4),
+          derivative: 100,
+          scale: 1.5,
+          f: '(|re(z)| + |im(z)|i)^3 + c',
+          f_perturb:
+            '(re(Z)^2 - 3 * im(Z)^2) * diffabs(re(Z), re(dz)) + (2 * (re(Z) * re(dz)) + re(dz)^2 - 6 * (im(Z) * im(dz)) - 3 * im(dz)^2) * abs(re(Z) + re(dz)) + i * ((3 * re(Z)^2 - im(Z)^2) * diffabs(im(Z), im(dz)) + (6 * (re(Z) * re(dz)) + 3 * re(dz)^2 - 2 * (im(Z) * im(dz)) - im(dz)^2) * abs(im(Z) + im(dz))) + dc',
+        },
+      },
+      {
+        name: 'Buffalo',
+        params: {
+          transform: rotate(Math.PI),
+          f: '(|re(z)| + |im(z)|i)^2 - (|re(z)| + |im(z)|i) + c',
+        },
+      },
+      {
+        name: 'Bird',
+        params: {
+          f: '(re(z) - |im(z)|i)^2 + c',
+        },
+      },
+    ],
   },
   {
     name: 'Tearbrot',
@@ -176,6 +242,14 @@ export const presets = withDefaults([
     },
   },
   {
+    name: 'Mothbrot',
+    params: {
+      scale: 6,
+      f: 'z^2 * (|re(z)| + |im(z)|i)^3 + c',
+      derivative: 120,
+    },
+  },
+  {
     name: 'Phoenix',
     params: {
       point: cx(0.5667),
@@ -188,49 +262,6 @@ export const presets = withDefaults([
     },
   },
   {
-    ...newt('Newton', 'z^3 - 1'),
-    subforms: [
-      newt('Newton', 'z^4 - 1'),
-      newt('Newton', 'z^3 - 2z + 2'),
-      newt('Newton', 'z^8 + 15z^4 - 16'),
-      newt('Newton', 'z^5 - 3i * z^3 - (5 + 2i) * z^2 + 3z + 1'),
-      newt('Newton', 'z^6 + z^3 - 1'),
-      newt('Newton', 'z^^3 - 1'),
-      newt('Newton', 'sin(z)', null, { center: cx(Math.PI / 2) }),
-      newt('Newton', 'cosh(z) - 1'),
-      newt('Newton', 'z^4 * sin(z) - 1'),
-      newt('Newton generalized', 'z^3 - 1', -0.5, {
-        divergent: true,
-        convergent: false,
-        smoothing: 'exp',
-        velocity: 75,
-      }),
-      newt('Newton generalized', 'z^2 - 1', '(1 + i)', {
-        divergent: true,
-        convergent: false,
-        smoothing: 'exp',
-        velocity: 75,
-        bailout: 1.5,
-        iterations: 100,
-        useRoots: false,
-      }),
-      newt('Newton generalized', 'z^(4 + 3i) - 1', 2, {
-        center: cx(1, 0.25),
-        scale: 0.05,
-      }),
-    ],
-  },
-  {
-    ...nova('Nova', 'z^3 - 1'),
-    subforms: [
-      nova('Nova', 'z^4 - 1'),
-      nova('Nova', 'z^3 - 2z + 2'),
-      nova('Nova', 'z^8 + 15z^4 - 16'),
-      nova('Nova', 'z^6 + z^3 - 1'),
-      nova('Nova', 'z^4 * sin(z) - 1'),
-    ],
-  },
-  {
     name: 'Frothy',
     params: {
       center: cx(0.5, 0),
@@ -239,6 +270,15 @@ export const presets = withDefaults([
       scale: 3,
       f: 'z^2 - c*~z',
       f_perturb: 'dz^2 + 2 * dz * Z - C * ~dz - dc * ~Z - dc * ~dz',
+    },
+  },
+  {
+    name: 'Whirlpool',
+    params: {
+      varying: 'z',
+      point: cx(2, 0),
+      scale: 3,
+      f: '(c/z + (im(z)*z - re(z))/c)^2',
     },
   },
   {
@@ -271,6 +311,49 @@ export const presets = withDefaults([
     },
   },
   {
+    ...newt('Newton', 'z^3 - 1'),
+    subforms: [
+      newt('Newton', 'z^4 - 1'),
+      newt('Newton', 'z^3 - 2z + 2'),
+      newt('Newton', 'z^8 + 15z^4 - 16'),
+      newt('Newton', 'z^5 - 3i * z^3 - (5 + 2i) * z^2 + 3z + 1'),
+      newt('Newton', 'z^6 + z^3 - 1'),
+      newt('Newton', 'z^^3 - 1'),
+      newt('Newton', 'sin(z)', null, { center: cx(Math.PI / 2) }),
+      newt('Newton', 'cosh(z) - 1', null, { center: cx(-3.14, -3.14) }),
+      newt('Newton', 'z^4 * sin(z) - 1'),
+      newt('Newton generalized', 'z^3 - 1', -0.5, {
+        divergent: true,
+        convergent: false,
+        smoothing: 'exp',
+        velocity: 750,
+      }),
+      newt('Newton generalized', 'z^2 - 1', '(1 + i)', {
+        divergent: true,
+        convergent: false,
+        smoothing: 'exp',
+        velocity: 750,
+        bailout: 1.5,
+        iterations: 100,
+        useRoots: false,
+      }),
+      newt('Newton generalized', 'z^(4 + 3i) - 1', 2, {
+        center: cx(1, 0.25),
+        scale: 0.05,
+      }),
+    ],
+  },
+  {
+    ...nova('Nova', 'z^3 - 1'),
+    subforms: [
+      nova('Nova', 'z^4 - 1'),
+      nova('Nova', 'z^3 - 2z + 2'),
+      nova('Nova', 'z^8 + 15z^4 - 16'),
+      nova('Nova', 'z^6 + z^3 - 1'),
+      nova('Nova', 'z^4 * sin(z) - 1'),
+    ],
+  },
+  {
     ...domain('Domain coloring', 'z + c'),
     subforms: [
       domain('Domain coloring', 'z^2 + c'),
@@ -283,6 +366,7 @@ export const presets = withDefaults([
       domain('Domain coloring', 'sn(z, .5) + c'),
       domain('Domain coloring', 'dn(z, .5) + c'),
       domain('Domain coloring', 'z^^3 + c'),
+      domain('Domain coloring', 'cn(z, .5)/cos(z) + c'),
     ],
   },
 ])

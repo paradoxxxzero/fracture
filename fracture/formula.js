@@ -62,7 +62,9 @@ export const functionShader = {
   exp: 'cexp',
   abs: 'cnorm',
   beta: 'cbeta',
+  "beta'": 'cdbeta',
   gamma: 'cgamma',
+  "gamma'": 'cdgamma',
   zeta: 'czeta',
   "zeta'": 'cdzeta',
   psi: 'cpsi',
@@ -674,6 +676,9 @@ class FunctionOp {
     return `${this.name}(${this.args.map(a => a.toString()).join(', ')})`
   }
   toShader() {
+    if (this.args.length === 0) {
+      return `${functionShader[this.name] || this.name}()`
+    }
     if (this.name === 're') {
       return `${this.args[0].toShader()}.x`
     }
@@ -685,21 +690,15 @@ class FunctionOp {
   toComplex() {
     let name = { re: 'real', im: 'imag' }[this.name] || this.name
     name = name.replace("'", '_prime')
+    if (this.args.length === 0) {
+      return `${name}()`
+    }
     return `${this.args[0].toComplex()}.${name}(${this.args
       .slice(1)
       .map(a => a.toComplex())
       .join(', ')})`
   }
   toDerivative(wrt_funs, wrt_vars) {
-    if (this.args.length === 0) {
-      if (this.name === 're') {
-        return new Leaf('number', 1)
-      }
-      if (this.name === 'im') {
-        return new Leaf('number', 0)
-      }
-      return this
-    }
     if (this.name === 'log') {
       return new BinaryOp(
         '/',
@@ -907,17 +906,6 @@ class FunctionOp {
             new FunctionOp('sn', this.args)
           ),
           new FunctionOp('cn', this.args)
-        ),
-        this.args[0].toDerivative(wrt_funs, wrt_vars)
-      )
-    }
-    if (this.name === 'gamma') {
-      return new BinaryOp(
-        '*',
-        new BinaryOp(
-          '*',
-          new FunctionOp('psi', this.args),
-          new FunctionOp('gamma', this.args)
         ),
         this.args[0].toDerivative(wrt_funs, wrt_vars)
       )

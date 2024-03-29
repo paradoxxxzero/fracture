@@ -6,7 +6,7 @@ precision highp float;
 uniform vec2 center;
 uniform vec2 point;
 uniform float scale;
-uniform float aspect;
+uniform vec2 aspect;
 uniform mat2 transform;
 
 uniform int iterations;
@@ -27,8 +27,11 @@ uniform ivec2 maxIterations;
 
 #include includes
 
+in vec2 uv;
+out vec4 fragColor;
+
 void main(void) {
-  vec2 p = scale * vec2(aspect, 1.) * (2. * uv - 1.);
+  vec2 p = scale * vec2(aspect.x, 1.) * (2. * uv - 1.);
   float BAILOUT = pow(10., bailout);
   float BAILIN = pow(10., bailin);
 
@@ -160,7 +163,7 @@ void main(void) {
       #elif SMOOTHING == 2
       n = 10. * zexp;
       #elif SMOOTHING >= 3
-      float d = sqrt(dot(z, z) / dot(zdc, zdc)) * log(dot(z, z));
+      float d = sqrt(dot(z, z) / dot(zdc, zdc)) * .5 * log(dot(z, z));
         #if SMOOTHING == 4
       d /= scale;
         #endif
@@ -186,7 +189,7 @@ void main(void) {
       #elif SMOOTHING == 2
       n = 10. * zexp;
       #elif SMOOTHING >= 3
-      float d = sqrt(zz / dot(zdc, zdc)) * log(zz);
+      float d = sqrt(zz / dot(zdc, zdc)) * .5 * log(zz);
         #if SMOOTHING == 4
       d /= scale;
         #endif
@@ -199,7 +202,7 @@ void main(void) {
     #endif
 
     #if !defined(CONVERGENT) && !defined(DIVERGENT)
-    const float gridWidth = .002;
+    float gridWidth = 3. * aspect.y;
     // Domain coloring of z:
     float h = (atan(z.y, z.x) + PI) / TAU;
     float ll = log2(length(z));

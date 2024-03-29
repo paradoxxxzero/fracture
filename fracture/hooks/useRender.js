@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
-import { recompile, render, updateUniforms } from '../render'
 import { allParams, compileParams, uniformParams } from '../default'
+import { recompileFragment, render, updateUniforms } from '../render'
 
 const params = (runtime, keys) => keys.map(key => runtime[key])
 
@@ -27,7 +27,7 @@ export const useRender = (runtime, setRuntime) => {
 
   useEffect(() => {
     setRuntime(runtime => {
-      recompile(runtime)
+      recompileFragment(runtime)
       return runtime
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps

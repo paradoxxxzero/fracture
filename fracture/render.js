@@ -5,7 +5,7 @@ import fragmentSource from './fragment.glsl?raw'
 import includesSource from './includes.glsl?raw'
 import vertexSource from './vertex.glsl?raw'
 
-const preprocess = (rt, source) => {
+export const preprocess = (rt, source) => {
   source = source
     .replace(
       '##CONFIG',
@@ -75,7 +75,7 @@ const preprocess = (rt, source) => {
   return source
 }
 
-const compileShader = (rt, shaderSource, shader) => {
+export const compileShader = (rt, shaderSource, shader) => {
   const { gl } = rt
   gl.shaderSource(shader, shaderSource)
   gl.compileShader(shader)
@@ -103,7 +103,7 @@ const compileShader = (rt, shaderSource, shader) => {
   }
 }
 
-const linkProgram = rt => {
+export const linkProgram = rt => {
   const { gl } = rt
   gl.linkProgram(rt.env.program)
 
@@ -113,6 +113,33 @@ const linkProgram = rt => {
     console.error(`Unable to initialize the shader program: ${error}`)
     return error
   }
+}
+
+export const recompileVertex = rt => {
+  compileShader(rt, vertexSource, rt.env.vertexShader)
+}
+
+export const recompileFragment = rt => {
+  const { gl } = rt
+  compileShader(rt, preprocess(rt, fragmentSource), rt.env.fragmentShader)
+  linkProgram(rt)
+  gl.useProgram(rt.env.program) // NEEDED?
+
+  rt.env.uniforms = Object.keys(uniformParams).reduce((acc, name) => {
+    acc[name] = gl.getUniformLocation(rt.env.program, name)
+    return acc
+  }, {})
+
+  if (window.location.search.includes('debug')) {
+    ;['f', 'f_prime_z', 'f_prime_c', 'f_perturb'].forEach((name, i) => {
+      if (!rt[name]) {
+        return
+      }
+      const st = ast(rt[name])
+      console.info(name, st.toShader(), st.toComplex())
+    })
+  }
+  updateUniforms(rt)
 }
 
 export const initializeGl = (rt, onContextLost, onContextRestored) => {
@@ -150,9 +177,8 @@ export const initializeGl = (rt, onContextLost, onContextRestored) => {
   gl.attachShader(rt.env.program, rt.env.vertexShader)
   gl.attachShader(rt.env.program, rt.env.fragmentShader)
 
-  compileShader(rt, vertexSource, rt.env.vertexShader)
-
-  recompile(rt)
+  recompileVertex(rt)
+  recompileFragment(rt)
 
   const orbit = gl.createTexture()
   gl.bindTexture(gl.TEXTURE_2D, orbit)
@@ -182,28 +208,6 @@ export const initializeGl = (rt, onContextLost, onContextRestored) => {
     gl,
     textures,
   }
-}
-
-export const recompile = rt => {
-  const { gl } = rt
-  compileShader(rt, preprocess(rt, fragmentSource), rt.env.fragmentShader)
-  linkProgram(rt)
-  rt.env.uniforms = Object.keys(uniformParams).reduce((acc, name) => {
-    acc[name] = gl.getUniformLocation(rt.env.program, name)
-    return acc
-  }, {})
-
-  if (window.location.search.includes('debug')) {
-    ;['f', 'f_prime_z', 'f_prime_c', 'f_perturb'].forEach((name, i) => {
-      if (!rt[name]) {
-        return
-      }
-      const st = ast(rt[name])
-      console.info(name, st.toShader(), st.toComplex())
-    })
-  }
-  gl.useProgram(rt.env.program) // NEEDED?
-  updateUniforms(rt)
 }
 
 export const updateUniforms = rt => {
@@ -282,7 +286,10 @@ export const render = rt => {
 
   if (resizeCanvasToDisplaySize(gl.canvas, rt.supersampling)) {
     gl.viewport(0, 0, gl.canvas.width, gl.canvas.height)
-    gl.uniform1f(rt.env.uniforms.aspect, gl.canvas.width / gl.canvas.height)
+    gl.uniform2fv(rt.env.uniforms.aspect, [
+      gl.canvas.width / gl.canvas.height,
+      1 / Math.max(gl.canvas.width, gl.canvas.height),
+    ])
   }
 
   // TODO: In useProcess / worker + only in prevention if still in viewPort
