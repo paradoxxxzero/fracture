@@ -47,6 +47,17 @@ export const defaultParams = {
   bailin: -6,
   divergent: true,
   bailout: 2.5,
+  showGrid: true,
+  gridScale: 100,
+  gridWidth: 1,
+  showNormGrid: true,
+  normGridScale: 100,
+  normGridWidth: 1,
+  showArgGrid: false,
+  argGridScale: 100,
+  argGridWidth: 1,
+  showPolesZeroes: true,
+  shadeNorm: true,
 }
 
 export const allParams = Object.keys(defaultParams)
@@ -65,6 +76,11 @@ export const compileParams = [
   'showDerivative',
   'useDistanceEstimate',
   'smoothing',
+  'showGrid',
+  'showNormGrid',
+  'showArgGrid',
+  'showPolesZeroes',
+  'shadeNorm',
 ]
 export const uniformParams = {
   center: {
@@ -121,4 +137,19 @@ export const uniformParams = {
     type: '1f',
     value: v => v / 100,
   },
+  gridScale: {
+    type: '1f',
+    value: v => v / 100,
+  },
+  gridWidth: '1f',
+  normGridScale: {
+    type: '1f',
+    value: v => v / 100,
+  },
+  normGridWidth: '1f',
+  argGridScale: {
+    type: '1f',
+    value: v => v / 100,
+  },
+  argGridWidth: '1f',
 }

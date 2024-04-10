@@ -244,7 +244,7 @@ export const presets = withDefaults([
   {
     name: 'Mothbrot',
     params: {
-      scale: 6,
+      scale: 1.5,
       f: 'z^2 * (|re(z)| + |im(z)|i)^3 + c',
       derivative: 120,
     },

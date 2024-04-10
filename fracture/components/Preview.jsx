@@ -69,19 +69,21 @@ export default memo(function Preview({ params }) {
   const canvas = useRef()
 
   useEffect(() => {
-    const pixels = previewer.render(params)
-    canvas.current.width = previewSize.width
-    canvas.current.height = previewSize.height
-    const ctx = canvas.current.getContext('2d')
-    const imageData = new ImageData(
-      new Uint8ClampedArray(pixels),
-      previewSize.width,
-      previewSize.height
-    )
-    ctx.putImageData(imageData, 0, 0)
-    ctx.scale(1, -1)
-    ctx.translate(0, -previewSize.height)
-    ctx.drawImage(canvas.current, 0, 0)
+    setTimeout(() => {
+      const pixels = previewer.render(params)
+      canvas.current.width = previewSize.width
+      canvas.current.height = previewSize.height
+      const ctx = canvas.current.getContext('2d')
+      const imageData = new ImageData(
+        new Uint8ClampedArray(pixels),
+        previewSize.width,
+        previewSize.height
+      )
+      ctx.putImageData(imageData, 0, 0)
+      ctx.scale(1, -1)
+      ctx.translate(0, -previewSize.height)
+      ctx.drawImage(canvas.current, 0, 0)
+    }, 5)
   }, [params])
 
   return <canvas ref={canvas} className="preview" style={previewSize} />

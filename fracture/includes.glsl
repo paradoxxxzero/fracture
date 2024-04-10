@@ -568,16 +568,43 @@ vec2 cdbeta(in vec2 z, in vec2 w) {
   return cmul(cbeta(z, w), csub(cpsi(z), cpsi(cadd(z, w))));
 }
 
-vec2 cphi(in vec2 z, in vec2 s, in float a) {
+vec2 cphi(in vec2 z, in vec2 s, in vec2 a) {
   // Lerch Phi function
   vec2 sum = vec2(0);
+  vec2 term = vec2(0);
+  vec2 zk = vec2(1., 0.);
+
   for(float i = 0.; i < 50.; ++i) {
-    sum += cdiv(cpow(z, i), cpow(a + i, s));
+    term = cdiv(zk, cpow(cadd(a, vec2(float(i), 0.)), s));
+    sum += term;
+    if(cnorm(term) <= 1e-9 * (1. + cnorm(sum))) {
+      break;
+    }
+    zk = cmul(zk, z);
   }
   return sum;
 }
-vec2 cphi(in float k, in vec2 s, in float a) {
+
+vec2 cphi(in float k, in vec2 s, in vec2 a) {
   return cphi(vec2(k, 0.), s, a);
+}
+vec2 cphi(in vec2 z, in float s, in vec2 a) {
+  return cphi(z, vec2(s, 0.), a);
+}
+vec2 cphi(in vec2 z, in vec2 s, in float a) {
+  return cphi(z, s, vec2(a, 0.));
+}
+vec2 cphi(in float k, in float s, in vec2 a) {
+  return cphi(vec2(k, 0.), vec2(s, 0.), a);
+}
+vec2 cphi(in float k, in vec2 s, in float a) {
+  return cphi(vec2(k, 0.), s, vec2(a, 0.));
+}
+vec2 cphi(in vec2 z, in float s, in float a) {
+  return cphi(z, vec2(s, 0.), vec2(a, 0.));
+}
+vec2 cphi(in float k, in float s, in float a) {
+  return cphi(vec2(k, 0.), vec2(s, 0.), vec2(a, 0.));
 }
 
 float diffabs(in float X, in float x) {

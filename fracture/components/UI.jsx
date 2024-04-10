@@ -256,15 +256,18 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
           ) : null}
           {['simple', 'advanced', 'full'].includes(showUI) ? (
             <aside className="params">
-              <Number
-                name="iterations"
-                label="Iterations"
-                min={0}
-                step={1}
-                value={params.iterations}
-                onChange={handleChange}
-              />
-              {['advanced', 'full'].includes(showUI) ? (
+              {params.convergent || params.divergent ? (
+                <Number
+                  name="iterations"
+                  label="Iterations"
+                  min={0}
+                  step={1}
+                  value={params.iterations}
+                  onChange={handleChange}
+                />
+              ) : null}
+              {['advanced', 'full'].includes(showUI) &&
+              (params.convergent || params.divergent) ? (
                 <Boolean
                   className="button"
                   label="Roots"
@@ -297,36 +300,122 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
                   onChange={handleChange}
                 />
               ) : null}
-              {['advanced', 'full'].includes(showUI) ? (
-                <Number
-                  name="derivative"
-                  label="Derivative"
-                  min={0}
-                  value={params.derivative}
-                  togglerName="useDerivative"
-                  toggler={params.useDerivative}
-                  onChange={handleChange}
-                />
-              ) : null}
-              {['advanced', 'full'].includes(showUI) && params.useDerivative ? (
-                <Boolean
-                  label="Derivative"
-                  className="button"
-                  name="showDerivative"
-                  value={params.showDerivative}
-                  onChange={handleChange}
-                />
-              ) : null}
-              {showUI === 'full' ? (
-                <Boolean
-                  label="Perturbation"
-                  className="button"
-                  name="usePerturbation"
-                  allowNull
-                  value={params.usePerturbation}
-                  onChange={handleChange}
-                />
-              ) : null}
+              {params.convergent || params.divergent ? (
+                <>
+                  {['advanced', 'full'].includes(showUI) ? (
+                    <Number
+                      name="derivative"
+                      label="Derivative"
+                      min={0}
+                      value={params.derivative}
+                      togglerName="useDerivative"
+                      toggler={params.useDerivative}
+                      onChange={handleChange}
+                    />
+                  ) : null}
+                  {['advanced', 'full'].includes(showUI) &&
+                  params.useDerivative ? (
+                    <Boolean
+                      label="Derivative"
+                      className="button"
+                      name="showDerivative"
+                      value={params.showDerivative}
+                      onChange={handleChange}
+                    />
+                  ) : null}
+                  {showUI === 'full' ? (
+                    <Boolean
+                      label="Perturbation"
+                      className="button"
+                      name="usePerturbation"
+                      allowNull
+                      value={params.usePerturbation}
+                      onChange={handleChange}
+                    />
+                  ) : null}
+                </>
+              ) : (
+                <>
+                  {['advanced', 'full'].includes(showUI) ? (
+                    <Number
+                      name="gridScale"
+                      label="Grid"
+                      min={0}
+                      value={params.gridScale}
+                      togglerName="showGrid"
+                      toggler={params.showGrid}
+                      onChange={handleChange}
+                    />
+                  ) : null}
+                  {['full'].includes(showUI) && params.showGrid ? (
+                    <Number
+                      label="Grid Width"
+                      step={0.1}
+                      name="gridWidth"
+                      value={params.gridWidth}
+                      onChange={handleChange}
+                    />
+                  ) : null}
+                  {['advanced', 'full'].includes(showUI) ? (
+                    <Number
+                      name="normGridScale"
+                      label="Norm Grid"
+                      min={0}
+                      value={params.normGridScale}
+                      togglerName="showNormGrid"
+                      toggler={params.showNormGrid}
+                      onChange={handleChange}
+                    />
+                  ) : null}
+                  {['full'].includes(showUI) && params.showNormGrid ? (
+                    <Number
+                      label="Norm Grid Width"
+                      step={0.1}
+                      name="normGridWidth"
+                      value={params.normGridWidth}
+                      onChange={handleChange}
+                    />
+                  ) : null}
+                  {['advanced', 'full'].includes(showUI) ? (
+                    <Number
+                      name="argGridScale"
+                      label="Arg Grid"
+                      min={0}
+                      value={params.argGridScale}
+                      togglerName="showArgGrid"
+                      toggler={params.showArgGrid}
+                      onChange={handleChange}
+                    />
+                  ) : null}
+                  {['full'].includes(showUI) && params.showArgGrid ? (
+                    <Number
+                      label="Arg Grid Width"
+                      step={0.1}
+                      name="argGridWidth"
+                      value={params.argGridWidth}
+                      onChange={handleChange}
+                    />
+                  ) : null}
+                  {['advanced', 'full'].includes(showUI) ? (
+                    <Boolean
+                      label="Poles/Zeroes"
+                      className="button"
+                      name="showPolesZeroes"
+                      value={params.showPolesZeroes}
+                      onChange={handleChange}
+                    />
+                  ) : null}
+                  {['advanced', 'full'].includes(showUI) ? (
+                    <Boolean
+                      label="Shade Norm"
+                      className="button"
+                      name="shadeNorm"
+                      value={params.shadeNorm}
+                      onChange={handleChange}
+                    />
+                  ) : null}
+                </>
+              )}
             </aside>
           ) : null}
         </div>

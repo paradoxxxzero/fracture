@@ -20,6 +20,13 @@ uniform float hue;
 uniform float saturation;
 uniform float lightness;
 
+uniform float gridScale;
+uniform float gridWidth;
+uniform float normGridScale;
+uniform float normGridWidth;
+uniform float argGridWidth;
+uniform float argGridScale;
+
 #ifdef PERTURB
 uniform sampler2D orbit;
 uniform ivec2 maxIterations;
@@ -202,44 +209,48 @@ void main(void) {
     #endif
 
     #if !defined(CONVERGENT) && !defined(DIVERGENT)
-    float gridWidth = 3. * aspect.y;
     // Domain coloring of z:
     float h = (atan(z.y, z.x) + PI) / TAU;
-    float ll = log2(length(z));
+    float lz = length(z);
+    float ll = log2(lz);
     float l = 1. - .7 * aafract(ll);
     // float l = 2. * atan(length(z)) / PI;
 
-    col = color(h * 100.) * l;
-      #ifdef USE_DERIVATIVE 
-    float res = 50. / derivative;
+    col = color(h * 100.);
+
+    #ifdef SHADE_NORM
+    col *= l;
+    #endif
     //     #if AMBIANCE == 2 || AMBIANCE == 3
     // res *= scale * scale;
     //     #endif
-
-    vec2 d = mod(z, 2. * res);
-    d = min(d, 2. * res - d);
-
-    vec2 der = vec2(scale);
-    vec2 der_1 = vec2(0.);
-    vec2 ztt = z;
-    z = z_1;
-    float dd = length(F_prime_z(z, c, der, der_1));
-    z = ztt;
-    col = mix(col, vec3(0.), smoothstep(gridWidth * dd, 0., min(d.x, d.y)));
-
-        #ifdef SHOW_DERIVATIVE
-    float lz = length(z);
-    float dl = mod(lz, 2. * res);
-    dl = min(dl, 2. * res - dl);
-    col = mix(col, vec3(1.), smoothstep(gridWidth * dd, 0., dl));
-
-        #endif
+      #ifdef SHOW_GRID
+    vec2 d = fract(2. * z * gridScale);
+    d = min(d, 1. - d);
+    d /= fwidth(z) * gridScale;
+    col = mix(vec3(0.), col, smoothstep(0., gridWidth * 3., min(d.x, d.y)));
       #endif
-      #ifndef USE_ROOTS
+
+      #ifdef SHOW_NORM_GRID
+    float dl = fract(ll * normGridScale);
+    dl = min(dl, 1. - dl);
+    dl /= fwidth(ll) * normGridScale / 2.;
+    col = mix(col, vec3(1.), smoothstep(normGridWidth * 3., 0., dl));
+      #endif
+
+      #ifdef SHOW_ARG_GRID
+    float dh = fract(2. * h * argGridScale * 12.);
+    dh = min(dh, 1. - dh);
+    dh /= fwidth(h) * argGridScale * 12.;
+    col = mix(col, vec3(.9), smoothstep(argGridWidth * 3., 0., dh));
+      #endif
+
+      #ifdef SHOW_POLES_ZEROES
     float llz = .5 * log(dot2(z));
     col = mix(col, vec3(0.), smoothstep(4., 0., llz + 4.));
     col = mix(col, vec3(1.), smoothstep(3., 1.5, 8. - llz));
       #endif
+
     break;
     #endif
 

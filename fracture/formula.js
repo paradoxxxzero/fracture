@@ -204,19 +204,6 @@ class BinaryOp {
   toDerivative(wrt_funs, wrt_vars) {
     const wrt = [...wrt_funs, ...wrt_vars]
     if (['+', '-'].includes(this.type)) {
-      if (
-        this.left.type === 'number' ||
-        (this.left.type === 'identifier' && !wrt.includes(this.left.value))
-      ) {
-        return this.right.toDerivative(wrt_funs, wrt_vars)
-      }
-
-      if (
-        this.right.type === 'number' ||
-        (this.right.type === 'identifier' && !wrt.includes(this.right.value))
-      ) {
-        return this.left.toDerivative(wrt_funs, wrt_vars)
-      }
       return new BinaryOp(
         this.type,
         this.left.toDerivative(wrt_funs, wrt_vars),
@@ -224,26 +211,6 @@ class BinaryOp {
       )
     }
     if (this.type === '*') {
-      if (
-        this.left.type === 'number' ||
-        (this.left.type === 'identifier' && !wrt.includes(this.left.value))
-      ) {
-        return new BinaryOp(
-          '*',
-          this.left,
-          this.right.toDerivative(wrt_funs, wrt_vars)
-        )
-      }
-      if (
-        this.right.type === 'number' ||
-        (this.right.type === 'identifier' && !wrt.includes(this.right.value))
-      ) {
-        return new BinaryOp(
-          '*',
-          this.left.toDerivative(wrt_funs, wrt_vars),
-          this.right
-        )
-      }
       return new BinaryOp(
         '+',
         new BinaryOp(
@@ -259,33 +226,6 @@ class BinaryOp {
       )
     }
     if (this.type === '/') {
-      if (
-        this.right.type === 'number' ||
-        (this.right.type === 'identifier' && !wrt.includes(this.right.value))
-      ) {
-        return new BinaryOp(
-          '/',
-          this.left.toDerivative(wrt_funs, wrt_vars),
-          this.right
-        )
-      }
-      if (
-        this.left.type === 'number' ||
-        (this.left.type === 'identifier' && !wrt.includes(this.left.value))
-      ) {
-        return new BinaryOp(
-          '/',
-          new UnaryOp(
-            '-',
-            new BinaryOp(
-              '*',
-              this.right.toDerivative(wrt_funs, wrt_vars),
-              this.left
-            )
-          ),
-          new BinaryOp('^', this.right, new Leaf('number', 2))
-        )
-      }
       return new BinaryOp(
         '/',
         new BinaryOp(
@@ -305,47 +245,6 @@ class BinaryOp {
       )
     }
     if (this.type === '^') {
-      if (
-        (this.left.type === 'number' ||
-          (this.left.type === 'identifier' &&
-            !wrt.includes(this.left.value))) &&
-        (this.right.type === 'number' ||
-          (this.right.type === 'identifier' && !wrt.includes(this.right.value)))
-      ) {
-        return this
-      }
-      if (
-        this.left.type === 'number' ||
-        (this.left.type === 'identifier' && !wrt.includes(this.left.value))
-      ) {
-        return new BinaryOp(
-          '*',
-          new BinaryOp(
-            '*',
-            new BinaryOp('^', this.left, this.right),
-            new FunctionOp('log', [this.left])
-          ),
-          this.right.toDerivative(wrt_funs, wrt_vars)
-        )
-      }
-      if (
-        this.right.type === 'number' ||
-        (this.right.type === 'identifier' && !wrt.includes(this.right.value))
-      ) {
-        return new BinaryOp(
-          '*',
-          new BinaryOp(
-            '*',
-            this.right,
-            new BinaryOp(
-              '^',
-              this.left,
-              new BinaryOp('-', this.right, new Leaf('number', 1))
-            )
-          ),
-          this.left.toDerivative(wrt_funs, wrt_vars)
-        )
-      }
       return new BinaryOp(
         '*',
         new BinaryOp(
@@ -425,6 +324,9 @@ class BinaryOp {
       }
     }
     if (this.type === '-') {
+      if (left.type === 'number' && left.value === 0) {
+        return new UnaryOp('-', right).simplify()
+      }
       if (right.type === 'number' && right.value === 0) {
         return left
       }
@@ -958,10 +860,7 @@ class Complex {
     return `cx(${this.real.toComplex()}, ${this.imag.toComplex()})`
   }
   toDerivative(wrt_funs, wrt_vars) {
-    return new Complex(
-      this.real.toDerivative(wrt_funs, wrt_vars),
-      this.imag.toDerivative(wrt_funs, wrt_vars)
-    )
+    return new Leaf('number', 0)
   }
   simplify() {
     return new Complex(this.real.simplify(), this.imag.simplify())
@@ -1006,13 +905,16 @@ class Leaf {
   }
   toDerivative(wrt_funs, wrt_vars) {
     const wrt = [...wrt_funs, ...wrt_vars]
+    if (this.type === 'identifier' && this.value === 'i') {
+      return new Leaf('number', 0)
+    }
     if (this.type === 'identifier' && wrt.includes(this.value)) {
       if (wrt_vars.includes(this.value)) {
         return new Leaf('number', 1)
       }
       return new Leaf('identifier', `${this.value}'`)
     }
-    return this
+    return new Leaf('number', 0)
   }
   simplify() {
     // if (this.type === 'identifier' && this.value === 'i') {
