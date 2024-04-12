@@ -74,6 +74,9 @@ export const functionShader = {
   dn: 'cdn',
   arg: 'carg',
   norm: 'length',
+  tet: 'ctet',
+  ate: 'cate',
+  tetra: 'ctetranat',
 }
 const opFunctions = {
   '+': (a, b) => a + b,
