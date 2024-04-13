@@ -356,7 +356,100 @@ vec2 cpow9(in vec2 z) {
 float cpow9(in float z) {
   return cmul(z, cpow8(z));
 }
+// https://www.ils.uec.ac.jp/~dima/BOOK/443.pdf
 
+vec2 catania(in vec2 z) {
+  return cadd(z, csub(clog(z), vec2(1., 0.)));
+}
+vec2 cataniap(in vec2 z) {
+  return cadd(vec2(1., 0.), cinv(z));
+}
+
+vec2 ctaniatay(vec2 z) {
+  int n;
+  vec2 res = vec2(-4.7 / 147456., 0.);
+  res = cmul(res, z);
+  res = cadd(res, vec2(1.3 / 6144., 0.));
+  res = cmul(res, z);
+  res = cadd(res, vec2(-1. / 3072., 0.));
+  res = cmul(res, z);
+  res = cadd(res, vec2(-1. / 192., 0.));
+  res = cmul(res, z);
+  res = cadd(res, vec2(1. / 16., 0.));
+  res = cmul(res, z);
+  res = cadd(res, vec2(.5, 0.));
+  res = cmul(res, z);
+  res = cadd(res, vec2(1., 0.));
+  for(int i = 0; i < 4; i++) {
+    res = cadd(res, cdiv(csub(z, catania(res)), cataniap(res)));
+  }
+  return res;
+}
+vec2 ctanianega(vec2 z) {
+  vec2 res = cexp(cadd(csub(z, cexp(z)), vec2(1., 0.)));
+  for(int i = 0; i < 5; i++) {
+    res = cadd(res, cdiv(csub(z, catania(res)), cataniap(res)));
+  }
+  return res;
+}
+vec2 ctaniabig(vec2 z) {
+  vec2 res = cadd(csub(z, -clog(z)), vec2(1., 0.));
+  for(int i = 0; i < 4; i++) {
+    res = cadd(res, cdiv(csub(z, catania(res)), cataniap(res)));
+  }
+  return res;
+}
+vec2 ctanias(vec2 z) {
+  vec2 t = z + vec2(2., -PI);
+  t *= 2. / 9.;
+  t = cmul(vec2(0., 1.), csqrt(t));
+  vec2 res = vec2(-12.51 / 224., 0.);
+  res = cmul(res, t);
+  res = cadd(res, vec2(-.3 / 7., 0.));
+  res = cmul(res, t);
+  res = cadd(res, vec2(.9 / 16., 0.));
+  res = cmul(res, t);
+  res = cadd(res, vec2(.3, 0.));
+  res = cmul(res, t);
+  res = cadd(res, vec2(.75, 0.));
+  res = cmul(res, t);
+  res = cadd(res, vec2(-3., 0.));
+  res = cmul(res, t);
+  res = cadd(res, vec2(3., 0.));
+  res = cmul(res, t);
+  res = cadd(res, vec2(-1., 0.));
+
+  for(int i = 0; i < 4; i++) {
+    res = cadd(res, cdiv(csub(z, catania(res)), cataniap(res)));
+  }
+  return res;
+}
+vec2 ctania(in vec2 z) {
+  if(abs(z.y) < PI && z.x < -2.51) {
+    return ctanianega(z);
+  }
+  if(cnorm(z) > 7. || z.x > 3.8) {
+    return ctaniabig(z);
+  }
+  if(z.y > .7) {
+    return ctanias(z);
+  }
+  if(z.y < -.7) {
+    return conj(ctanias(conj(z)));
+  }
+  return ctaniatay(z);
+}
+
+vec2 cdoya(in vec2 z, in float n) {
+  return ctania(cadd(vec2(int(n), 0.), catania(z)));
+}
+vec2 cdoya(in vec2 z) {
+  return cdoya(z, 1.);
+}
+
+vec2 cfilog(in vec2 z) {
+  return cdiv(ctania(csub(clog(z), vec2(1., PI))), -z);
+}
 // https://www.ams.org/journals/mcom/2009-78-267/S0025-5718-09-02188-7/S0025-5718-09-02188-7.pdf
 vec2 cfima(in vec2 z) {
   // if(z.y <= 4. + .2379 * z.x) {
