@@ -736,7 +736,7 @@ class FunctionOp {
           new BinaryOp(
             '+',
             new BinaryOp('^', this.args[0], new Leaf('number', 2)),
-            1
+            new Leaf('number', 1)
           ),
           new Leaf('number', 0.5)
         )
@@ -751,7 +751,7 @@ class FunctionOp {
           new BinaryOp(
             '-',
             new BinaryOp('^', this.args[0], new Leaf('number', 2)),
-            1
+            new Leaf('number', 1)
           ),
           new Leaf('number', 0.5)
         )
@@ -763,7 +763,7 @@ class FunctionOp {
         this.args[0].toDerivative(wrt_funs, wrt_vars),
         new BinaryOp(
           '-',
-          1,
+          new Leaf('number', 1),
           new BinaryOp('^', this.args[0], new Leaf('number', 2))
         )
       )

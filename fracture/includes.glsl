@@ -635,6 +635,9 @@ vec2 ctetranat(in float k, in float w) {
   return ctetranat(vec2(k, 0.), vec2(w, 0.));
 }
 
+vec2 ctetranat(in vec2 z) {
+  return ctetranat(z, 1.);
+}
 vec2 ctetra(in vec2 z, in int n) {
   vec2 w = vec2(1., 0.);
   for(int i = 0; i < n; i++) {
