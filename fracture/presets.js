@@ -93,7 +93,7 @@ const domain = (name, f, extra = {}) => ({
     divergent: false,
     useDerivative: false,
     usePerturbation: false,
-    scale: 2.5,
+    scale: cx(2.5),
     ...extra,
   },
 })
@@ -118,7 +118,7 @@ export const presets = withDefaults([
     subforms: [
       brot('Minibrot', 2, {
         point: cx(-1.71121, 0.00002),
-        scale: 0.00085,
+        scale: cx(0.00085),
         smoothing: 'distance_scaled',
         velocity: 70,
         saturation: 0,
@@ -136,13 +136,13 @@ export const presets = withDefaults([
       brot('Invbibrot', -2, {
         center: cx(10),
         convergent: true,
-        scale: 3,
+        scale: cx(3),
         derivative: 250,
       }),
       brot('Invtribrot', -3, {
         center: cx(10),
         convergent: true,
-        scale: 3,
+        scale: cx(3),
         derivative: 350,
       }),
     ],
@@ -172,7 +172,7 @@ export const presets = withDefaults([
       point: cx(0.5, 0.5),
       transform: rotate(Math.PI),
       derivative: 100,
-      scale: 1.5,
+      scale: cx(1.5),
       f: '(|re(z)| + |im(z)|i)^2 + c',
       f_perturb:
         '(2 * re(dz) * re(Z) + re(dz) * re(dz) - 2 * im(Z) * im(dz) - im(dz) * im(dz) + 2 * (diffabs((re(Z) * im(Z)), (re(Z) * im(dz) + re(dz) * im(Z) + re(dz) * im(dz)))) * i) + dc',
@@ -185,7 +185,7 @@ export const presets = withDefaults([
           transform: rotate(Math.PI),
           derivative: 100,
           smoothing: 'distance_scaled',
-          scale: 0.008069,
+          scale: cx(0.008069),
           velocity: 62,
           lightness: 300,
           saturation: 0,
@@ -199,7 +199,7 @@ export const presets = withDefaults([
         params: {
           transform: rotate((-3 * Math.PI) / 4),
           derivative: 100,
-          scale: 1.5,
+          scale: cx(1.5),
           f: '(|re(z)| + |im(z)|i)^3 + c',
           f_perturb:
             '(re(Z)^2 - 3 * im(Z)^2) * diffabs(re(Z), re(dz)) + (2 * (re(Z) * re(dz)) + re(dz)^2 - 6 * (im(Z) * im(dz)) - 3 * im(dz)^2) * abs(re(Z) + re(dz)) + i * ((3 * re(Z)^2 - im(Z)^2) * diffabs(im(Z), im(dz)) + (6 * (re(Z) * re(dz)) + 3 * re(dz)^2 - 2 * (im(Z) * im(dz)) - im(dz)^2) * abs(im(Z) + im(dz))) + dc',
@@ -224,7 +224,7 @@ export const presets = withDefaults([
     name: 'Tearbrot',
     params: {
       point: cx(0, 1),
-      scale: 4,
+      scale: cx(4),
       transform: rotate(-Math.PI / 2),
       f: '(z + 1)^2 / c',
       showDerivative: true,
@@ -236,7 +236,7 @@ export const presets = withDefaults([
   {
     name: 'Moonbrot',
     params: {
-      scale: 6,
+      scale: cx(6),
       f: 'c / (z + 1)^2',
       derivative: 120,
     },
@@ -244,7 +244,7 @@ export const presets = withDefaults([
   {
     name: 'Mothbrot',
     params: {
-      scale: 1.5,
+      scale: cx(1.5),
       f: 'z^2 * (|re(z)| + |im(z)|i)^3 + c',
       derivative: 120,
     },
@@ -253,7 +253,7 @@ export const presets = withDefaults([
     name: 'Phoenix',
     params: {
       point: cx(0.5667),
-      scale: 1.5,
+      scale: cx(1.5),
       transform: rotate(-Math.PI / 2),
       varying: 'z',
       f: 'z^2 + c - 0.5 * z_1',
@@ -267,7 +267,7 @@ export const presets = withDefaults([
       center: cx(0.5, 0),
       point: cx(2 + 3e-2, -1e-2),
       varying: 'z',
-      scale: 3,
+      scale: cx(3),
       f: 'z^2 - c*~z',
       f_perturb: 'dz^2 + 2 * dz * Z - C * ~dz - dc * ~Z - dc * ~dz',
     },
@@ -277,7 +277,7 @@ export const presets = withDefaults([
     params: {
       varying: 'z',
       point: cx(2, 0),
-      scale: 3,
+      scale: cx(3),
       f: '(c/z + (im(z)*z - re(z))/c)^2',
     },
   },
@@ -285,7 +285,7 @@ export const presets = withDefaults([
     name: 'Magnet',
     params: {
       point: cx(1),
-      scale: 3,
+      scale: cx(3),
       f: '((z^2 + c - 1) / (2z + c - 2))^2',
       useDerivative: false,
       convergent: true,
@@ -296,7 +296,7 @@ export const presets = withDefaults([
     params: {
       center: cx(0.5),
       point: cx(1),
-      scale: 3,
+      scale: cx(3),
       f: 'c^z',
       useDerivative: false,
     },
@@ -305,7 +305,7 @@ export const presets = withDefaults([
     name: 'Celtic',
     params: {
       point: cx(-0.7),
-      scale: 2,
+      scale: cx(2),
       f: '|re(z^2)| + i * im(z^2) + c',
       useDerivative: false,
     },
@@ -339,7 +339,7 @@ export const presets = withDefaults([
       }),
       newt('Newton generalized', 'z^(4 + 3i) - 1', 2, {
         center: cx(1, 0.25),
-        scale: 0.05,
+        scale: cx(0.05),
       }),
     ],
   },
@@ -357,7 +357,7 @@ export const presets = withDefaults([
     ...domain('Domain coloring', 'z + c'),
     subforms: [
       domain('Domain coloring', 'z^2 + c'),
-      domain('Domain coloring', 'sin(z) + c', { scale: 3 }),
+      domain('Domain coloring', 'sin(z) + c', { scale: cx(3) }),
       domain('Domain coloring', 'tan(z) + c'),
       domain('Domain coloring', '(z^3 - 2 * z + i) / (z^2 + 1) + c'),
       domain('Domain coloring', 'gamma(z) + c'),

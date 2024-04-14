@@ -5,7 +5,7 @@ precision highp float;
 
 uniform vec2 center;
 uniform vec2 point;
-uniform float scale;
+uniform vec2 scale;
 uniform vec2 aspect;
 uniform mat2 transform;
 
@@ -42,7 +42,7 @@ out vec4 fragColor;
 
 void main(void) {
   float k = time * speed;
-  vec2 p = scale * vec2(aspect.x, 1.) * (2. * uv - 1.);
+  vec2 p = cmul(scale, vec2(aspect.x, 1.)) * (2. * uv - 1.);
   float BAILOUT = pow(10., bailout);
   float BAILIN = pow(10., bailin);
 
@@ -176,7 +176,7 @@ void main(void) {
       #elif SMOOTHING >= 3
       float d = sqrt(dot(z, z) / dot(zdc, zdc)) * .5 * log(dot(z, z));
         #if SMOOTHING == 4
-      d /= scale;
+      d /= scale.x;
         #endif
       n = 130. / pow(d, .02);
       #endif
@@ -202,7 +202,7 @@ void main(void) {
       #elif SMOOTHING >= 3
       float d = sqrt(zz / dot(zdc, zdc)) * .5 * log(zz);
         #if SMOOTHING == 4
-      d /= scale;
+      d /= scale.x;
         #endif
       n = 130. / pow(d, .02);
       #endif

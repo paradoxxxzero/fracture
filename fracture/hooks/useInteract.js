@@ -40,16 +40,16 @@ export const useInteract = (runtime, updateParams) => {
   const shift = useCallback(
     (dx, dy, zoom, alt) => {
       const aspect = runtime.gl.canvas.width / runtime.gl.canvas.height
-      const width = local.current.scale * 2
+      const width = local.current.scale.multiply(2)
       alt = !alt === (zoom || runtime.moveCenter)
       if (runtime.varying.includes('c') === alt) {
         local.current.point = local.current.point.add(
-          cx(-dx * width * aspect, dy * width)
+          cx(-dx * aspect, dy).multiply(width)
         )
       }
       if (runtime.varying.includes('z') === (alt || runtime.varying === 'zc')) {
         local.current.center = local.current.center.add(
-          cx(-dx * width * aspect, dy * width)
+          cx(-dx * aspect, dy).multiply(width)
         )
       }
     },
@@ -68,7 +68,13 @@ export const useInteract = (runtime, updateParams) => {
       if (!runtime.lockCenter) {
         shift(dx * delta, dy * delta, true)
       }
-      local.current.scale -= local.current.scale * delta
+      const scaleDiff = local.current.scale.multiply(delta)
+      const scaleDiffStr = scaleDiff.real().toString()
+      const leading = scaleDiffStr.match(/^-?0\.(0*)/)
+      if (leading && leading[1].length > scaleDiff.real().precision - 16) {
+        scaleDiff.real().precision = leading[1].length + 16
+      }
+      local.current.scale = local.current.scale.subtract(scaleDiff)
     },
     [shift, runtime.lockCenter]
   )
@@ -87,7 +93,10 @@ export const useInteract = (runtime, updateParams) => {
         runtime.env.uniforms.point,
         local.current.point.to2fv()
       )
-      runtime.gl.uniform1f(runtime.env.uniforms.scale, local.current.scale)
+      runtime.gl.uniform2fv(
+        runtime.env.uniforms.scale,
+        local.current.scale.to2fv()
+      )
       update()
       if (!loop.current) {
         loop.current = requestAnimationFrame(animate)

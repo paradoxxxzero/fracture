@@ -26,7 +26,8 @@ export default function Float({
       console.warn(e)
       setValid(false)
     }
-  }, [decimal, raw, value])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [decimal, value])
 
   const [valid, setValid] = useState(true)
 

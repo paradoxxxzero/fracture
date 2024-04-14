@@ -1097,6 +1097,32 @@ const parse = tokens => {
   return ast
 }
 
+const vars = (ast_, ids = []) => {
+  if (
+    ast_.type === 'identifier' &&
+    !ids.includes(ast_.value) &&
+    ast_.value !== 'i'
+  ) {
+    ids.push(ast_.value)
+  }
+  if (ast_.left) {
+    ids = vars(ast_.left, ids)
+  }
+  if (ast_.right) {
+    ids = vars(ast_.right, ids)
+  }
+  if (ast_.args) {
+    ast_.args.forEach(arg => {
+      ids = vars(arg, ids)
+    })
+  }
+  if (ast_.operand) {
+    ids = vars(ast_.operand, ids)
+  }
+
+  return ids
+}
+
 export const ast = s => parse(tokenize(s)).simplify()
 export const derive = (s, wrt_funs = ['z', 'z_1'], wrt_vars = []) =>
   parse(tokenize(s)).simplify().toDerivative(wrt_funs, wrt_vars).simplify()
@@ -1104,5 +1130,6 @@ export const derive = (s, wrt_funs = ['z', 'z_1'], wrt_vars = []) =>
 window.tokenize = tokenize
 window.parse = parse
 window.ast = ast
+window.vars = vars
 window.derive = derive
 window.astRaw = s => parse(tokenize(s))

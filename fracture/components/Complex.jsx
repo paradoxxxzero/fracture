@@ -8,6 +8,7 @@ export default function Complex({
   min = 0,
   max = Infinity,
   step = 1,
+  initial = cx(0, 0),
   value,
   toggler,
   togglerName,
@@ -57,7 +58,7 @@ export default function Complex({
           <span className="complex-inner-label">i</span>
           <button
             type="button"
-            onClick={() => onChange(name, cx(0, 0))}
+            onClick={() => onChange(name, initial)}
             className="button"
           >
             {backspaceIcon}

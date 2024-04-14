@@ -19,6 +19,7 @@ import Float from './Float.jsx'
 import Number from './Number.jsx'
 import Presets from './Presets'
 import Select from './Select.jsx'
+import { cx } from '../decimal.js'
 
 const getShowUI = () => {
   try {
@@ -491,7 +492,6 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
                 name="center"
                 label="Center"
                 value={params.center}
-                step={params.scale}
                 maxWidth={null}
                 onChange={handleChange}
               />
@@ -502,10 +502,11 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
                 value={params.point}
                 onChange={handleChange}
               />
-              <Float
+              <Complex
                 name="scale"
                 label="Scale"
                 maxWidth={null}
+                initial={cx(1, 0)}
                 value={params.scale}
                 onChange={handleChange}
               />

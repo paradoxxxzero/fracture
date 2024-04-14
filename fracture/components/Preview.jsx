@@ -70,6 +70,9 @@ export default memo(function Preview({ params }) {
 
   useEffect(() => {
     setTimeout(() => {
+      if (!canvas.current) {
+        return
+      }
       const pixels = previewer.render(params)
       canvas.current.width = previewSize.width
       canvas.current.height = previewSize.height

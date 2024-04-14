@@ -17,7 +17,7 @@ export const varyings = ['z', 'c', 'zc']
 export const defaultParams = {
   center: cx(),
   point: cx(),
-  scale: 1.2,
+  scale: cx(1.2),
   varying: 'c',
   usePerturbation: null, // Auto
   useDerivative: true,
@@ -99,7 +99,10 @@ export const uniformParams = {
     type: '2fv',
     value: v => v.to2fv(),
   },
-  scale: '1f',
+  scale: {
+    type: '2fv',
+    value: v => v.to2fv(),
+  },
   aspect: {
     type: '2fv',
     value: (_, rt) => [

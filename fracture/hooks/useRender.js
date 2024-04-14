@@ -11,7 +11,7 @@ export const useRender = (runtime, setRuntime) => {
         ...runtime,
         perturb:
           runtime.usePerturbation === null
-            ? Math.log10(runtime.scale) < -4.5
+            ? Math.log10(runtime.scale.real().toNumber()) < -4.5
             : runtime.usePerturbation,
       }
     })
