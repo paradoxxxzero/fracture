@@ -27,6 +27,9 @@ uniform float normGridWidth;
 uniform float argGridWidth;
 uniform float argGridScale;
 
+uniform float speed;
+uniform float time;
+
 #ifdef PERTURB
 uniform sampler2D orbit;
 uniform ivec2 maxIterations;
@@ -38,6 +41,7 @@ in vec2 uv;
 out vec4 fragColor;
 
 void main(void) {
+  float k = time * speed;
   vec2 p = scale * vec2(aspect.x, 1.) * (2. * uv - 1.);
   float BAILOUT = pow(10., bailout);
   float BAILIN = pow(10., bailin);
@@ -139,7 +143,7 @@ void main(void) {
       #elif SMOOTHING == 2
       n = 10. * zexp;
       #endif
-      col = color(n, .5);
+      col = color(n, .5 + k);
       #endif
       break;
     }
@@ -176,7 +180,7 @@ void main(void) {
         #endif
       n = 130. / pow(d, .02);
       #endif
-      col = color(n, r);
+      col = color(n, r + k);
       break;
     }
     #endif
@@ -203,17 +207,17 @@ void main(void) {
       n = 130. / pow(d, .02);
       #endif
 
-      col = color(n, r);
+      col = color(n, r + k);
       break;
     }
     #endif
 
     #if !defined(CONVERGENT) && !defined(DIVERGENT)
     // Domain coloring of z:
-    float h = (atan(z.y, z.x) + PI) / TAU;
+    float h = (atan(z.y, z.x) + PI) / TAU + k;
     float lz = length(z);
     float ll = log2(lz);
-    float l = 1. - .7 * aafract(ll);
+    float l = 1. - .7 * aafract(ll + k);
     // float l = 2. * atan(length(z)) / PI;
 
     col = color(h * 100.);
@@ -225,23 +229,38 @@ void main(void) {
     // res *= scale * scale;
     //     #endif
       #ifdef SHOW_GRID
-    vec2 d = fract(2. * z * gridScale);
+        #ifdef GRID_LOG
+    vec2 g = log2(abs(z));
+        #else
+    vec2 g = z;
+        #endif
+    vec2 d = fract(2. * (g + vec2(k)) * gridScale);
     d = min(d, 1. - d);
-    d /= fwidth(z) * gridScale;
+    d /= fwidth(g) * gridScale;
     col = mix(vec3(0.), col, smoothstep(0., gridWidth * 3., min(d.x, d.y)));
       #endif
 
       #ifdef SHOW_NORM_GRID
-    float dl = fract(ll * normGridScale);
+        #ifdef NORM_GRID_LOG
+    float ng = ll;
+        #else
+    float ng = lz;
+        #endif
+    float dl = fract((ng + k) * normGridScale);
     dl = min(dl, 1. - dl);
-    dl /= fwidth(ll) * normGridScale / 2.;
+    dl /= fwidth(ng) * normGridScale / 2.;
     col = mix(col, vec3(1.), smoothstep(normGridWidth * 3., 0., dl));
       #endif
 
       #ifdef SHOW_ARG_GRID
-    float dh = fract(2. * h * argGridScale * 12.);
+        #ifdef ARG_GRID_LOG
+    float ag = log2(h);
+        #else
+    float ag = h;
+        #endif
+    float dh = fract(2. * (ag + k) * argGridScale * 12.);
     dh = min(dh, 1. - dh);
-    dh /= fwidth(h) * argGridScale * 12.;
+    dh /= fwidth(ag) * argGridScale * 12.;
     col = mix(col, vec3(.9), smoothstep(argGridWidth * 3., 0., dh));
       #endif
 

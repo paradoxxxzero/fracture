@@ -6,7 +6,9 @@ import {
   lockIcon,
   moveCenterIcon,
   moveConstantIcon,
+  playIcon,
   presetsIcon,
+  stopIcon,
   unlockIcon,
 } from '../icons'
 import { presets } from '../presets.js'
@@ -30,6 +32,13 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
   const [showUI, setShowUI] = useState(getShowUI)
   const [showPresets, setShowPresets] = useState(false)
   const [presetIndex, setPresetIndex] = useState(0)
+  const openPresets = useCallback(() => {
+    setRuntime(rt => ({
+      ...rt,
+      animate: false,
+    }))
+    setShowPresets(true)
+  }, [setRuntime])
   const closePresets = useCallback(() => {
     setShowPresets(false)
   }, [])
@@ -144,6 +153,19 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
                   {runtime.lockCenter ? lockIcon : unlockIcon}
                 </button>
               ) : null}
+              {['simple', 'advanced', 'full'].includes(showUI) ? (
+                <button
+                  className="button"
+                  onClick={() =>
+                    setRuntime({
+                      ...runtime,
+                      animate: !runtime.animate,
+                    })
+                  }
+                >
+                  {runtime.animate ? stopIcon : playIcon}
+                </button>
+              ) : null}
             </div>
           </aside>
           {['simple', 'advanced', 'full'].includes(showUI) ? (
@@ -241,6 +263,15 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
                   label="Lightness"
                   min={0}
                   value={params.lightness}
+                  onChange={handleChange}
+                />
+              ) : null}
+              {['advanced', 'full'].includes(showUI) && runtime.animate ? (
+                <Number
+                  name="speed"
+                  label="Speed"
+                  min={0}
+                  value={params.speed}
                   onChange={handleChange}
                 />
               ) : null}
@@ -349,10 +380,18 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
                   ) : null}
                   {['full'].includes(showUI) && params.showGrid ? (
                     <Number
+                      name="gridWidth"
                       label="Grid Width"
                       step={0.1}
-                      name="gridWidth"
                       value={params.gridWidth}
+                      onChange={handleChange}
+                    />
+                  ) : null}
+                  {['advanced', 'full'].includes(showUI) && params.showGrid ? (
+                    <Boolean
+                      name="gridLog"
+                      label="Grid Log"
+                      value={params.gridLog}
                       onChange={handleChange}
                     />
                   ) : null}
@@ -364,6 +403,15 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
                       value={params.normGridScale}
                       togglerName="showNormGrid"
                       toggler={params.showNormGrid}
+                      onChange={handleChange}
+                    />
+                  ) : null}
+                  {['advanced', 'full'].includes(showUI) &&
+                  params.showNormGrid ? (
+                    <Boolean
+                      name="normGridLog"
+                      label="Norm Grid Log"
+                      value={params.normGridLog}
                       onChange={handleChange}
                     />
                   ) : null}
@@ -384,6 +432,15 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
                       value={params.argGridScale}
                       togglerName="showArgGrid"
                       toggler={params.showArgGrid}
+                      onChange={handleChange}
+                    />
+                  ) : null}
+                  {['advanced', 'full'].includes(showUI) &&
+                  params.showArgGrid ? (
+                    <Boolean
+                      name="argGridLog"
+                      label="Arg Grid Log"
+                      value={params.argGridLog}
                       onChange={handleChange}
                     />
                   ) : null}
@@ -423,7 +480,7 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
           {['simple', 'advanced', 'full'].includes(showUI) ? (
             <button
               className="preset-button button"
-              onClick={() => setShowPresets(presets => !presets)}
+              onClick={openPresets}
               title="Presets"
             >
               {presetsIcon}

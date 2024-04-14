@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { allParams, compileParams, uniformParams } from '../default'
 import { recompileFragment, render, updateUniforms } from '../render'
 
@@ -45,6 +45,23 @@ export const useRender = (runtime, setRuntime) => {
 
     return () => resizeObserver.disconnect()
   }, [runtime, runtime.gl.canvas])
+
+  const raf = useRef(null)
+  useEffect(() => {
+    if (runtime.animate) {
+      runtime.timeref = performance.now()
+      const loop = () => {
+        render(runtime)
+        raf.current = requestAnimationFrame(loop)
+      }
+
+      loop()
+      return () => {
+        cancelAnimationFrame(raf.current)
+        raf.current = null
+      }
+    }
+  }, [runtime.animate])
 
   useEffect(
     () => {

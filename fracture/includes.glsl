@@ -361,7 +361,7 @@ float cpow9(in float z) {
 vec2 catania(in vec2 z) {
   return cadd(z, csub(clog(z), vec2(1., 0.)));
 }
-vec2 cataniap(in vec2 z) {
+vec2 cataniad(in vec2 z) {
   return cadd(vec2(1., 0.), cinv(z));
 }
 
@@ -381,21 +381,21 @@ vec2 ctaniatay(vec2 z) {
   res = cmul(res, z);
   res = cadd(res, vec2(1., 0.));
   for(int i = 0; i < 4; i++) {
-    res = cadd(res, cdiv(csub(z, catania(res)), cataniap(res)));
+    res = cadd(res, cdiv(csub(z, catania(res)), cataniad(res)));
   }
   return res;
 }
 vec2 ctanianega(vec2 z) {
   vec2 res = cexp(cadd(csub(z, cexp(z)), vec2(1., 0.)));
   for(int i = 0; i < 5; i++) {
-    res = cadd(res, cdiv(csub(z, catania(res)), cataniap(res)));
+    res = cadd(res, cdiv(csub(z, catania(res)), cataniad(res)));
   }
   return res;
 }
 vec2 ctaniabig(vec2 z) {
   vec2 res = cadd(csub(z, -clog(z)), vec2(1., 0.));
   for(int i = 0; i < 4; i++) {
-    res = cadd(res, cdiv(csub(z, catania(res)), cataniap(res)));
+    res = cadd(res, cdiv(csub(z, catania(res)), cataniad(res)));
   }
   return res;
 }
@@ -420,7 +420,7 @@ vec2 ctanias(vec2 z) {
   res = cadd(res, vec2(-1., 0.));
 
   for(int i = 0; i < 4; i++) {
-    res = cadd(res, cdiv(csub(z, catania(res)), cataniap(res)));
+    res = cadd(res, cdiv(csub(z, catania(res)), cataniad(res)));
   }
   return res;
 }
@@ -438,6 +438,11 @@ vec2 ctania(in vec2 z) {
     return conj(ctanias(conj(z)));
   }
   return ctaniatay(z);
+}
+
+vec2 ctaniad(in vec2 z) {
+  vec2 t = ctania(z);
+  return cdiv(t, cadd(vec2(1., 0.), t));
 }
 
 vec2 cdoya(in vec2 z, in float n) {

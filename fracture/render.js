@@ -23,6 +23,9 @@ export const preprocess = (rt, source) => {
         rt.showGrid ? '#define SHOW_GRID' : '',
         rt.showNormGrid ? '#define SHOW_NORM_GRID' : '',
         rt.showArgGrid ? '#define SHOW_ARG_GRID' : '',
+        rt.gridLog ? '#define GRID_LOG' : '',
+        rt.normGridLog ? '#define NORM_GRID_LOG' : '',
+        rt.argGridLog ? '#define ARG_GRID_LOG' : '',
         rt.showPolesZeroes ? '#define SHOW_POLES_ZEROES' : '',
         rt.shadeNorm ? '#define SHADE_NORM' : '',
         `#define VARYING ${varyings.indexOf(rt.varying)}`,
@@ -288,7 +291,10 @@ export const render = rt => {
     return
   }
   const { gl } = rt
-
+  gl.uniform1f(
+    rt.env.uniforms.time,
+    rt.animate ? performance.now() - rt.timeref : 0
+  )
   if (resizeCanvasToDisplaySize(gl.canvas, rt.supersampling)) {
     gl.viewport(0, 0, gl.canvas.width, gl.canvas.height)
     gl.uniform2fv(rt.env.uniforms.aspect, [

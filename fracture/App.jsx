@@ -10,6 +10,8 @@ export default function App({ params, updateParams }) {
     moveCenter: true,
     lockCenter: false,
     perturb: false,
+    animate: false,
+    timeref: 0,
   })
   const [displayStack, setDisplayStack] = useState(false)
 

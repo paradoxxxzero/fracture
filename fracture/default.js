@@ -49,15 +49,19 @@ export const defaultParams = {
   bailout: 2.5,
   showGrid: true,
   gridScale: 100,
+  gridLog: false,
   gridWidth: 1,
   showNormGrid: true,
   normGridScale: 100,
+  normGridLog: true,
   normGridWidth: 1,
   showArgGrid: false,
   argGridScale: 100,
+  argGridLog: false,
   argGridWidth: 1,
   showPolesZeroes: true,
   shadeNorm: true,
+  speed: 100,
 }
 
 export const allParams = Object.keys(defaultParams)
@@ -79,6 +83,9 @@ export const compileParams = [
   'showGrid',
   'showNormGrid',
   'showArgGrid',
+  'gridLog',
+  'normGridLog',
+  'argGridLog',
   'showPolesZeroes',
   'shadeNorm',
 ]
@@ -152,4 +159,12 @@ export const uniformParams = {
     value: v => v / 100,
   },
   argGridWidth: '1f',
+  time: {
+    type: '1f',
+    value: () => 0,
+  },
+  speed: {
+    type: '1f',
+    value: v => v / 1000000,
+  },
 }
