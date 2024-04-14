@@ -61,8 +61,10 @@ export const defaultParams = {
   argGridWidth: 1,
   showPolesZeroes: true,
   shadeNorm: true,
+  animate: false,
   speed: 100,
   moveCenter: true,
+  lockCenter: false,
 }
 
 export const allParams = Object.keys(defaultParams)

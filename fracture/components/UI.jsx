@@ -34,12 +34,11 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
   const [showPresets, setShowPresets] = useState(false)
   const [presetIndex, setPresetIndex] = useState(0)
   const openPresets = useCallback(() => {
-    setRuntime(rt => ({
-      ...rt,
+    updateParams({
       animate: false,
-    }))
+    })
     setShowPresets(true)
-  }, [setRuntime])
+  }, [updateParams])
   const closePresets = useCallback(() => {
     setShowPresets(false)
   }, [])
@@ -144,26 +143,24 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
                 <button
                   className="button"
                   onClick={() =>
-                    setRuntime({
-                      ...runtime,
-                      lockCenter: !runtime.lockCenter,
+                    updateParams({
+                      lockCenter: !params.lockCenter,
                     })
                   }
                 >
-                  {runtime.lockCenter ? lockIcon : unlockIcon}
+                  {params.lockCenter ? lockIcon : unlockIcon}
                 </button>
               ) : null}
               {['simple', 'advanced', 'full'].includes(showUI) ? (
                 <button
                   className="button"
                   onClick={() =>
-                    setRuntime({
-                      ...runtime,
-                      animate: !runtime.animate,
+                    updateParams({
+                      animate: !params.animate,
                     })
                   }
                 >
-                  {runtime.animate ? stopIcon : playIcon}
+                  {params.animate ? stopIcon : playIcon}
                 </button>
               ) : null}
             </div>
@@ -266,7 +263,7 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
                   onChange={handleChange}
                 />
               ) : null}
-              {['advanced', 'full'].includes(showUI) && runtime.animate ? (
+              {['advanced', 'full'].includes(showUI) && params.animate ? (
                 <Number
                   name="speed"
                   label="Speed"
