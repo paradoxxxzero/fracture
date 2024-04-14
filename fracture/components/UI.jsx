@@ -131,13 +131,12 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
                 <button
                   className="button"
                   onClick={() =>
-                    setRuntime({
-                      ...runtime,
-                      moveCenter: !runtime.moveCenter,
+                    updateParams({
+                      moveCenter: !params.moveCenter,
                     })
                   }
                 >
-                  {runtime.moveCenter ? moveCenterIcon : moveConstantIcon}
+                  {params.moveCenter ? moveCenterIcon : moveConstantIcon}
                 </button>
               ) : null}
               {['advanced', 'full'].includes(showUI) ? (

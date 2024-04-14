@@ -62,6 +62,7 @@ export const defaultParams = {
   showPolesZeroes: true,
   shadeNorm: true,
   speed: 100,
+  moveCenter: true,
 }
 
 export const allParams = Object.keys(defaultParams)
