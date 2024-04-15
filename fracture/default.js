@@ -59,6 +59,7 @@ export const defaultParams = {
   argGridScale: 100,
   argGridLog: false,
   argGridWidth: 1,
+  scaled: false,
   showPolesZeroes: true,
   shadeNorm: true,
   animate: false,
@@ -89,6 +90,7 @@ export const compileParams = [
   'gridLog',
   'normGridLog',
   'argGridLog',
+  'scaled',
   'showPolesZeroes',
   'shadeNorm',
 ]

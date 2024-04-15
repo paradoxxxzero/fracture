@@ -364,6 +364,14 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
                 </>
               ) : (
                 <>
+                  {['full'].includes(showUI) ? (
+                    <Boolean
+                      name="scaled"
+                      label="Scaled"
+                      value={params.scaled}
+                      onChange={handleChange}
+                    />
+                  ) : null}
                   {['advanced', 'full'].includes(showUI) ? (
                     <Number
                       name="gridScale"

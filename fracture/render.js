@@ -28,6 +28,7 @@ export const preprocess = (rt, source) => {
         rt.argGridLog ? '#define ARG_GRID_LOG' : '',
         rt.showPolesZeroes ? '#define SHOW_POLES_ZEROES' : '',
         rt.shadeNorm ? '#define SHADE_NORM' : '',
+        rt.scaled ? '#define SCALED' : '',
         `#define VARYING ${varyings.indexOf(rt.varying)}`,
         `#define PALETTE ${palettes.indexOf(rt.palette)}`,
         `#define SMOOTHING ${smoothings.indexOf(rt.smoothing)}`,

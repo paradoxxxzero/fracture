@@ -41,7 +41,7 @@ in vec2 uv;
 out vec4 fragColor;
 
 void main(void) {
-  float k = time * speed;
+  float k = -time * speed;
   vec2 p = cmul(scale, vec2(aspect.x, 1.)) * (2. * uv - 1.);
   float BAILOUT = pow(10., bailout);
   float BAILIN = pow(10., bailin);
@@ -214,13 +214,16 @@ void main(void) {
 
     #if !defined(CONVERGENT) && !defined(DIVERGENT)
     // Domain coloring of z:
-    float h = (atan(z.y, z.x) + PI) / TAU + k;
+    float h = (atan(z.y, z.x)) / TAU;
     float lz = length(z);
+    #ifdef SCALED
+    lz /= sqrt(dot2(scale));
+    #endif
     float ll = log2(lz);
     float l = 1. - .7 * aafract(ll + k);
     // float l = 2. * atan(length(z)) / PI;
 
-    col = color(h * 100.);
+    col = color((h + k) * 100.);
 
     #ifdef SHADE_NORM
     col *= l;
@@ -229,10 +232,14 @@ void main(void) {
     // res *= scale * scale;
     //     #endif
       #ifdef SHOW_GRID
+    vec2 zs = z;
+        #ifdef SCALED
+    zs /= dot2(scale);
+        #endif
         #ifdef GRID_LOG
-    vec2 g = log2(abs(z));
+    vec2 g = log2(abs(zs));
         #else
-    vec2 g = z;
+    vec2 g = zs;
         #endif
     vec2 d = fract(2. * (g + vec2(k)) * gridScale);
     d = min(d, 1. - d);
@@ -254,20 +261,20 @@ void main(void) {
 
       #ifdef SHOW_ARG_GRID
         #ifdef ARG_GRID_LOG
-    float ag = log2(h);
+    float ag = log2(abs(h));
         #else
     float ag = h;
         #endif
-    float dh = fract(2. * (ag + k) * argGridScale * 12.);
+    float dh = fract(2. * (ag + k * .25) * argGridScale);
     dh = min(dh, 1. - dh);
-    dh /= fwidth(ag) * argGridScale * 12.;
+    dh /= fwidth(ag) * argGridScale;
     col = mix(col, vec3(.9), smoothstep(argGridWidth * 3., 0., dh));
       #endif
 
       #ifdef SHOW_POLES_ZEROES
-    float llz = .5 * log(dot2(z));
-    col = mix(col, vec3(0.), smoothstep(4., 0., llz + 4.));
-    col = mix(col, vec3(1.), smoothstep(3., 1.5, 8. - llz));
+    float slz = log(lz);
+    col = mix(col, vec3(0.), smoothstep(4., 0., slz + 4.));
+    col = mix(col, vec3(1.), smoothstep(3., 1.5, 8. - slz));
       #endif
 
     break;
