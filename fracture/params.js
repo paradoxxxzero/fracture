@@ -53,7 +53,7 @@ export const filterParams = (maybeBadParams, changed = [], oldParams) => {
   }
   if (changed.includes('convergent') || changed.includes('divergent')) {
     if (!params.convergent && !params.divergent) {
-      params.useDerivative = false
+      // params.useDerivative = false
       params.usePerturbation = false
     }
   }

@@ -26,9 +26,12 @@ export const preprocess = (rt, source) => {
         rt.gridLog ? '#define GRID_LOG' : '',
         rt.normGridLog ? '#define NORM_GRID_LOG' : '',
         rt.argGridLog ? '#define ARG_GRID_LOG' : '',
-        rt.showPolesZeroes ? '#define SHOW_POLES_ZEROES' : '',
+        rt.showPoles ? '#define SHOW_POLES' : '',
+        rt.showZeroes ? '#define SHOW_ZEROES' : '',
         rt.shadeNorm ? '#define SHADE_NORM' : '',
+        rt.animate ? '#define ANIMATE' : '',
         rt.scaled ? '#define SCALED' : '',
+        rt.showPolya ? '#define SHOW_POLYA' : '',
         `#define VARYING ${varyings.indexOf(rt.varying)}`,
         `#define PALETTE ${palettes.indexOf(rt.palette)}`,
         `#define SMOOTHING ${smoothings.indexOf(rt.smoothing)}`,
@@ -37,15 +40,21 @@ export const preprocess = (rt, source) => {
         .join('\n')
     )
     .replace('#include includes', includesSource)
-    .replace(/F\(z,\s*c\)/g, ast(rt.f).toShader())
+    .replace(
+      /F\(\s*(.+)\s*,\s*(.+)\s*\)/g,
+      ast(rt.f).toShader().replace(/\bz\b/g, '$1').replace(/\bc\b/g, '$2')
+    )
 
   if (rt.f_prime_z) {
     source = source.replace(
-      /F_prime_z\s*\(z,\s*c,\s*(.*?),\s*(.*?)\)/g,
+      /F_prime_z\s*\(\s*(.+)\s*,\s*(.+)\s*,\s*(.*?)\s*,\s*(.*?)\s*\)/g,
       ast(rt.f_prime_z)
         .toShader()
-        .replace(/z_prime/g, '$1')
-        .replace(/z_1_prime/g, '$2')
+
+        .replace(/\bz\b/g, '$1')
+        .replace(/\bc\b/g, '$2')
+        .replace(/\bz_prime\b/g, '$3')
+        .replace(/\bz_1_prime\b/g, '$4')
     )
   } else {
     source = source.replace(

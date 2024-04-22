@@ -26,6 +26,9 @@ uniform float normGridScale;
 uniform float normGridWidth;
 uniform float argGridWidth;
 uniform float argGridScale;
+uniform float zeroes;
+uniform float poles;
+uniform float polya;
 
 uniform float speed;
 uniform float time;
@@ -56,7 +59,7 @@ void main(void) {
   dz += p; // Mandelbrot-like
   dz *= transform;
     #endif
-    #if VARYING == 1 || VARYING == 2 
+    #if VARYING == 1 || VARYING == 2
   dc += p; // Julia-like
   dc *= transform;
     #endif
@@ -68,7 +71,7 @@ void main(void) {
   z += p; // Mandelbrot-like
   z *= transform;
     #endif
-    #if VARYING == 1 || VARYING == 2 
+    #if VARYING == 1 || VARYING == 2
   c += p; // Julia-like
   c *= transform;
     #endif
@@ -271,11 +274,42 @@ void main(void) {
     col = mix(col, vec3(.9), smoothstep(argGridWidth * 3., 0., dh));
       #endif
 
-      #ifdef SHOW_POLES_ZEROES
-    float slz = log(lz);
-    col = mix(col, vec3(0.), smoothstep(4., 0., slz + 4.));
-    col = mix(col, vec3(1.), smoothstep(3., 1.5, 8. - slz));
+      #ifdef SHOW_ZEROES
+    col = mix(col, vec3(0.), smoothstep(0., PI, zeroes - ll));
       #endif
+      #ifdef SHOW_POLES
+    col = mix(col, vec3(1.), smoothstep(0., PI, ll - poles));
+      #endif
+
+        #ifdef SHOW_POLYA
+    float size = 2. / polya;
+          #ifdef SCALED
+    size *= scale.x;
+          #endif
+
+    vec2 ztile = (floor(z_1 / size) + 0.5) * size;
+    vec2 zp = conj(F(ztile, c));
+
+    // vec2 zdz = vec2(1., 0.);
+    // vec2 zdz_1 = vec2(1., 0.);
+    // vec2 zp = F_prime_z(ztile, c, zdz, zdz_1);
+    vec2 p = z_1 - ztile;
+
+    float arrow = length(p);
+    vec2 v = zp * size;
+    float base = length(v) * .25;
+    float minArrow = size * .15;
+    float maxArrow = size * .4;
+    v = normalize(v) * clamp(base, minArrow, maxArrow);
+
+    arrow = sdAArrow(p, -v, v, .02 * size, .2 * size, 5.) / size;
+
+    // float al = log2(1. + abs(base - maxSize));
+    // vec3 arrowColor = hsl2rgb(vec3(al, .5, 1. / (al + 1.)));
+    // col = mix(arrowColor, col, arrow);
+    float aaa = .003 * scale.x / size;
+    col = mix(col, vec3(1.0), 1.0 - smoothstep(0.0, aaa, arrow));
+        #endif
 
     break;
     #endif

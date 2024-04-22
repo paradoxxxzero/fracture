@@ -328,19 +328,19 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
                   onChange={handleChange}
                 />
               ) : null}
+              {['advanced', 'full'].includes(showUI) ? (
+                <Number
+                  name="derivative"
+                  label="Derivative"
+                  min={0}
+                  value={params.derivative}
+                  togglerName="useDerivative"
+                  toggler={params.useDerivative}
+                  onChange={handleChange}
+                />
+              ) : null}
               {params.convergent || params.divergent ? (
                 <>
-                  {['advanced', 'full'].includes(showUI) ? (
-                    <Number
-                      name="derivative"
-                      label="Derivative"
-                      min={0}
-                      value={params.derivative}
-                      togglerName="useDerivative"
-                      toggler={params.useDerivative}
-                      onChange={handleChange}
-                    />
-                  ) : null}
                   {['advanced', 'full'].includes(showUI) &&
                   params.useDerivative ? (
                     <Boolean
@@ -459,11 +459,26 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
                     />
                   ) : null}
                   {['advanced', 'full'].includes(showUI) ? (
-                    <Boolean
-                      label="Poles/Zeroes"
+                    <Number
+                      label="Zeroes"
                       className="button"
-                      name="showPolesZeroes"
-                      value={params.showPolesZeroes}
+                      name="zeroes"
+                      min={-Infinity}
+                      value={params.zeroes}
+                      togglerName="showZeroes"
+                      toggler={params.showZeroes}
+                      onChange={handleChange}
+                    />
+                  ) : null}
+                  {['advanced', 'full'].includes(showUI) ? (
+                    <Number
+                      label="Poles"
+                      className="button"
+                      name="poles"
+                      min={-Infinity}
+                      value={params.poles}
+                      togglerName="showPoles"
+                      toggler={params.showPoles}
                       onChange={handleChange}
                     />
                   ) : null}
@@ -473,6 +488,17 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
                       className="button"
                       name="shadeNorm"
                       value={params.shadeNorm}
+                      onChange={handleChange}
+                    />
+                  ) : null}
+                  {['advanced', 'full'].includes(showUI) ? (
+                    <Number
+                      name="polya"
+                      label="Polya Plot"
+                      min={0}
+                      value={params.polya}
+                      togglerName="showPolya"
+                      toggler={params.showPolya}
                       onChange={handleChange}
                     />
                   ) : null}

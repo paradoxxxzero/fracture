@@ -83,6 +83,7 @@ export const functionShader = {
   tet: 'ctet',
   ate: 'cate',
   tetra: 'ctetranat',
+  fibonacci: 'cfibonacci'
 }
 const opFunctions = {
   '+': (a, b) => a + b,

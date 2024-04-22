@@ -60,12 +60,17 @@ export const defaultParams = {
   argGridLog: false,
   argGridWidth: 1,
   scaled: false,
-  showPolesZeroes: true,
+  showZeroes: true,
+  zeroes: 0,
+  showPoles: true,
+  poles: 2,
   shadeNorm: true,
   animate: false,
   speed: 100,
   moveCenter: true,
   lockCenter: false,
+  showPolya: false,
+  polya: 15,
 }
 
 export const allParams = Object.keys(defaultParams)
@@ -91,8 +96,11 @@ export const compileParams = [
   'normGridLog',
   'argGridLog',
   'scaled',
-  'showPolesZeroes',
+  'showZeroes',
+  'showPoles',
   'shadeNorm',
+  'showPolya',
+  'animate',
 ]
 export const uniformParams = {
   center: {
@@ -175,4 +183,7 @@ export const uniformParams = {
     type: '1f',
     value: v => v / 1000000,
   },
+  zeroes: '1f',
+  poles: '1f',
+  polya: '1f',
 }

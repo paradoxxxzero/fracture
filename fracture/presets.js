@@ -400,6 +400,7 @@ export const presets = withDefaults([
       domain('Domain coloring', 'tet(z) + c'),
       domain('Domain coloring', 'ate(z) + c'),
       domain('Domain coloring', 'tetra(z, c)', { point: cx(2, 2) }),
+      domain('Domain coloring', 'fibonacci(z) + c'),
     ],
   },
 ])
