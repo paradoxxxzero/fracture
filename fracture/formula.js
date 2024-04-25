@@ -83,7 +83,7 @@ export const functionShader = {
   tet: 'ctet',
   ate: 'cate',
   tetra: 'ctetranat',
-  fibonacci: 'cfibonacci'
+  fibonacci: 'cfibonacci',
 }
 const opFunctions = {
   '+': (a, b) => a + b,
@@ -408,7 +408,7 @@ class BinaryOp {
       }
     }
     if (right.type === 'number' && left.type === 'number') {
-      const op = this.type === '^' ? '**' : this.type
+      const op = this.type === '**' ? '^' : this.type
       const result = opFunctions[op](left.value, right.value)
       if (result % 1 === 0) {
         return new Leaf('number', opFunctions[op](left.value, right.value))

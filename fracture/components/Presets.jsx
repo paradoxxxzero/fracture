@@ -16,11 +16,8 @@ export default function Presets({
     setRawSearch(e.target.value)
     debounce(setSearch(e.target.value), 50)
   }, [])
-  if (!open) {
-    return null
-  }
   return (
-    <>
+    <div style={{ display: open ? 'block' : 'none' }}>
       <div className="presets-overlay" onClick={closePresets} />
       <div className="presets">
         <div className="presets-modal">
@@ -76,6 +73,6 @@ export default function Presets({
           </div>
         </div>
       </div>
-    </>
+    </div>
   )
 }

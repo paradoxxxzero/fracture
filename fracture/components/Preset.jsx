@@ -49,12 +49,8 @@ export default memo(function Preset({
     setOpen(false)
   }, [name, search, subforms])
 
-  if (!visible) {
-    return null
-  }
-
   return (
-    <>
+    <div style={{ display: visible ? 'block' : 'none' }}>
       <div
         className={`preset${sub ? ' sub' : ''}`}
         onClick={() => onPreset(params, index)}
@@ -92,7 +88,7 @@ export default memo(function Preset({
               </code>
               {/* <code className="preset-perturb">{params.f_perturb}</code> */}
             </div>
-            <Preview params={params} />
+            {visible ? <Preview params={params} /> : null}
           </div>
         </div>
       </div>
@@ -106,6 +102,6 @@ export default memo(function Preset({
             onPreset={onPreset}
           />
         ))}
-    </>
+    </div>
   )
 })

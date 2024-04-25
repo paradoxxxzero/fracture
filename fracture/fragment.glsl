@@ -269,16 +269,19 @@ void main(void) {
     float ag = h;
         #endif
     float dh = fract(2. * (ag + k * .25) * argGridScale);
+
     dh = min(dh, 1. - dh);
-    dh /= fwidth(ag) * argGridScale;
-    col = mix(col, vec3(.9), smoothstep(argGridWidth * 3., 0., dh));
+    dh /= min(fwidth(ag), .01) * argGridScale;
+
+    col = mix(col, col + .5, smoothstep(argGridWidth * 3., 0., dh));
+
       #endif
 
       #ifdef SHOW_ZEROES
-    col = mix(col, vec3(0.), smoothstep(0., PI, zeroes - ll));
+    col = mix(col, vec3(1.), smoothstep(0., PI, zeroes - ll));
       #endif
       #ifdef SHOW_POLES
-    col = mix(col, vec3(1.), smoothstep(0., PI, ll - poles));
+    col = mix(col, vec3(0.), smoothstep(0., PI, ll - poles));
       #endif
 
         #ifdef SHOW_POLYA
@@ -302,12 +305,13 @@ void main(void) {
     float maxArrow = size * .4;
     v = normalize(v) * clamp(base, minArrow, maxArrow);
 
-    arrow = sdAArrow(p, -v, v, .02 * size, .2 * size, 5.) / size;
+    arrow = sdAArrow(p, -v, v, .02 * size, .15 * size, 5.) / size;
 
     // float al = log2(1. + abs(base - maxSize));
     // vec3 arrowColor = hsl2rgb(vec3(al, .5, 1. / (al + 1.)));
     // col = mix(arrowColor, col, arrow);
     float aaa = .003 * scale.x / size;
+    col = mix(col, vec3(0.), 1.0 - smoothstep(0.0, aaa, abs(arrow) * .5));
     col = mix(col, vec3(1.0), 1.0 - smoothstep(0.0, aaa, arrow));
         #endif
 

@@ -15,7 +15,6 @@ import { presets } from '../presets.js'
 import Boolean from './Boolean.jsx'
 import Complex from './Complex.jsx'
 import ComplexFormula from './ComplexFormula.jsx'
-import Float from './Float.jsx'
 import Number from './Number.jsx'
 import Presets from './Presets'
 import Select from './Select.jsx'
@@ -328,19 +327,19 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
                   onChange={handleChange}
                 />
               ) : null}
-              {['advanced', 'full'].includes(showUI) ? (
-                <Number
-                  name="derivative"
-                  label="Derivative"
-                  min={0}
-                  value={params.derivative}
-                  togglerName="useDerivative"
-                  toggler={params.useDerivative}
-                  onChange={handleChange}
-                />
-              ) : null}
               {params.convergent || params.divergent ? (
                 <>
+                  {['advanced', 'full'].includes(showUI) ? (
+                    <Number
+                      name="derivative"
+                      label="Derivative"
+                      min={0}
+                      value={params.derivative}
+                      togglerName="useDerivative"
+                      toggler={params.useDerivative}
+                      onChange={handleChange}
+                    />
+                  ) : null}
                   {['advanced', 'full'].includes(showUI) &&
                   params.useDerivative ? (
                     <Boolean
