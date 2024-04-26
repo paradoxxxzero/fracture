@@ -77,7 +77,9 @@ export default function Number({
       // pass
     } else {
       let val =
-        parseInt(step) === parseFloat(step) ? parseInt(raw) : parseFloat(raw)
+        parseInt(step) === parseFloat(step)
+          ? parseInt(raw)
+          : parseFloat(raw) + 1e-9
       val -= val % step
       val -= step
       if (step > 0 && step < 1) {
@@ -97,7 +99,10 @@ export default function Number({
       // pass
     } else {
       let val =
-        parseInt(step) === parseFloat(step) ? parseInt(raw) : parseFloat(raw)
+        parseInt(step) === parseFloat(step)
+          ? parseInt(raw)
+          : parseFloat(raw) + 1e-9
+
       val -= val % step
       val += step
       if (step > 0 && step < 1) {

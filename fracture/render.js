@@ -42,13 +42,13 @@ export const preprocess = (rt, source) => {
     )
     .replace('#include includes', includesSource)
     .replace(
-      /F\(\s*(.+)\s*,\s*(.+)\s*\)/g,
+      /F\(\s*(.+?)\s*,\s*(.+?)\s*\)/g,
       ast(rt.f).toShader().replace(/\bz\b/g, '$1').replace(/\bc\b/g, '$2')
     )
 
   if (rt.f_prime_z) {
     source = source.replace(
-      /F_prime_z\s*\(\s*(.+)\s*,\s*(.+)\s*,\s*(.*?)\s*,\s*(.*?)\s*\)/g,
+      /F_prime_z\s*\(\s*(.+?)\s*,\s*(.+?)\s*,\s*(.*?)\s*,\s*(.*?)\s*\)/g,
       ast(rt.f_prime_z)
         .toShader()
 

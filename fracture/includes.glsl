@@ -931,20 +931,6 @@ float aastep(float x) {
 }
 
 // iquilezles.org/articles/distfunctions2d
-float sdBox(in vec2 p, in vec2 b) {
-  vec2 d = abs(p) - b;
-  return length(max(d, 0.0)) + min(max(d.x, d.y), 0.0);
-}
-
-float sdEquilateralTriangle(in vec2 p, in float r) {
-  const float k = sqrt(3.0);
-  p.x = abs(p.x) - r;
-  p.y = p.y + r / k;
-  if(p.x + k * p.y > 0.0)
-    p = vec2(p.x - k * p.y, -k * p.x - p.y) / 2.0;
-  p.x -= clamp(p.x, -2.0 * r, 0.0);
-  return -length(p) * sign(p.y);
-}
 
 vec2 opRotate(in vec2 p, in float theta) {
   float c = cos(theta);
@@ -953,17 +939,42 @@ vec2 opRotate(in vec2 p, in float theta) {
   return p;
 }
 
-// Custom animated arrow
-float sdAArrow(in vec2 p, in float w, in float h, in float a) {
-  // w: line width
-  // h: line height
-  // a: arrow width
+float sdArrow(in vec2 p, vec2 a, vec2 b, float w1, float w2, float k) {
+  vec2 ba = b - a;
+  float l2 = dot(ba, ba);
+  float l = sqrt(l2);
 
-  vec2 box = vec2(w, h);
-  float line = sdBox(p, box);
-  p.x -= w;
-  p = opRotate(p, PI / 6.);
-  float s = 1.8;
-  float arrow = sdEquilateralTriangle(p * s, a) / s;
-  return min(line, arrow);
+  p = p - a;
+  p = mat2(ba.x, -ba.y, ba.y, ba.x) * p / l;
+  p.y = abs(p.y);
+  vec2 pz = p - vec2(l - w2 * k, w2);
+
+  vec2 q = p;
+  q.x -= clamp(q.x, 0.0, l - w2 * k);
+  q.y -= w1;
+  float di = dot(q, q);
+  q = pz;
+  q.y -= clamp(q.y, w1 - w2, 0.0);
+  di = min(di, dot(q, q));
+  if(p.x < w1) // conditional is optional
+  {
+    q = p;
+    q.y -= clamp(q.y, 0.0, w1);
+    di = min(di, dot(q, q));
+  }
+  if(pz.x > 0.0) // conditional is optional
+  {
+    q = pz;
+    q -= vec2(k, -1.0) * clamp((q.x * k - q.y) / (k * k + 1.0), 0.0, w2);
+    di = min(di, dot(q, q));
+  }
+
+  float si = 1.0;
+  float z = l - p.x;
+  if(min(p.x, z) > 0.0) {
+    float h = (pz.x < 0.0) ? w1 : z / k;
+    if(p.y < h)
+      si = -1.0;
+  }
+  return si * sqrt(di);
 }

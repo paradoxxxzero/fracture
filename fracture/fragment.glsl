@@ -249,7 +249,8 @@ void main(void) {
     vec2 d = fract(2. * (g + vec2(k)) * gridScale);
     d = min(d, 1. - d);
     d /= fwidth(g) * gridScale;
-    col = mix(vec3(0.), col, smoothstep(0., gridWidth * 3., min(d.x, d.y)));
+    col = mix(vec3(0.), col, smoothstep(0., gridWidth * 3., d.x));
+    col = mix(col * .3, col, smoothstep(0., gridWidth * 4., d.y));
       #endif
 
       #ifdef SHOW_NORM_GRID
@@ -293,42 +294,39 @@ void main(void) {
           #endif
 
     vec2 ztile = (floor(z_1 / size) + 0.5) * size;
-    vec2 zp = conj(F(ztile, c));
+    vec2 zp = conj(F(z_1, c));
+    vec2 zr = conj(F(ztile, c));
 
-    // vec2 zdz = vec2(1., 0.);
-    // vec2 zdz_1 = vec2(1., 0.);
-    // vec2 zp = F_prime_z(ztile, c, zdz, zdz_1);
     vec2 p = z_1 - ztile;
     float shade = 1.;
           #ifdef ANIMATE
-    shade = 1. - smoothstep(size * .4, size * .5, length(p));
+    shade = 1. - smoothstep(size * .3, size * .5, length(p));
           #endif
 
     float arrow = 0.;
-    vec2 v = zp;
-    float base = length(v) * .1;
-    float len = min(base, .35);
+    float base = length(zr) * .1;
+    float len = clamp(base, .08, .35);
+    float angle = atan(zp.y, zp.x);
 
-    p = opRotate(p, atan(v.y, v.x));
+    p = opRotate(p, angle);
 
     float sc = 1. / size;
     p *= sc;
           #ifdef ANIMATE
-    p.x -= time * speed * base * 25.;
+    p.x += k * base * 25.;
     float r = min(.35 / len, 2.);
     p.x -= round(p.x * r) / r;
           #endif
-    arrow = sdAArrow(p, len, .02, .15) / sc;
-
+    arrow = sdArrow(p, vec2(-len, 0.), vec2(len, 0.), .02, .08, 2.);
+    arrow /= sc;
     vec3 arrowColor = col + polyaLightness - 1.;
           #ifndef POLYA_COLOR
-    float al = log2(abs(base - .4));
-    arrowColor = color(al);
+    float al = log2(base + .1);
+    arrowColor = color(al * 5.);
           #endif
 
     float aaa = .003 * scale.x;
     col = mix(col, arrowColor, shade * (1.0 - smoothstep(0.0, aaa, arrow)));
-    // col = mix(col, col + (polyaLightness - 1.), 1.0 - smoothstep(0.0, aaa, abs(arrow)));
         #endif
 
     break;
