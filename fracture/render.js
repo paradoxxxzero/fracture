@@ -42,13 +42,13 @@ export const preprocess = (rt, source) => {
     )
     .replace('#include includes', includesSource)
     .replace(
-      /F\(\s*(.+?)\s*,\s*(.+?)\s*\)/g,
+      /\bF\(\s*(.+?)\s*,\s*(.+?)\s*\)/g,
       ast(rt.f).toShader().replace(/\bz\b/g, '$1').replace(/\bc\b/g, '$2')
     )
 
   if (rt.f_prime_z) {
     source = source.replace(
-      /F_prime_z\s*\(\s*(.+?)\s*,\s*(.+?)\s*,\s*(.*?)\s*,\s*(.*?)\s*\)/g,
+      /\bF_prime_z\s*\(\s*(.+?)\s*,\s*(.+?)\s*,\s*(.*?)\s*,\s*(.*?)\s*\)/g,
       ast(rt.f_prime_z)
         .toShader()
 
@@ -59,13 +59,13 @@ export const preprocess = (rt, source) => {
     )
   } else {
     source = source.replace(
-      /F_prime_z\s*\(z,\s*c,\s*(.*?),\s*(.*?)\)/g,
+      /\bF_prime_z\s*\(z,\s*c,\s*(.*?),\s*(.*?)\)/g,
       'vec2(0)'
     )
   }
   if (rt.f_prime_c) {
     source = source.replace(
-      /F_prime_c\s*\(z,\s*c,\s*(.*?),\s*(.*?)\)/g,
+      /\bF_prime_c\s*\(z,\s*c,\s*(.*?),\s*(.*?)\)/g,
       ast(rt.f_prime_c)
         .toShader()
         .replace(/z_prime/g, '$1')
@@ -73,7 +73,7 @@ export const preprocess = (rt, source) => {
     )
   } else {
     source = source.replace(
-      /F_prime_c\s*\(z,\s*c,\s*(.*?),\s*(.*?)\)/g,
+      /\bF_prime_c\s*\(z,\s*c,\s*(.*?),\s*(.*?)\)/g,
       'vec2(0)'
     )
   }

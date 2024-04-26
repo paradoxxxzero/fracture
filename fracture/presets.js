@@ -370,11 +370,6 @@ export const presets = withDefaults([
     subforms: [
       domain('Cos', 'cos(z) + c'),
       domain('Tan', 'tan(z) + c'),
-      domain('Cn', 'cn(z, .5) + c'),
-      domain('Sn', 'sn(z, .5) + c'),
-      domain('Dn', 'dn(z, .5) + c'),
-      domain('Cn', 'cn(z, .5) / cos(z) + c'),
-      domain('Tan', 'tan(z) + c'),
       domain('Acos', 'acos(z) + c'),
       domain('Asin', 'asin(z) + c'),
       domain('Atan', 'atan(z) + c'),
@@ -384,6 +379,13 @@ export const presets = withDefaults([
       domain('Acosh', 'acosh(z) + c'),
       domain('Asinh', 'asinh(z) + c'),
       domain('Atanh', 'atanh(z) + c'),
+      domain('Cn', 'cn(z, .5) + c'),
+      domain('Sn', 'sn(z, .5) + c'),
+      domain('Dn', 'dn(z, .5) + c'),
+      domain('Cn', 'cn(z, .5) / cos(z) + c'),
+      domain('Complete Elliptic Integral of First Kind', 'ellk(z) + c'),
+      domain('Incomplet Elliptic Integral of First Kind', 'ellfi(z, .5) + c'),
+      domain('Nome', 'nome(z) + c'),
     ],
   },
   {
@@ -436,7 +438,9 @@ export const presets = withDefaults([
       domain('', '(1 - cos(z)) / z^2 + c'),
       domain('', 'sin(z) / z + c'),
       domain('', 'z / (exp(z) - 1) + c'),
-      domain('', '(z - 1) cos(1/z) + c'),
+      domain('', '(z - 1) cos(1 / z) + c'),
+      domain('', 'z / i - i / z + c'),
+      domain('', 'z^(4z^(3z^(2z^z))) + c'),
       domain(
         '',
         range(1, 21)

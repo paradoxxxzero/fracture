@@ -84,6 +84,11 @@ export const functionShader = {
   ate: 'cate',
   tetra: 'ctetranat',
   fibonacci: 'cfibonacci',
+  weierstrass: 'cweierstrass',
+  "weierstrass'": 'cweierstrassd',
+  nome: 'cnome',
+  ellk: 'cellk',
+  ellfi: 'cellipticFi',
 }
 const opFunctions = {
   '+': (a, b) => a + b,

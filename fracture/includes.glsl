@@ -665,6 +665,7 @@ vec2 ctetra(in vec2 z, in float n) {
   return ctetra(z, int(n));
 }
 
+// https://www.shadertoy.com/view/Mlsfzs
 void sncndn(float u, float k2, out float sn, out float cn, out float dn) {
   float emc = 1.0 - k2;
   float a, b, c;
@@ -729,13 +730,13 @@ vec2 cdn(vec2 z, float k2) {
 }
 
 vec2 csn(vec2 z) {
-  return csn(z, .8);
+  return csn(z, .5);
 }
 vec2 ccn(vec2 z) {
-  return ccn(z, .8);
+  return ccn(z, .5);
 }
 vec2 cdn(vec2 z) {
-  return cdn(z, .8);
+  return cdn(z, .5);
 }
 
 vec2 czeta(in vec2 z) {
@@ -894,6 +895,156 @@ vec2 cphi(in float k, in float s, in float a) {
 vec2 cfibonacci(in vec2 z) {
   // Using generalized Binet formula
   return cdiv(csub(cpow(PHI, z), cpow(-PHI, -z)), 2. * PHI - 1.);
+}
+
+vec2 cweierstrass(in vec2 z) {
+  // Weierstrass elliptic function
+  const float om = 1.529954037057; // real semiperiod
+  const float o3 = 0.57735026919; // 1/sqrt(3)
+  const vec2 ep = vec2(0.5, 0.866025403784); // exp(i * pi/3)
+
+  vec2 zt = z - 2.0 * om * (vec2(floor(0.5 - o3 * dot(vec2(ep.x, -ep.y), z) / om), 0.) + floor(o3 * z.y / om + 0.5) * ep);
+  bool zq = (dot(zt, zt) > 0.25);
+  vec2 zz = zq ? 0.0625 * zt : zt;
+
+  vec2 z2 = cmul(zz, zz), z4 = cmul(z2, z2), z3 = cmul(zz, z2), z6 = cmul(z4, z2);
+  vec2 wp = cinv(z2) + cdiv(cmul(z4 / 28.0, vec2(1.0, 0.) + z6 / 2730.0), vec2(1.0, 0.) + cmul(z6 / 420.0, z6 / 1729.0 - vec2(1.0, 0.)));
+
+  if(zq) {
+    for(int k = 0; k < 4; k++) {
+      vec2 tmp1 = cmul(wp, cmul(wp, wp));
+      wp = cdiv(cmul(tmp1 + vec2(2.0, 0.), wp), 4.0 * tmp1 - vec2(1.0, 0.));
+    }
+  }
+
+  return wp;
+}
+vec2 cweierstrassd(in vec2 z) {
+  // Weierstrass elliptic function
+  const float om = 1.529954037057; // real semiperiod
+  const float o3 = 0.57735026919; // 1/sqrt(3)
+  const vec2 ep = vec2(0.5, 0.866025403784); // exp(i * pi/3)
+     // constants for Padé approximation
+  const float P0 = 0.00328332715973; // 3191/971880
+  const float P1 = 0.0148207056102; // 205/13832
+
+    // period reduction and rescaling
+  vec2 zt = z - 2.0 * om * (vec2(floor(0.5 - o3 * dot(vec2(ep.x, -ep.y), z) / om), 0.) + floor(o3 * z.y / om + 0.5) * ep);
+  bool zq = (dot(zt, zt) > 0.25);
+  vec2 zz = zq ? 0.0625 * zt : zt;
+
+    // evaluate the Padé approximants
+  vec2 z2 = cmul(zz, zz), z4 = cmul(z2, z2), z3 = cmul(zz, z2), z6 = cmul(z4, z2);
+  vec2 pd = cdiv(cmul(z3 / 7.0, vec2(1.0, 0.) + P0 * z6), vec2(1.0, 0.) + cmul(z6 / 3738.0, P1 * z6 - vec2(13.4, 0.))) - 2.0 * cinv(z3);
+
+  if(zq) {
+    for(int k = 0; k < 4; k++) {
+      vec2 tmp2 = cmul(pd, pd);
+      pd = cdiv(cmul(tmp2 - vec2(18.0, 0.), tmp2) - vec2(27.0, 0.), 8.0 * cmul(pd, tmp2));
+    }
+  }
+
+  return pd;
+}
+vec2 cellk(in vec2 z) {
+  vec2 agA = vec2(1.0, 0.0), agB = csqrt(agA - z);
+  vec2 tmp = vec2(0.0), h = tmp;
+
+  for(int i = 0; i <= 9; i++) {
+    tmp = csqrt(cmul(agA, agB));
+    h = 0.5 * (agB - agA);
+    agA += h;
+    agB = tmp;
+    if(length(h) < 1.0e-6)
+      break;
+  }
+
+  return (PI * cinv(agA + agB));
+}
+
+float polevl(float x, float[11] coef) {
+  float ans = coef[0];
+
+  for(int i = 0; i < 11; i++) {
+    ans = ans * x + coef[i];
+  }
+  return ans;
+}
+
+float cellpk(in float x) {
+  const float P[11] = float[](1.37982864606273237150E-4, 2.28025724005875567385E-3, 7.97404013220415179367E-3, 9.85821379021226008714E-3, 6.87489687449949877925E-3, 6.18901033637687613229E-3, 8.79078273952743772254E-3, 1.49380448916805252718E-2, 3.08851465246711995998E-2, 9.65735902811690126535E-2, 1.38629436111989062502E0);
+  const float Q[11] = float[](2.94078955048598507511E-5, 9.14184723865917226571E-4, 5.94058303753167793257E-3, 1.54850516649762399335E-2, 2.39089602715924892727E-2, 3.01204715227604046988E-2, 3.73774314173823228969E-2, 4.88280347570998239232E-2, 7.03124996963957469739E-2, 1.24999999999870820058E-1, 4.99999999999999999821E-1);
+  if(x > 0.) {
+    return (polevl(x, P) - log(x) * polevl(x, Q));
+  } else {
+    return (1.3862943611198906188E0 - 0.5 * log(x));
+  }
+}
+
+float cellik(in float phi, in float m) {
+  float a = 1.;
+  float b = sqrt(1. - m);
+  float c = sqrt(m);
+  float d = 1.;
+  for(int i = 0; abs(c) > 1e-6; i++) {
+    if(mod(phi, PI) != 0.) {
+      float dPhi = atan((b * tan(phi)), a);
+      if(dPhi < 0.) {
+        dPhi += PI;
+      }
+      phi += dPhi + floor(phi / PI) * PI;
+    } else {
+      phi += phi;
+    }
+    c = (a + b) / 2.;
+    b = sqrt(a * b);
+    a = c;
+    c = (a - b) / 2.;
+    d += d;
+  }
+  return phi / (d * a);
+}
+
+float cellipticF(in float phi, in float m) {
+  float b = sqrt(1. - m);
+  float t = tan(phi);
+
+  if(abs(t) > 10.) {
+    float e = 1.0 / (b * t);
+    phi = atan(e);
+    return cellpk(1. - m) - cellik(phi, m);
+  }
+  return cellik(phi, m);
+}
+
+vec2 cellipticFi(in vec2 z, in float m) {
+  float r = abs(z.x);
+  float i = abs(z.y);
+  if(r == 0.) {
+    return vec2(0., cellipticF(0., 1. - m) * sign(z.y));
+  }
+  if(abs(r - ETA) < .001) {
+    r = ETA - .001;
+  }
+
+  float sinhPsi2 = pow(sinh(i), 2.);
+  float cscPhi2 = 1. / (sin(r) * sin(r));
+  float cotPhi2 = 1. / (tan(r) * tan(r));
+  float b = -(cotPhi2 + m * (sinhPsi2 * cscPhi2) - 1. + m);
+  float c = (m - 1.) * cotPhi2;
+  float cotLambda2 = (-b + sqrt(max(0., b * b - 4. * c))) / 2.;
+  r = cellipticF(atan(1. / sqrt(max(0., cotLambda2))), m) * sign(z.x);
+  i = cellipticF(atan(sqrt(max(0., (cotLambda2 / cotPhi2 - 1.) / m))), 1. - m) * sign(z.y);
+  return vec2(r, i);
+}
+
+vec2 cellipticFi(in vec2 z) {
+  return cellipticFi(z, .5);
+}
+
+// https://www.shadertoy.com/view/wllGD4#
+vec2 cnome(in vec2 z) {
+  return cexp(-PI * cdiv(cellk(vec2(1.0, 0.0) - z), cellk(z)));
 }
 
 float diffabs(in float X, in float x) {
