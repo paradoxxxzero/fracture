@@ -25,10 +25,17 @@ export default memo(function Preset({
   search,
   subforms = [],
   sub = false,
+  shown,
   onPreset,
 }) {
+  const [subshown, setSubshown] = useState(false)
   const [visible, setVisible] = useState(true)
   const [open, setOpen] = useState(false)
+  useEffect(() => {
+    if (open) {
+      setSubshown(true)
+    }
+  }, [open])
 
   useEffect(() => {
     if (!search) {
@@ -88,20 +95,22 @@ export default memo(function Preset({
               </code>
               {/* <code className="preset-perturb">{params.f_perturb}</code> */}
             </div>
-            {visible ? <Preview params={params} /> : null}
+            {shown ? <Preview params={params} /> : null}
           </div>
         </div>
       </div>
-      {open &&
-        subforms.map((subform, i) => (
+      <div className="subforms" style={{ display: open ? 'block' : 'none' }}>
+        {subforms.map((subform, i) => (
           <Preset
             key={i}
             {...subform}
             sub
             search={search}
+            shown={shown && subshown}
             onPreset={onPreset}
           />
         ))}
+      </div>
     </div>
   )
 })

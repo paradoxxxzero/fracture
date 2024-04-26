@@ -390,7 +390,8 @@ export const presets = withDefaults([
     ...domain('Domain coloring Transcendental', 'exp(z) + c'),
     subforms: [
       domain('Log', 'log(z) + c'),
-      domain('Exponential of Inverse', 'exp(z^-1) + c'),
+      domain('', 'exp(z^-1) + c', { scale: cx(1.5) }),
+      domain('', 'exp(-z^2) + c', { scale: cx(1.5), showPolya: true }),
       domain('Square Root', 'sqrt(z) + c'),
       domain('Cubic Root', 'z^(1/3) + c'),
       domain('Complex Exponentiation', 'z^c', { point: cx(2.5) }),

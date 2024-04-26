@@ -29,6 +29,7 @@ uniform float argGridScale;
 uniform float zeroes;
 uniform float poles;
 uniform float polya;
+uniform float polyaLightness;
 
 uniform float speed;
 uniform float time;
@@ -219,18 +220,19 @@ void main(void) {
     // Domain coloring of z:
     float h = (atan(z.y, z.x)) / TAU;
     float lz = length(z);
-    #ifdef SCALED
+      #ifdef SCALED
     lz /= sqrt(dot2(scale));
-    #endif
+      #endif
     float ll = log2(lz);
     float l = 1. - .7 * aafract(ll + k);
     // float l = 2. * atan(length(z)) / PI;
-
+      #if !defined(SHOW_POLYA) || defined(POLYA_COLOR)
     col = color((h + k) * 100.);
+      #endif
 
-    #ifdef SHADE_NORM
+      #ifdef SHADE_NORM
     col *= l;
-    #endif
+      #endif
     //     #if AMBIANCE == 2 || AMBIANCE == 3
     // res *= scale * scale;
     //     #endif
@@ -297,22 +299,36 @@ void main(void) {
     // vec2 zdz_1 = vec2(1., 0.);
     // vec2 zp = F_prime_z(ztile, c, zdz, zdz_1);
     vec2 p = z_1 - ztile;
+    float shade = 1.;
+          #ifdef ANIMATE
+    shade = 1. - smoothstep(size * .4, size * .5, length(p));
+          #endif
 
-    float arrow = length(p);
-    vec2 v = zp * size;
-    float base = length(v) * .25;
-    float minArrow = size * .15;
-    float maxArrow = size * .4;
-    v = normalize(v) * clamp(base, minArrow, maxArrow);
+    float arrow = 0.;
+    vec2 v = zp;
+    float base = length(v) * .1;
+    float len = min(base, .35);
 
-    arrow = sdAArrow(p, -v, v, .02 * size, .15 * size, 5.) / size;
+    p = opRotate(p, atan(v.y, v.x));
 
-    // float al = log2(1. + abs(base - maxSize));
-    // vec3 arrowColor = hsl2rgb(vec3(al, .5, 1. / (al + 1.)));
-    // col = mix(arrowColor, col, arrow);
-    float aaa = .003 * scale.x / size;
-    col = mix(col, vec3(0.), 1.0 - smoothstep(0.0, aaa, abs(arrow) * .5));
-    col = mix(col, vec3(1.0), 1.0 - smoothstep(0.0, aaa, arrow));
+    float sc = 1. / size;
+    p *= sc;
+          #ifdef ANIMATE
+    p.x -= time * speed * base * 25.;
+    float r = min(.35 / len, 2.);
+    p.x -= round(p.x * r) / r;
+          #endif
+    arrow = sdAArrow(p, len, .02, .15) / sc;
+
+    vec3 arrowColor = col + polyaLightness - 1.;
+          #ifndef POLYA_COLOR
+    float al = log2(abs(base - .4));
+    arrowColor = color(al);
+          #endif
+
+    float aaa = .003 * scale.x;
+    col = mix(col, arrowColor, shade * (1.0 - smoothstep(0.0, aaa, arrow)));
+    // col = mix(col, col + (polyaLightness - 1.), 1.0 - smoothstep(0.0, aaa, abs(arrow)));
         #endif
 
     break;

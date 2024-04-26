@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 
-export const parse = (raw, min, max, step) => {
+export const parse = (raw, min, max, step, stepLock) => {
   let valid = true
   let value = 0
 
@@ -16,7 +16,7 @@ export const parse = (raw, min, max, step) => {
     isNaN(value) ||
     value < min ||
     value > max ||
-    (step % 1 === 0 && value % step !== 0) ||
+    (stepLock && step % 1 === 0 && value % step !== 0) ||
     // Consider x.  as invalid to prevent auto deletion
     (step % 1 !== 0 && raw.endsWith('.')) ||
     (min < 0 && raw === '-0')
@@ -40,6 +40,8 @@ export default function Number({
   maxWidth = 5,
   togglerName,
   noPlusMinus,
+  stepLock = false,
+  togglerOnly = false,
   onChange,
   ...props
 }) {
@@ -56,7 +58,7 @@ export default function Number({
 
   const update = useCallback(
     (newRaw, input = false) => {
-      const parsed = parse(newRaw, min, max, step)
+      const parsed = parse(newRaw, min, max, step, stepLock)
       setRaw(parsed.raw)
       setValid(parsed.valid)
       if (parsed.valid) {
@@ -74,10 +76,10 @@ export default function Number({
     if (raw === `${min}`) {
       // pass
     } else {
-      const val =
-        (parseInt(step) === parseFloat(step)
-          ? parseInt(raw)
-          : parseFloat(raw)) - step
+      let val =
+        parseInt(step) === parseFloat(step) ? parseInt(raw) : parseFloat(raw)
+      val -= val % step
+      val -= step
       if (step > 0 && step < 1) {
         update(val.toFixed(step.toString().split('.')[1].length))
       } else {
@@ -94,10 +96,10 @@ export default function Number({
     if (raw === `${max}`) {
       // pass
     } else {
-      const val =
-        (parseInt(step) === parseFloat(step)
-          ? parseInt(raw)
-          : parseFloat(raw)) + step
+      let val =
+        parseInt(step) === parseFloat(step) ? parseInt(raw) : parseFloat(raw)
+      val -= val % step
+      val += step
       if (step > 0 && step < 1) {
         update(val.toFixed(step.toString().split('.')[1].length))
       } else {
@@ -130,7 +132,7 @@ export default function Number({
           )}
         </div>
       ) : null}
-      {(!togglerName || toggler) && (
+      {(!togglerName || toggler) && !togglerOnly && (
         <div className={`number-control${noPlusMinus ? ' noplusminus' : ''}`}>
           <input
             type="text"

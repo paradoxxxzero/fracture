@@ -221,6 +221,7 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
                   name="offset"
                   label="Offset"
                   min={0}
+                  step={10}
                   value={params.offset}
                   onChange={handleChange}
                 />
@@ -230,6 +231,7 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
                   name="velocity"
                   label="Velocity"
                   min={0}
+                  step={10}
                   value={params.velocity}
                   onChange={handleChange}
                 />
@@ -240,6 +242,7 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
                   label="Hue"
                   min={0}
                   max={360}
+                  step={10}
                   value={params.hue}
                   onChange={handleChange}
                 />
@@ -249,6 +252,7 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
                   name="saturation"
                   label="Saturation"
                   min={0}
+                  step={10}
                   value={params.saturation}
                   onChange={handleChange}
                 />
@@ -258,6 +262,7 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
                   name="lightness"
                   label="Lightness"
                   min={0}
+                  step={10}
                   value={params.lightness}
                   onChange={handleChange}
                 />
@@ -379,6 +384,7 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
                       value={params.gridScale}
                       togglerName="showGrid"
                       toggler={params.showGrid}
+                      togglerOnly={showUI !== 'full'}
                       onChange={handleChange}
                     />
                   ) : null}
@@ -391,11 +397,12 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
                       onChange={handleChange}
                     />
                   ) : null}
-                  {['advanced', 'full'].includes(showUI) && params.showGrid ? (
+                  {['full'].includes(showUI) && params.showGrid ? (
                     <Boolean
                       name="gridLog"
                       label="Grid Log"
                       value={params.gridLog}
+                      togglerOnly={showUI !== 'full'}
                       onChange={handleChange}
                     />
                   ) : null}
@@ -407,6 +414,7 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
                       value={params.normGridScale}
                       togglerName="showNormGrid"
                       toggler={params.showNormGrid}
+                      togglerOnly={showUI !== 'full'}
                       onChange={handleChange}
                     />
                   ) : null}
@@ -416,6 +424,7 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
                       name="normGridLog"
                       label="Norm Grid Log"
                       value={params.normGridLog}
+                      togglerOnly={showUI !== 'full'}
                       onChange={handleChange}
                     />
                   ) : null}
@@ -436,15 +445,16 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
                       value={params.argGridScale}
                       togglerName="showArgGrid"
                       toggler={params.showArgGrid}
+                      togglerOnly={showUI !== 'full'}
                       onChange={handleChange}
                     />
                   ) : null}
-                  {['advanced', 'full'].includes(showUI) &&
-                  params.showArgGrid ? (
+                  {['full'].includes(showUI) && params.showArgGrid ? (
                     <Boolean
                       name="argGridLog"
                       label="Arg Grid Log"
                       value={params.argGridLog}
+                      togglerOnly={showUI !== 'full'}
                       onChange={handleChange}
                     />
                   ) : null}
@@ -466,6 +476,7 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
                       value={params.zeroes}
                       togglerName="showZeroes"
                       toggler={params.showZeroes}
+                      togglerOnly={showUI !== 'full'}
                       onChange={handleChange}
                     />
                   ) : null}
@@ -478,6 +489,7 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
                       value={params.poles}
                       togglerName="showPoles"
                       toggler={params.showPoles}
+                      togglerOnly={showUI !== 'full'}
                       onChange={handleChange}
                     />
                   ) : null}
@@ -498,6 +510,19 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
                       value={params.polya}
                       togglerName="showPolya"
                       toggler={params.showPolya}
+                      togglerOnly={showUI !== 'full'}
+                      onChange={handleChange}
+                    />
+                  ) : null}
+                  {['full'].includes(showUI) && params.showPolya ? (
+                    <Number
+                      name="polyaLightness"
+                      label="Polya Lightness"
+                      min={0}
+                      step={10}
+                      togglerName="polyaColor"
+                      toggler={params.polyaColor}
+                      value={params.polyaLightness}
                       onChange={handleChange}
                     />
                   ) : null}

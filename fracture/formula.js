@@ -1061,10 +1061,10 @@ const parse = tokens => {
       return new FunctionOp('abs', [node])
     } else if (token.type === 'unaryPrefix') {
       i++
-      return new UnaryOp(token.value, factor())
+      return new UnaryOp(token.value, exponentiation())
     } else if (token.type === 'operator' && '+-'.includes(token.value)) {
       i++
-      return new UnaryOp(token.value, factor())
+      return new UnaryOp(token.value, exponentiation())
     } else if (token.type === 'float' || token.type === 'integer') {
       i++
       return new Leaf('number', parseFloat(token.value))

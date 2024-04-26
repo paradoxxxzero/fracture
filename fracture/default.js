@@ -71,6 +71,8 @@ export const defaultParams = {
   lockCenter: false,
   showPolya: false,
   polya: 15,
+  polyaColor: true,
+  polyaLightness: 120,
 }
 
 export const allParams = Object.keys(defaultParams)
@@ -100,6 +102,7 @@ export const compileParams = [
   'showPoles',
   'shadeNorm',
   'showPolya',
+  'polyaColor',
   'animate',
 ]
 export const uniformParams = {
@@ -186,4 +189,8 @@ export const uniformParams = {
   zeroes: '1f',
   poles: '1f',
   polya: '1f',
+  polyaLightness: {
+    type: '1f',
+    value: v => v / 100,
+  },
 }

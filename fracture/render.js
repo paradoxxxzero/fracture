@@ -32,6 +32,7 @@ export const preprocess = (rt, source) => {
         rt.animate ? '#define ANIMATE' : '',
         rt.scaled ? '#define SCALED' : '',
         rt.showPolya ? '#define SHOW_POLYA' : '',
+        rt.polyaColor ? '#define POLYA_COLOR' : '',
         `#define VARYING ${varyings.indexOf(rt.varying)}`,
         `#define PALETTE ${palettes.indexOf(rt.palette)}`,
         `#define SMOOTHING ${smoothings.indexOf(rt.smoothing)}`,

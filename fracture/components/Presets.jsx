@@ -1,4 +1,4 @@
-import { Fragment, useCallback, useState } from 'react'
+import { Fragment, useCallback, useEffect, useState } from 'react'
 import { presets } from '../presets'
 import Preset from './Preset'
 import { debounce } from '../../utils'
@@ -10,8 +10,15 @@ export default function Presets({
   onExportImage,
   closePresets,
 }) {
+  const [shown, setShown] = useState(false)
   const [search, setSearch] = useState('')
   const [rawSearch, setRawSearch] = useState('')
+  useEffect(() => {
+    if (open) {
+      setShown(true)
+    }
+  }, [open])
+
   const handleSearch = useCallback(e => {
     setRawSearch(e.target.value)
     debounce(setSearch(e.target.value), 50)
@@ -64,6 +71,7 @@ export default function Presets({
                     index={i}
                     params={params}
                     search={search}
+                    shown={shown}
                     subforms={subforms}
                     onPreset={onPreset}
                   />
