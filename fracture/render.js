@@ -1,11 +1,28 @@
 import { cx, m } from './decimal'
 import { palettes, smoothings, uniformParams, varyings } from './default'
 import { ast } from './formula'
-import fragmentSource from './fragment.glsl?raw'
-import includesSource from './includes.glsl?raw'
-import vertexSource from './vertex.glsl?raw'
+import fragmentSource from './shaders/fragment.glsl?raw'
+import includesSource from './shaders/includes.glsl?raw'
+import globalsSource from './shaders/globals.glsl?raw'
+import renderSource from './shaders/render.glsl?raw'
+import colorsSource from './shaders/colors.glsl?raw'
+import complexSource from './shaders/complex.glsl?raw'
+import specialSource from './shaders/special.glsl?raw'
+import vertexSource from './shaders/vertex.glsl?raw'
+
+export const includes = {
+  includes: includesSource,
+  globals: globalsSource,
+  colors: colorsSource,
+  render: renderSource,
+  complex: complexSource,
+  special: specialSource,
+}
 
 export const preprocess = (rt, source) => {
+  Object.entries(includes).forEach(([key, value]) => {
+    source = source.replace(`#include ${key}`, value)
+  })
   source = source
     .replace(
       '##CONFIG',
@@ -40,7 +57,6 @@ export const preprocess = (rt, source) => {
         .filter(Boolean)
         .join('\n')
     )
-    .replace('#include includes', includesSource)
     .replace(
       /\bF\(\s*(.+?)\s*,\s*(.+?)\s*\)/g,
       ast(rt.f).toShader().replace(/\bz\b/g, '$1').replace(/\bc\b/g, '$2')

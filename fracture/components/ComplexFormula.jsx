@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { cx } from '../decimal'
-import { ast, functionShader } from '../formula'
+import { ast, consts, functionShader } from '../formula'
 
 export default function ComplexFormula({
   name,
@@ -58,6 +58,7 @@ export default function ComplexFormula({
           if (!Object.keys(functionShader).includes(funcName)) {
             console.warn('Unknown function in formula', e)
             setValid(false)
+            onChange(name, newRaw)
             return
           }
         }
@@ -66,9 +67,16 @@ export default function ComplexFormula({
           err.includes('undeclared identifier') ||
           err.includes('is not defined')
         ) {
-          console.warn('Undeclared identifier in formula', e)
-          setValid(false)
-          return
+          const idName = err
+            .match(/(.+) is not defined/)[1]
+            .split(': ')
+            .slice(-1)[0]
+          if (!consts.includes(idName)) {
+            console.warn('Undeclared identifier in formula', e)
+            setValid(false)
+            onChange(name, newRaw)
+            return
+          }
         }
       }
       setValid(true)

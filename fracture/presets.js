@@ -404,6 +404,7 @@ export const presets = withDefaults([
       domain('Beta First derivative', "beta'(z, c)", { point: cx(2) }),
       domain('Gamma', 'gamma(z) + c'),
       domain('Gamma First derivative', "gamma'(z) + c"),
+      domain('Eta', 'eta(z) + c'),
       domain('Zeta', 'zeta(z) + c'),
       domain('Zeta First derivative', "zeta'(z) + c"),
       domain('Psi (Digamma)', 'psi(z) + c'),
@@ -441,6 +442,11 @@ export const presets = withDefaults([
       domain('', '(z - 1) cos(1 / z) + c'),
       domain('', 'z / i - i / z + c'),
       domain('', 'z^(4z^(3z^(2z^z))) + c'),
+      domain(
+        'Wilmshurst',
+        'im(exp(-i*PI / 4) * z^c) + i * im(exp(i * PI / 4) * (z - 1)^c)',
+        { point: cx(4) }
+      ),
       domain(
         '',
         range(1, 21)

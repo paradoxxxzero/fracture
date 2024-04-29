@@ -34,6 +34,21 @@ class Token {
   }
 }
 
+export const consts = [
+  'PI',
+  'TAU',
+  'ETA',
+  'PHI',
+  'GAMMA',
+  'E',
+  'SQRT2',
+  'SQRT3',
+  'LN10',
+  'LN2',
+  'LEMNISCATE',
+  'GAUSS',
+]
+
 const shaderBinary = {
   '+': 'cadd',
   '-': 'csub',
@@ -45,6 +60,8 @@ const shaderBinary = {
 }
 
 export const functionShader = {
+  R: 'R',
+  I: 'I',
   sqrt: 'csqrt',
   cos: 'ccos',
   sin: 'csin',
@@ -65,6 +82,8 @@ export const functionShader = {
   "beta'": 'cdbeta',
   gamma: 'cgamma',
   "gamma'": 'cdgamma',
+  factorial: 'cfactorial',
+  eta: 'ceta',
   zeta: 'czeta',
   "zeta'": 'cdzeta',
   psi: 'cpsi',
@@ -75,9 +94,9 @@ export const functionShader = {
   arg: 'carg',
   norm: 'length',
   tania: 'ctania',
-  "tania'": 'ctaniad',
+  "tania'": 'cdtania',
   atania: 'catania',
-  "atania'": 'cataniad',
+  "atania'": 'cdatania',
   doya: 'cdoya',
   filog: 'cfilog',
   tet: 'ctet',
@@ -85,7 +104,7 @@ export const functionShader = {
   tetra: 'ctetranat',
   fibonacci: 'cfibonacci',
   weierstrass: 'cweierstrass',
-  "weierstrass'": 'cweierstrassd',
+  "weierstrass'": 'cdweierstrass',
   nome: 'cnome',
   ellk: 'cellk',
   ellfi: 'cellipticFi',
@@ -575,7 +594,7 @@ class UnaryOp {
 
 class FunctionOp {
   constructor(name, args) {
-    this.name = name.toLowerCase()
+    this.name = name
     this.args = args
     this.type = 'function'
   }

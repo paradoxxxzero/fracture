@@ -1,370 +1,10 @@
-const float PI = 3.1415926535897932384626433832795;
-const float TAU = 6.283185307179586476925286766559;
-const float ETA = 1.5707963267948966192313216916398;
-const float PHI = 1.6180339887498948482045868343656;
-
-const vec2 c1 = vec2(1., 0.);
-const vec2 ci = vec2(0., 1.);
-
-vec3 hsl2rgb(in vec3 c) {
-  vec3 rgb = clamp(abs(mod(c.x * 6.0 + vec3(0.0, 4.0, 2.0), 6.0) - 3.0) - 1.0, 0.0, 1.0);
-  return c.z + c.y * (rgb - 0.5) * (1.0 - abs(2.0 * c.z - 1.0));
-}
-vec3 rgb2hcv(in vec3 col) {
-  vec4 P = mix(vec4(col.bg, -1.0, 2.0 / 3.0), vec4(col.gb, 0.0, -1.0 / 3.0), step(col.b, col.g));
-  vec4 Q = mix(vec4(P.xyw, col.r), vec4(col.r, P.yzx), step(P.x, col.r));
-  float C = Q.x - min(Q.w, Q.y);
-  float H = abs((Q.w - Q.y) / (6. * C + 1e-9) + Q.z);
-  return vec3(H, C, Q.x);
-}
-
-vec3 rgb2hsl(in vec3 col) {
-  col = rgb2hcv(col);
-  float L = col.z - col.y * 0.5;
-  float S = col.y / (1. - abs(L * 2. - 1.) + 1e-9);
-  return vec3(col.x, S, L);
-}
-
-// vec3 hsl2rgb(in vec3 c) {
-//   vec3 rgb = clamp(abs(mod(c.x * 6.0 + vec3(0.0, 4.0, 2.0), 6.0) - 3.0) - 1.0, 0.0, 1.0);
-//   return c.z + c.y * (rgb - 0.5) * (1.0 - abs(2.0 * c.z - 1.0));
-// }
-
-// vec3 rgb2hsl(vec3 col) {
-//   float eps = 1e-10;
-//   float minc = min(col.r, min(col.g, col.b));
-//   float maxc = max(col.r, max(col.g, col.b));
-//   vec3 mask = step(col.grr, col.rgb) * step(col.bbg, col.rgb);
-//   vec3 h = mask * (vec3(0.0, 2.0, 4.0) + (col.gbr - col.brg) / (maxc - minc + eps)) / 6.0;
-//   return vec3(fract(1.0 + h.x + h.y + h.z), (maxc - minc) / (1.0 - abs(minc + maxc - 1.0) + eps), (minc + maxc) * 0.5);
-// }
-
-vec3 hueAdjust(in vec3 col, in float p) {
-  vec3 hsl = rgb2hsl(col);
-  hsl.x += p + hue;
-  hsl.y *= saturation;
-  hsl.z *= lightness;
-  return hsl2rgb(hsl);
-}
-
-// https://iquilezles.org/articles/palettes
-vec3 cosPalette(in float t, in vec3 a, in vec3 b, in vec3 c, in vec3 d) {
-  return a + b * cos(offset + TAU * (c * velocity * .1 * t + d));
-}
-
-vec3 palette(float t) {
-  return cosPalette(t, 
-#if PALETTE == 0
-  vec3(0.5, 0.5, 0.5), vec3(0.5, 0.5, 0.5), vec3(1.0, 1.0, 1.0), vec3(0.0, 0.10, 0.20)
-#elif PALETTE == 1
-  vec3(0.5, 0.5, 0.5), vec3(0.5, 0.5, 0.5), vec3(1.0, 1.0, 1.0), vec3(0.0, 0.33, 0.67)
-#elif PALETTE == 2
-  vec3(0.5, 0.5, 0.5), vec3(0.5, 0.5, 0.5), vec3(1.0, 1.0, 1.0), vec3(0.3, 0.20, 0.20)
-#elif PALETTE == 3
-  vec3(0.5, 0.5, 0.5), vec3(0.5, 0.5, 0.5), vec3(1.0, 1.0, 0.5), vec3(0.8, 0.90, 0.30)
-#elif PALETTE == 4
-  vec3(0.5, 0.5, 0.5), vec3(0.5, 0.5, 0.5), vec3(1.0, 0.7, 0.4), vec3(0.0, 0.15, 0.20)
-#elif PALETTE == 5
-  vec3(0.5, 0.5, 0.5), vec3(0.5, 0.5, 0.5), vec3(2.0, 1.0, 0.0), vec3(0.5, 0.20, 0.25)
-#elif PALETTE == 6
-  vec3(0.8, 0.5, 0.4), vec3(0.2, 0.4, 0.2), vec3(2.0, 1.0, 1.0), vec3(0.0, 0.25, 0.25)
-#else
-  vec3(0.731, 1.098, 0.192), vec3(0.358, 1.090, 0.657), vec3(1.077, 0.360, 0.328), vec3(0.965, 2.265, 0.837)
-#endif
-  );
-}
-
-vec3 color(float t, float p) {
-  return hueAdjust(palette(t), p);
-}
-
-vec3 color(float t) {
-  return color(t, 0.);
-}
-
-float dot2(in vec2 z) {
-  return dot(z, z);
-}
-
-vec2 cadd(in vec2 z0, in vec2 z1) {
-  return z0 + z1;
-}
-vec2 cadd(in vec2 z, in float w) {
-  return z + vec2(w, 0.);
-}
-vec2 cadd(in float k, in vec2 w) {
-  return vec2(k, 0.) + w;
-}
-float cadd(in float k, in float w) {
-  return k + w;
-}
-
-vec2 csub(in vec2 z0, in vec2 z1) {
-  return z0 - z1;
-}
-vec2 csub(in vec2 z, in float w) {
-  return z - vec2(w, 0.);
-}
-vec2 csub(in float k, in vec2 w) {
-  return vec2(k, 0.) - w;
-}
-float csub(in float k, in float w) {
-  return k - w;
-}
-
-vec2 cmul(in vec2 z, in vec2 w) {
-  return vec2(z.x * w.x - z.y * w.y, z.x * w.y + z.y * w.x);
-}
-vec2 cmul(in vec2 z, in float k) {
-  return k * z;
-}
-vec2 cmul(in float k, in vec2 w) {
-  return k * w;
-}
-float cmul(in float k, in float w) {
-  return k * w;
-}
-
-vec2 cinv(in vec2 z) {
-  return z * vec2(1, -1) / dot(z, z);
-}
-vec2 cdiv(in vec2 z0, in vec2 z1) {
-  return cmul(z0, cinv(z1));
-}
-vec2 cdiv(in vec2 z0, in float k) {
-  return z0 / k;
-}
-vec2 cdiv(in float k, in vec2 w) {
-  return k * cinv(w);
-}
-float cdiv(in float k, in float w) {
-  return k / w;
-}
-
-vec2 conj(in vec2 z) {
-  return vec2(z.x, -z.y);
-}
-float conj(in float k) {
-  return k;
-}
-
-vec2 expi(in float x) {
-  return vec2(cos(x), sin(x));
-}
-vec2 cexp(in vec2 z) {
-  return exp(z.x) * expi(z.y);
-}
-float cexp(in float k) {
-  return exp(k);
-}
-
-float cnorm(in vec2 z) {
-  return length(z);
-}
-float cnorm(in float k) {
-  return abs(k);
-}
-float carg(in vec2 z) {
-  return atan(z.y, z.x);
-}
-float carg(in float k) {
-  return sign(k) * ETA;
-}
-
-vec2 csqrt(in vec2 z) {
-  float r = length(z);
-  return vec2(sqrt(0.5 * (r + z.x)), sign(z.y) * sqrt(0.5 * (r - z.x)));
-}
-float csqrt(in float k) {
-  return sqrt(k);
-}
-
-vec2 clog(in vec2 z) {
-  return vec2(log(length(z)), atan(z.y, z.x));
-}
-float clog(in float k) {
-  return log(k);
-}
-
-vec2 ccos(in vec2 z) {
-  return vec2(cos(z.x) * cosh(z.y), -sin(z.x) * sinh(z.y));
-}
-float ccos(in float k) {
-  return cos(k);
-}
-
-vec2 csin(in vec2 z) {
-  return vec2(sin(z.x) * cosh(z.y), cos(z.x) * sinh(z.y));
-}
-float csin(in float k) {
-  return sin(k);
-}
-
-vec2 ctan(in vec2 z) {
-  return cdiv(csin(z), ccos(z));
-}
-float ctan(in float k) {
-  return tan(k);
-}
-
-vec2 cacos(in vec2 z) {
-  return cmul(-ci, clog(cadd(z, cmul(ci, csqrt(csub(c1, cmul(z, z)))))));
-}
-float cacos(in float k) {
-  return acos(k);
-}
-
-vec2 casin(in vec2 z) {
-  return cmul(-ci, clog(cadd(cmul(z, ci), csqrt(csub(c1, cmul(z, z))))));
-}
-float casin(in float k) {
-  return asin(k);
-}
-
-vec2 catan(in vec2 z) {
-  return cmul(ci * .5, clog(cdiv(cadd(ci, z), csub(ci, z))));
-}
-float catan(in float k) {
-  return atan(k);
-}
-
-vec2 ccosh(in vec2 z) {
-  return cdiv(cadd(cexp(z), cexp(cmul(-ci, z))), 2.0);
-}
-float ccosh(in float k) {
-  return cosh(k);
-}
-
-vec2 csinh(in vec2 z) {
-  return cdiv(cexp(z) - cexp(cmul(-ci, z)), 2.0);
-}
-float csinh(in float k) {
-  return sinh(k);
-}
-
-vec2 ctanh(in vec2 z) {
-  return cdiv(csinh(z), ccosh(z));
-}
-float ctanh(in float k) {
-  return tanh(k);
-}
-
-vec2 cacosh(in vec2 z) {
-  return clog(cadd(z, csqrt(csub(cmul(z, z), c1))));
-}
-float cacosh(in float k) {
-  return acosh(k);
-}
-
-vec2 casinh(in vec2 z) {
-  return clog(cadd(z, csqrt(cadd(cmul(z, z), c1))));
-}
-float casinh(in float k) {
-  return asinh(k);
-}
-
-vec2 catanh(in vec2 z) {
-  return cmul(vec2(0.5, 0.), clog(cdiv(cadd(c1, z), csub(c1, z))));
-}
-float catanh(in float k) {
-  return atanh(k);
-}
-
-vec2 cpow(in vec2 z, in vec2 k) {
-  return cexp(cmul(k, clog(z)));
-}
-float cpow(in float z, in float k) {
-  return pow(z, k);
-}
-vec2 cpow(in float k, in vec2 z) {
-  return cpow(vec2(k, 0.), z);
-}
-vec2 cpow(in vec2 z, in float k) {
-  return cexp(k * clog(z));
-}
-vec2 cpow(in vec2 z, in int k) {
-  vec2 w = vec2(1., 0.);
-  if(abs(k) > 10) {
-    return cpow(z, float(k));
-  }
-  if(k < 0) {
-    z = cinv(z);
-    k = -k;
-  }
-  for(int i = 0; i < k; i++) {
-    w = cmul(w, z);
-  }
-  return w;
-}
-
-// Fast integer power functions
-vec2 cpow0(in vec2 z) {
-  return vec2(1., 0.);
-}
-float cpow0(in float z) {
-  return 1.;
-}
-vec2 cpow1(in vec2 z) {
-  return z;
-}
-float cpow1(in float z) {
-  return z;
-}
-vec2 cpow2(in vec2 z) {
-  return cmul(z, z);
-}
-float cpow2(in float z) {
-  return z * z;
-}
-vec2 cpow3(in vec2 z) {
-  return cmul(z, cpow2(z));
-}
-float cpow3(in float z) {
-  return cmul(z, cpow2(z));
-}
-vec2 cpow4(in vec2 z) {
-  return cmul(cpow2(z), cpow2(z));
-}
-float cpow4(in float z) {
-  return cmul(cpow2(z), cpow2(z));
-}
-vec2 cpow5(in vec2 z) {
-  return cmul(z, cpow4(z));
-}
-float cpow5(in float z) {
-  return cmul(z, cpow4(z));
-}
-vec2 cpow6(in vec2 z) {
-  return cpow2(cpow3(z));
-}
-float cpow6(in float z) {
-  return cpow2(cpow3(z));
-}
-vec2 cpow7(in vec2 z) {
-  return cmul(z, cpow6(z));
-}
-float cpow7(in float z) {
-  return cmul(z, cpow6(z));
-}
-vec2 cpow8(in vec2 z) {
-  return cpow2(cpow4(z));
-}
-float cpow8(in float z) {
-  return cpow2(cpow4(z));
-}
-vec2 cpow9(in vec2 z) {
-  return cmul(z, cpow8(z));
-}
-float cpow9(in float z) {
-  return cmul(z, cpow8(z));
-}
 // https://www.ils.uec.ac.jp/~dima/BOOK/443.pdf
 
 vec2 catania(in vec2 z) {
-  return cadd(z, csub(clog(z), vec2(1., 0.)));
+  return cadd(z, csub(clog(z), c1));
 }
-vec2 cataniad(in vec2 z) {
-  return cadd(vec2(1., 0.), cinv(z));
+vec2 cdatania(in vec2 z) {
+  return cadd(c1, cinv(z));
 }
 
 vec2 ctaniatay(vec2 z) {
@@ -381,23 +21,23 @@ vec2 ctaniatay(vec2 z) {
   res = cmul(res, z);
   res = cadd(res, vec2(.5, 0.));
   res = cmul(res, z);
-  res = cadd(res, vec2(1., 0.));
+  res = cadd(res, c1);
   for(int i = 0; i < 4; i++) {
-    res = cadd(res, cdiv(csub(z, catania(res)), cataniad(res)));
+    res = cadd(res, cdiv(csub(z, catania(res)), cdatania(res)));
   }
   return res;
 }
 vec2 ctanianega(vec2 z) {
-  vec2 res = cexp(cadd(csub(z, cexp(z)), vec2(1., 0.)));
+  vec2 res = cexp(cadd(csub(z, cexp(z)), c1));
   for(int i = 0; i < 5; i++) {
-    res = cadd(res, cdiv(csub(z, catania(res)), cataniad(res)));
+    res = cadd(res, cdiv(csub(z, catania(res)), cdatania(res)));
   }
   return res;
 }
 vec2 ctaniabig(vec2 z) {
-  vec2 res = cadd(csub(z, -clog(z)), vec2(1., 0.));
+  vec2 res = cadd(csub(z, -clog(z)), c1);
   for(int i = 0; i < 4; i++) {
-    res = cadd(res, cdiv(csub(z, catania(res)), cataniad(res)));
+    res = cadd(res, cdiv(csub(z, catania(res)), cdatania(res)));
   }
   return res;
 }
@@ -422,7 +62,7 @@ vec2 ctanias(vec2 z) {
   res = cadd(res, vec2(-1., 0.));
 
   for(int i = 0; i < 4; i++) {
-    res = cadd(res, cdiv(csub(z, catania(res)), cataniad(res)));
+    res = cadd(res, cdiv(csub(z, catania(res)), cdatania(res)));
   }
   return res;
 }
@@ -442,9 +82,9 @@ vec2 ctania(in vec2 z) {
   return ctaniatay(z);
 }
 
-vec2 ctaniad(in vec2 z) {
+vec2 cdtania(in vec2 z) {
   vec2 t = ctania(z);
-  return cdiv(t, cadd(vec2(1., 0.), t));
+  return cdiv(t, cadd(c1, t));
 }
 
 vec2 cdoya(in vec2 z, in float n) {
@@ -455,12 +95,12 @@ vec2 cdoya(in vec2 z) {
 }
 
 vec2 cfilog(in vec2 z) {
-  return cdiv(ctania(csub(clog(z), vec2(1., PI))), -z);
+  return cdiv(ctania(csub(clog(z), c1 + I(PI))), -z);
 }
 // https://www.ams.org/journals/mcom/2009-78-267/S0025-5718-09-02188-7/S0025-5718-09-02188-7.pdf
 vec2 cfima(in vec2 z) {
   // if(z.y <= 4. + .2379 * z.x) {
-  //   return cexp(cfima(csub(z, vec2(1., 0.))));
+  //   return cexp(cfima(csub(z, c1)));
   // }
   int shift = 0;
   for(; shift < 250; shift++) {
@@ -470,11 +110,11 @@ vec2 cfima(in vec2 z) {
     z.x -= 1.;
   }
   vec2 a0 = vec2(0.31813150520476413531, 1.33723570143068940890);
-  vec2 a1 = vec2(1., 0.);
+  vec2 a1 = c1;
   vec2 a2 = .5 * cinv(csub(a0, a1));
-  vec2 a3 = cdiv(cadd(a2, vec2(1. / 6., 0.)), csub(cmul(a0, a0), vec2(1., 0.)));
-  vec2 a4 = cdiv(cadd(a2 * .5, cadd(cmul(a2, a2) * .5, cadd(a3, 1. / 24.))), csub(cmul(a0, cmul(a0, a0)), vec2(1., 0.)));
-  vec2 a5 = cdiv(cadd(cmul(a2, a2) * .5, cadd(a2 / 6., cadd(cmul(a2, a3), cadd(a3 * .5, cadd(a4, 1. / 120.))))), csub(cmul(a0, cmul(a0, cmul(a0, a0))), vec2(1., 0.)));
+  vec2 a3 = cdiv(cadd(a2, vec2(1. / 6., 0.)), csub(cmul(a0, a0), c1));
+  vec2 a4 = cdiv(cadd(a2 * .5, cadd(cmul(a2, a2) * .5, cadd(a3, 1. / 24.))), csub(cmul(a0, cmul(a0, a0)), c1));
+  vec2 a5 = cdiv(cadd(cmul(a2, a2) * .5, cadd(a2 / 6., cadd(cmul(a2, a3), cadd(a3 * .5, cadd(a4, 1. / 120.))))), csub(cmul(a0, cmul(a0, cmul(a0, a0))), c1));
   vec2 R = vec2(1.0779614375278, -.9465409639479);
   vec2 b = vec2(0.12233176, 0.02366108);
   vec2 e = cexp(cadd(cmul(a0, z), R));
@@ -513,7 +153,7 @@ vec2 ctai(in vec2 z) {
   vec2[] t = vec2[](vec2(0.37090658903228507226, 1.33682167078891400713), vec2(0.03660096537598455518, 0.13922215389950498565), vec2(-0.16888431840641535131, 0.09718533619629270148), vec2(-0.12681315048680869007, -0.11831628767028627702), vec2(0.04235809310323926380, -0.10520930088320722129), vec2(0.05848306393563178218, -0.00810224524496080435), vec2(0.02340031665294847393, 0.01807777011820375229), vec2(0.00344260984701375092, 0.01815103755635914459), vec2(-0.00803695814441672193, 0.00917428467034995393), vec2(-0.00704695528168774229, -0.00093958506727472686), vec2(-0.00184617963095305509, -0.00322342583181676459), vec2(0.00054064885443097391, -0.00189672061015605498), vec2(0.00102243648088806748, -0.00055968657179243165), vec2(0.00064714396398048754, 0.00025980661935827123), vec2(0.00010444455593372213, 0.00037199472598828116), vec2(-0.00011178535404343476, 0.00016786687552190863), vec2(-0.00010630158710808594, 0.00002072200033125881), vec2(-0.00005078098819110608, -0.00003575913005741248), vec2(-0.00000314742998690270, -0.00003523185937587781), vec2(0.00001347661344130504, -0.00001333034137448205), vec2(0.00000980239082395275, 0.00000047607184151673), vec2(0.00000355493475454698, 0.00000389816212201278), vec2(-0.00000021552652645735, 0.00000296273413237997), vec2(-0.00000131673903627820, 0.00000097381354534333), vec2(-0.00000083401960806066, -0.00000018663858711081), vec2(-0.00000022869610981361, -0.00000037497716770031), vec2(0.00000005372584613379, -0.00000023060136585176), vec2(0.00000011406656653786, -0.00000006569510293486), vec2(0.00000006663595460757, 0.00000002326630571343), vec2(0.00000001396786846375, 0.00000003315118300198), vec2(-0.00000000684890556421, 0.00000001713041981611), vec2(-0.00000000916619598268, 0.00000000403886083652), vec2(-0.00000000502933384276, -0.00000000222121299478), vec2(-0.00000000084484352792, -0.00000000273668661113), vec2(0.00000000070086729861, -0.00000000124687683156), vec2(0.00000000070558101710, -0.00000000021962577544), vec2(0.00000000035900951951, 0.00000000018774741308), vec2(0.00000000005248658571, 0.00000000021201177126), vec2(-0.00000000006264758835, 0.00000000009059171879), vec2(-0.00000000005333473585, 0.00000000001006078866), vec2(-0.00000000002432138144, -0.00000000001506937008), vec2(-0.00000000000331880379, -0.00000000001544700067), vec2(0.00000000000501652570, -0.00000000000658967459), vec2(0.00000000000401214135, -0.00000000000036708383), vec2(0.00000000000158629111, 0.00000000000119885992), vec2(0.00000000000019668766, 0.00000000000106532662), vec2(-0.00000000000036355730, 0.00000000000047229527), vec2(-0.00000000000029920206, 0.00000000000001251827), vec2(-0.00000000000010305550, -0.00000000000009571381), vec2(-0.00000000000000910369, -0.00000000000007087680), vec2(0.00000000000002418310, -0.00000000000003240337));
 
   vec2 res = t[0];
-  vec2 zn_3i = vec2(1., 0.);
+  vec2 zn_3i = c1;
   vec2 z_3i = csub(z, vec2(0., 3.)) * .5;
 
   for(int i = 1; i < 51; i++) {
@@ -554,7 +194,7 @@ vec2 cmaclo(in vec2 z) {
 
   float[] s = float[](0.30685281944005469058, 1.18353470251664338875, 1.58593285160678321155, 1.36629265207672068172, 1.36264601823980036066, 1.21734246689515424045, 1.10981816083559525765, 0.96674692974769849130, 0.84089872598668435888, 0.71353210966804747617, 0.60168548504001373445, 0.49928574281440518678, 0.41140086629121763728, 0.33506195665178500898, 0.27104779243942234146, 0.21728554054610033086, 0.17311050207880035456, 0.13690016038526570119, 0.10765949732729711286, 0.08413804539743192923, 0.06542450487497340761, 0.05060001212013485322, 0.03895655493977817629, 0.02985084640296329153, 0.02277908979501017117, 0.01730960309240666892, 0.01310389615589767874, 0.00988251130733762764, 0.00742735935367278347, 0.00556296426263720549, 0.00415334478103463346, 0.00309116153137843543, 0.00229387529664008653, 0.00169729976398295653, 0.00125245885041635465, 0.00092172809095368547, 0.00067661152429638357, 0.00049544127485341987, 0.00036192128589181518, 0.00026376927786672476, 0.00019180840045267570, 0.00013917553105723647, 0.00010077412023867018, 0.00007281884753121133, 0.00005251474516228446, 0.00003779882770351268, 0.00002715594536867241, 0.00001947408515177282, 0.00001394059355016322, 0.00000996213949015693, 0.00000710713872292710, 0.00000506199803708578, 0.00000359960968975399, 0.00000255569149787694, 0.00000181175810338313, 0.00000128245831538430, 0.00000090647322737496, 0.00000063980422418981, 0.00000045095738191441, 0.00000031741772125007, 0.00000022312521183625, 0.00000015663840476155, 0.00000010982301013230, 0.00000007690305934973, 0.00000005378502675604, 0.00000003757126131521, 0.00000002621429405247, 0.00000001826909956818, 0.00000001271754463425, 0.00000000884310192977, 0.00000000614230041407, 0.00000000426177146865, 0.00000000295386817285, 0.00000000204522503591, 0.00000000141464900426, 0.00000000097750884878, 0.00000000067478454029, 0.00000000046535930671, 0.00000000032062550784, 0.00000000022069891976, 0.00000000015177557961, 0.00000000010428189463, 0.00000000007158597119, 0.00000000004909806710, 0.00000000003364531769, 0.00000000002303635851, 0.00000000001575933679, 0.00000000001077213757, 0.00000000000735717912, 0.00000000000502077719, 0.00000000000342362421, 0.00000000000233271256, 0.00000000000158818623, 0.00000000000108046566, 0.00000000000073450488, 0.00000000000049894945, 0.00000000000033868911, 0.00000000000022973789, 0.00000000000015572383, 0.00000000000010548054, 0.00000000000007139840, 0.00000000000004829557, 0.00000000000003264619, 0.00000000000002205299, 0.00000000000001488731, 0.00000000000001004347, 0.00000000000000677124, 0.00000000000000456225, 0.00000000000000307196, 0.00000000000000206720, 0.00000000000000139022, 0.00000000000000093437, 0.00000000000000062762, 0.00000000000000042133, 0.00000000000000028267, 0.00000000000000018954, 0.00000000000000012701, 0.00000000000000008507, 0.00000000000000005694, 0.00000000000000003809);
   vec2 res = cadd(clog(cadd(z, vec2(2., 0.))), vec2(s[0], 0.));
-  vec2 zn = vec2(1., 0.);
+  vec2 zn = c1;
 
   for(int i = 1; i < 120; i++) {
     zn = cmul(zn, .5 * z);
@@ -585,7 +225,7 @@ vec2 ctet(in vec2 z) {
 }
 
 vec2 cate(in vec2 z) {
-  vec2 shift = vec2(0.);
+  vec2 shift = c0;
 
   for(int i = 0; i < 25; i++) {
     if(abs(z.y) > 1.3372357014306895) {
@@ -597,7 +237,7 @@ vec2 cate(in vec2 z) {
     } else if(z.x < 0.31813150520476413) {
       shift.x--;
       z = cexp(z);
-    } else if(cnorm(csub(clog(z), vec2(1., 0.))) < cnorm(csub(z, vec2(1., 0.)))) {
+    } else if(cnorm(csub(clog(z), c1)) < cnorm(csub(z, c1))) {
       z = clog(z);
       shift.x++;
     } else {
@@ -610,8 +250,8 @@ vec2 cate(in vec2 z) {
   vec2 a0 = vec2(0.31813150520476413531, 1.33723570143068940890);
   vec2 ac = conj(a0);
 
-  vec2 res = vec2(0.);
-  vec2 z_1 = csub(z, vec2(1., 0.)) * .5;
+  vec2 res = c0;
+  vec2 z_1 = csub(z, c1) * .5;
 
   for(int i = 127; i > 0; i--) {
     res = cadd(res, vec2(u[i], 0.));
@@ -646,7 +286,7 @@ vec2 ctetranat(in vec2 z) {
   return ctetranat(z, 1.);
 }
 vec2 ctetra(in vec2 z, in int n) {
-  vec2 w = vec2(1., 0.);
+  vec2 w = c1;
   for(int i = 0; i < n; i++) {
     w = cpow(z, w);
   }
@@ -739,12 +379,171 @@ vec2 cdn(vec2 z) {
   return cdn(z, .5);
 }
 
-vec2 czeta(in vec2 z) {
-  vec2 sum = vec2(0);
-  for(float i = 1.; i < 30.; ++i) {
-    sum += sin(-z.y * log(i) - vec2(ETA, 0.)) / pow(i, z.x);
+vec2 cgammaL(in vec2 z) {
+  // Lanczos
+  float LG = 5.65;
+  float[] P = float[](2.506628275635, 225.525584619175, -268.295973841305, 80.9030806934622, -5.007578639705, 0.0114684895435);
+
+  vec2 zz = (z.x > 1.0) ? (z) : (c1 - z);
+  vec2 sum = vec2(P[0], 0.0) + P[1] * cinv(zz + c1) + P[2] * cinv(zz + vec2(2.0, 0.0)) + P[3] * cinv(zz + vec2(3.0, 0.0)) + P[4] * cinv(zz + vec2(4.0, 0.0)) + P[5] * cinv(zz + vec2(5.0, 0.0));
+  vec2 zh = zz + vec2(LG, 0.0);
+  vec2 w = cexp(clog(sum) + cmul(zz + vec2(0.5, 0.0), clog(zh)) - clog(zz) - zh);
+
+  return ((z.x > 1.0) ? (w) : (PI * cinv(cmul(w, csin(PI * z)))));
+}
+
+vec2 cgamma(vec2 z) {
+  // Spouge
+  const int N = 16;
+  float c = sqrt(TAU);
+  vec2 s = vec2(c, 0.);
+  float f = 1.;
+  for(int k = 1; k < N; k++) {
+    c = exp(float(N - k)) * pow(float(N - k), float(k) - .5) / f;
+    f *= -float(k);
+    s += c * cinv(z + vec2(float(k), 0.));
   }
-  return sum;
+  s = cmul(s, cmul(cexp(-z - vec2(float(N), 0.)), cpow(z + vec2(float(N), 0.), z + vec2(.5, 0.))));
+  return cdiv(s, z);
+}
+
+vec2 cfactorial(in vec2 z) {
+  return cgamma(cadd(z, c1));
+
+}
+
+vec2 czeta(in vec2 z, in vec2 a) {
+  // Hurwitz Zeta function
+  vec2 suffix = c0;
+
+  // Naive SUM:
+  // for(int n = 0; n < 100; n++) {
+  //   suffix += cpow(cadd(a, R(float(n))), -z);
+  // }
+  // return suffix;
+
+  if(a.x > 1. && z.x < 0.) {
+    // zeta(s, a) = zeta(s, a + m) + sum(0 -> m - 1, (n + a)^-s)
+    // zeta(s, a + m) = zeta(s, a) - sum(0 -> m - 1, (n + a)^-s)
+
+    float k = fract(a.x);
+    float m = a.x - k;
+    a.x = k;
+    for(int i = 0; i < int(m); i++) {
+      suffix = cadd(suffix, cpow(cadd(R(float(i)), a), -z));
+    }
+    suffix = -suffix;
+  } else if(a.x < 0. && z.x < 0.) {
+    // zeta(s, a) = zeta(s, a + m) + sum(0 -> m - 1, (n + a)^-s)
+    // zeta(s, a + m) = zeta(s, a) - sum(0 -> m - 1, (n + a)^-s)
+
+    float m = -floor(a.x);
+    float k = a.x + m;
+
+    for(int i = 0; i < int(m); i++) {
+      suffix = cadd(suffix, cpow(cadd(R(float(i)), a), -z));
+    }
+    a.x = k;
+  }
+
+  if(z.x < -1. && (abs(a.y) < 1e-9 && a.x > 0. && a.x < 1.)) {
+    // Fast convergence on negative real part
+    // zeta(s, a) = 2*gamma(1-s) / (TAU)^(1-s) (
+    //    sin(ETA*s) * sum(1 -> inf, cos(TAU*n*a) * n^(1-s)) +
+    //    cos(ETA*s) * sum(1 -> inf, sin(TAU*n*a) * n^(1-s)))
+    const float N = 20.;
+    vec2 sum1 = c0;
+    for(float i = 1.; i < N; i++) {
+      sum1 += cos(TAU * i * a) * cpow(i, z - c1);
+    }
+    vec2 sum2 = c0;
+    for(float i = 1.; i < N; i++) {
+      sum2 += sin(TAU * i * a) * cpow(i, z - c1);
+    }
+    vec2 f = cmul(csin(ETA * z), sum1) + cmul(ccos(ETA * z), sum2);
+    return cadd(2. * cmul(cpow(TAU, z - c1), cmul(cgamma(c1 - z), f)), suffix);
+  }
+
+  vec2 zeta = c0;
+  int n = 30;
+  vec2 N = R(float(n));
+  vec2 aN = cadd(a, N);
+  vec2 s = -z;
+  for(int i = 0; i < n; i++) {
+    zeta = cadd(zeta, cpow(cadd(a, R(float(i))), s));
+  }
+  vec2 deriv = cpow(aN, s);
+  vec2 term = .5 * deriv;
+  zeta = cadd(zeta, term);
+
+  vec2 emq = aN;
+  term = cmul(deriv, emq);
+  s = cadd(s, c1);
+  term = cdiv(term, s);
+  zeta = csub(zeta, term);
+
+  emq = cinv(emq);
+  deriv = cmul(deriv, emq);
+
+  emq = cmul(emq, emq);
+
+  float fact = .5;
+
+  s = csub(s, c1);
+  s = -s;
+  vec2 spoch = s;
+  int k = 1;
+  while(k < 20) {
+    float bern = B2nN[k] / B2nD[k];
+    float ft = bern;
+    ft *= fact;
+
+    term = cmul(deriv, ft);
+    term = cmul(term, spoch);
+    zeta = cadd(zeta, term);
+
+    ft = dot2(term);
+    if(ft < 1e-9) {
+      break;
+    }
+    k++;
+    fact /= (2. * float(k) - 1.) * (2. * float(k));
+    deriv = cmul(deriv, emq);
+    s = cadd(s, c1);
+    spoch = cmul(spoch, s);
+    s = cadd(s, c1);
+    spoch = cmul(spoch, s);
+  }
+
+  zeta = cadd(zeta, suffix);
+
+  return zeta;
+}
+
+// vec2 reflection(vec2 z, vec2 a) {
+//   const float N = 20.;
+//   vec2 sum1 = vec2(0);
+//   for(float i = 1.; i < N; i++) sum1 += cos(TAU * i * a) * cpow(i, z - c1);
+//   vec2 sum2 = vec2(0);
+//   for(float i = 1.; i < N; i++) sum2 += sin(TAU * i * a) * cpow(i, z - c1);
+//   vec2 f = cmul(csin(pi * z / 2.), sum1) + cmul(ccos(pi * z / 2.), sum2);
+//   return 2. * cmul(cpow(TAU, z - c1), cmul(cgamma(c1 - z), f));
+// }
+
+// vec2 czeta(vec2 z, vec2 a) {
+//   if(z.x < -1.)
+//     return reflection(z, a);
+//   return czeta3(z, a);
+// }
+
+vec2 czeta(in vec2 z, in float a) {
+  return czeta(z, R(a));
+}
+vec2 czeta(in float k, in vec2 a) {
+  return czeta(R(k), a);
+}
+vec2 czeta(in vec2 z) {
+  return czeta(z, c1);
 }
 
 vec2 cdzeta(in vec2 z) {
@@ -755,36 +554,16 @@ vec2 cdzeta(in vec2 z) {
   return sum;
 }
 
-vec2 czeta(in vec2 z, in vec2 a) {
-  // Hurwitz Zeta function
-  return czeta(z + a) - czeta(z);
-
-}
-vec2 czeta(in vec2 z, in float a) {
-  return czeta(z, vec2(a, 0.));
-}
-vec2 czeta(in float k, in vec2 a) {
-  return czeta(vec2(k, 0.), a);
-}
-
-vec2 cgamma(in vec2 z) {
-  float LG = 5.65;
-  float[] P = float[](2.506628275635, 225.525584619175, -268.295973841305, 80.9030806934622, -5.007578639705, 0.0114684895435);
-
-  vec2 zz = (z.x > 1.0) ? (z) : (vec2(1.0, 0.0) - z);
-  vec2 sum = vec2(P[0], 0.0) + P[1] * cinv(zz + vec2(1.0, 0.0)) + P[2] * cinv(zz + vec2(2.0, 0.0)) + P[3] * cinv(zz + vec2(3.0, 0.0)) + P[4] * cinv(zz + vec2(4.0, 0.0)) + P[5] * cinv(zz + vec2(5.0, 0.0));
-  vec2 zh = zz + vec2(LG, 0.0);
-  vec2 w = cexp(clog(sum) + cmul(zz + vec2(0.5, 0.0), clog(zh)) - clog(zz) - zh);
-
-  return ((z.x > 1.0) ? (w) : (PI * cinv(cmul(w, csin(PI * z)))));
+vec2 ceta(in vec2 z) {
+  return cmul(czeta(z), csub(c1, cpow(2., csub(c1, z))));
 }
 
 vec2 _cpsi_asymptotic(in vec2 z) {
   // Digamma function
   float[] B = float[](0.166666666666666667, -0.0333333333333333333, 0.0238095238095238095, -0.0333333333333333333, 0.0757575757575757576, -0.253113553113553114, 1.16666666666666667, -7.09215686274509804, 54.9711779448621554, -529.124242424242424, 6192.12318840579710, -86580.2531135531136, 1425517.16666666667, -27298231.0678160920, 601580873.900642368, -15116315767.0921569);
   vec2 rzz = cdiv(cinv(z), z);
-  vec2 zfac = vec2(1., 0.);
-  vec2 term = vec2(0.);
+  vec2 zfac = c1;
+  vec2 term = c0;
   vec2 res = csub(clog(z), .5 * cinv(z));
 
   for(int i = 1; i < 17; i++) {
@@ -814,18 +593,18 @@ vec2 _backward_rec(in vec2 z, in vec2 s, in int n) {
 
 vec2 cpsi(in vec2 z) {
   float absz = cnorm(z);
-  vec2 res = vec2(0.);
+  vec2 res = c0;
   float smallabsz = 14.;
 
   if(z.x < 0. && abs(z.y) < smallabsz) {
     res = csub(res, PI * cdiv(ccos(PI * z), csin(PI * z)));
-    z = csub(vec2(1., 0.), z);
+    z = csub(c1, z);
     absz = cnorm(z);
   }
 
   if(absz < 0.5) {
     res = csub(res, cinv(z));
-    z = cadd(vec2(1., 0.), z);
+    z = cadd(c1, z);
     absz = cnorm(z);
   }
 
@@ -857,7 +636,7 @@ vec2 cphi(in vec2 z, in vec2 s, in vec2 a) {
   // Lerch Phi function
   vec2 sum = vec2(0);
   vec2 term = vec2(0);
-  vec2 zk = vec2(1., 0.);
+  vec2 zk = c1;
 
   for(float i = 0.; i < 50.; ++i) {
     term = cdiv(zk, cpow(cadd(a, vec2(float(i), 0.)), s));
@@ -908,18 +687,18 @@ vec2 cweierstrass(in vec2 z) {
   vec2 zz = zq ? 0.0625 * zt : zt;
 
   vec2 z2 = cmul(zz, zz), z4 = cmul(z2, z2), z3 = cmul(zz, z2), z6 = cmul(z4, z2);
-  vec2 wp = cinv(z2) + cdiv(cmul(z4 / 28.0, vec2(1.0, 0.) + z6 / 2730.0), vec2(1.0, 0.) + cmul(z6 / 420.0, z6 / 1729.0 - vec2(1.0, 0.)));
+  vec2 wp = cinv(z2) + cdiv(cmul(z4 / 28.0, c1 + z6 / 2730.0), c1 + cmul(z6 / 420.0, z6 / 1729.0 - c1));
 
   if(zq) {
     for(int k = 0; k < 4; k++) {
       vec2 tmp1 = cmul(wp, cmul(wp, wp));
-      wp = cdiv(cmul(tmp1 + vec2(2.0, 0.), wp), 4.0 * tmp1 - vec2(1.0, 0.));
+      wp = cdiv(cmul(tmp1 + vec2(2.0, 0.), wp), 4.0 * tmp1 - c1);
     }
   }
 
   return wp;
 }
-vec2 cweierstrassd(in vec2 z) {
+vec2 cdweierstrass(in vec2 z) {
   // Weierstrass elliptic function
   const float om = 1.529954037057; // real semiperiod
   const float o3 = 0.57735026919; // 1/sqrt(3)
@@ -935,7 +714,7 @@ vec2 cweierstrassd(in vec2 z) {
 
     // evaluate the Padé approximants
   vec2 z2 = cmul(zz, zz), z4 = cmul(z2, z2), z3 = cmul(zz, z2), z6 = cmul(z4, z2);
-  vec2 pd = cdiv(cmul(z3 / 7.0, vec2(1.0, 0.) + P0 * z6), vec2(1.0, 0.) + cmul(z6 / 3738.0, P1 * z6 - vec2(13.4, 0.))) - 2.0 * cinv(z3);
+  vec2 pd = cdiv(cmul(z3 / 7.0, c1 + P0 * z6), c1 + cmul(z6 / 3738.0, P1 * z6 - vec2(13.4, 0.))) - 2.0 * cinv(z3);
 
   if(zq) {
     for(int k = 0; k < 4; k++) {
@@ -947,7 +726,7 @@ vec2 cweierstrassd(in vec2 z) {
   return pd;
 }
 vec2 cellk(in vec2 z) {
-  vec2 agA = vec2(1.0, 0.0), agB = csqrt(agA - z);
+  vec2 agA = c1, agB = csqrt(agA - z);
   vec2 tmp = vec2(0.0), h = tmp;
 
   for(int i = 0; i <= 9; i++) {
@@ -1044,7 +823,7 @@ vec2 cellipticFi(in vec2 z) {
 
 // https://www.shadertoy.com/view/wllGD4#
 vec2 cnome(in vec2 z) {
-  return cexp(-PI * cdiv(cellk(vec2(1.0, 0.0) - z), cellk(z)));
+  return cexp(-PI * cdiv(cellk(c1 - z), cellk(z)));
 }
 
 float diffabs(in float X, in float x) {
@@ -1061,71 +840,4 @@ float diffabs(in float X, in float x) {
       return -x;
     }
   }
-}
-
-#ifdef PERTURB
-vec2 fetchRef(in int n, in bool shift) {
-  vec4 tex = texelFetch(orbit, ivec2(n % 128, n / 128), 0);
-  return shift ? tex.zw : tex.xy;
-}
-#endif
-
-float aafract(float x) {
-  float v = fract(x);
-  float w = length(vec2(dFdx(x), dFdy(x)));
-  return v < 1. - w ? v / (1. - w) : (1. - v) / w;
-}
-
-float aastep(float x) {
-  float w = length(vec2(dFdx(x), dFdy(x)));
-  return smoothstep(.7, -.7, (abs(fract(x - .25) - .5) - .25) / w);
-}
-
-// iquilezles.org/articles/distfunctions2d
-
-vec2 opRotate(in vec2 p, in float theta) {
-  float c = cos(theta);
-  float s = sin(theta);
-  p *= mat2(c, s, -s, c);
-  return p;
-}
-
-float sdArrow(in vec2 p, vec2 a, vec2 b, float w1, float w2, float k) {
-  vec2 ba = b - a;
-  float l2 = dot(ba, ba);
-  float l = sqrt(l2);
-
-  p = p - a;
-  p = mat2(ba.x, -ba.y, ba.y, ba.x) * p / l;
-  p.y = abs(p.y);
-  vec2 pz = p - vec2(l - w2 * k, w2);
-
-  vec2 q = p;
-  q.x -= clamp(q.x, 0.0, l - w2 * k);
-  q.y -= w1;
-  float di = dot(q, q);
-  q = pz;
-  q.y -= clamp(q.y, w1 - w2, 0.0);
-  di = min(di, dot(q, q));
-  if(p.x < w1) // conditional is optional
-  {
-    q = p;
-    q.y -= clamp(q.y, 0.0, w1);
-    di = min(di, dot(q, q));
-  }
-  if(pz.x > 0.0) // conditional is optional
-  {
-    q = pz;
-    q -= vec2(k, -1.0) * clamp((q.x * k - q.y) / (k * k + 1.0), 0.0, w2);
-    di = min(di, dot(q, q));
-  }
-
-  float si = 1.0;
-  float z = l - p.x;
-  if(min(p.x, z) > 0.0) {
-    float h = (pz.x < 0.0) ? w1 : z / k;
-    if(p.y < h)
-      si = -1.0;
-  }
-  return si * sqrt(di);
 }
