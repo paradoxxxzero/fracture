@@ -24,8 +24,10 @@ uniform float gridScale;
 uniform float gridWidth;
 uniform float normGridScale;
 uniform float normGridWidth;
+uniform float normShadeValue;
 uniform float argGridWidth;
 uniform float argGridScale;
+uniform float argShadeValue;
 uniform float zeroes;
 uniform float poles;
 uniform float polya;
@@ -224,14 +226,28 @@ void main(void) {
     lz /= sqrt(dot2(scale));
       #endif
     float ll = log2(lz);
-    float l = 1. - .7 * aafract(ll + k);
+
+        #ifdef ARG_GRID_LOG
+    float ag = log2(abs(h));
+        #else
+    float ag = h;
+        #endif
+        #ifdef NORM_GRID_LOG
+    float ng = ll;
+        #else
+    float ng = lz;
+        #endif
+
     // float l = 2. * atan(length(z)) / PI;
       #if !defined(SHOW_POLYA) || defined(POLYA_COLOR)
     col = color((h + k) * 100.);
       #endif
 
       #ifdef SHADE_NORM
-    col *= l;
+    col *= 1. - normShadeValue * aafract(ng * normGridScale + k);
+      #endif
+      #ifdef SHADE_ARG
+    col *= 1. + argShadeValue * aafract(ag * argGridScale + k);
       #endif
     //     #if AMBIANCE == 2 || AMBIANCE == 3
     // res *= scale * scale;
@@ -254,11 +270,6 @@ void main(void) {
       #endif
 
       #ifdef SHOW_NORM_GRID
-        #ifdef NORM_GRID_LOG
-    float ng = ll;
-        #else
-    float ng = lz;
-        #endif
     float dl = fract((ng + k) * normGridScale);
     dl = min(dl, 1. - dl);
     dl /= fwidth(ng) * normGridScale / 2.;
@@ -266,11 +277,6 @@ void main(void) {
       #endif
 
       #ifdef SHOW_ARG_GRID
-        #ifdef ARG_GRID_LOG
-    float ag = log2(abs(h));
-        #else
-    float ag = h;
-        #endif
     float dh = fract(2. * (ag + k * .25) * argGridScale);
 
     dh = min(dh, 1. - dh);

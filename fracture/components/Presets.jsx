@@ -1,4 +1,4 @@
-import { Fragment, useCallback, useEffect, useState } from 'react'
+import { Fragment, useCallback, useEffect, useRef, useState } from 'react'
 import { presets } from '../presets'
 import Preset from './Preset'
 import { debounce } from '../../utils'
@@ -13,9 +13,11 @@ export default function Presets({
   const [shown, setShown] = useState(false)
   const [search, setSearch] = useState('')
   const [rawSearch, setRawSearch] = useState('')
+  const searchRef = useRef()
   useEffect(() => {
     if (open) {
       setShown(true)
+      searchRef.current.focus()
     }
   }, [open])
 
@@ -33,6 +35,7 @@ export default function Presets({
               <input
                 type="text"
                 placeholder="Search"
+                ref={searchRef}
                 value={rawSearch}
                 onChange={handleSearch}
               />

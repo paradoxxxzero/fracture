@@ -446,22 +446,23 @@ vec2 czeta(in vec2 z, in vec2 a) {
     a.x = k;
   }
 
-  if(z.x < -1. && (abs(a.y) < 1e-9 && a.x > 0. && a.x < 1.)) {
+  if(z.x < -1. && (abs(a.y) < 1e-9 && a.x > 0. && a.x <= 1.)) {
     // Fast convergence on negative real part
     // zeta(s, a) = 2*gamma(1-s) / (TAU)^(1-s) (
     //    sin(ETA*s) * sum(1 -> inf, cos(TAU*n*a) * n^(1-s)) +
     //    cos(ETA*s) * sum(1 -> inf, sin(TAU*n*a) * n^(1-s)))
     const float N = 20.;
     vec2 sum1 = c0;
+    vec2 z_1 = csub(z, c1);
     for(float i = 1.; i < N; i++) {
-      sum1 += cos(TAU * i * a) * cpow(i, z - c1);
+      sum1 += cos(TAU * i * a.x) * cpow(i, z_1);
     }
     vec2 sum2 = c0;
     for(float i = 1.; i < N; i++) {
-      sum2 += sin(TAU * i * a) * cpow(i, z - c1);
+      sum2 += sin(TAU * i * a.x) * cpow(i, z_1);
     }
     vec2 f = cmul(csin(ETA * z), sum1) + cmul(ccos(ETA * z), sum2);
-    return cadd(2. * cmul(cpow(TAU, z - c1), cmul(cgamma(c1 - z), f)), suffix);
+    return cadd(2. * cmul(cpow(TAU, z_1), cmul(cgamma(-z_1), f)), suffix);
   }
 
   vec2 zeta = c0;
@@ -554,10 +555,6 @@ vec2 cdzeta(in vec2 z) {
   return sum;
 }
 
-vec2 ceta(in vec2 z) {
-  return cmul(czeta(z), csub(c1, cpow(2., csub(c1, z))));
-}
-
 vec2 _cpsi_asymptotic(in vec2 z) {
   // Digamma function
   float[] B = float[](0.166666666666666667, -0.0333333333333333333, 0.0238095238095238095, -0.0333333333333333333, 0.0757575757575757576, -0.253113553113553114, 1.16666666666666667, -7.09215686274509804, 54.9711779448621554, -529.124242424242424, 6192.12318840579710, -86580.2531135531136, 1425517.16666666667, -27298231.0678160920, 601580873.900642368, -15116315767.0921569);
@@ -619,7 +616,37 @@ vec2 cpsi(in vec2 z) {
   }
   return res;
 }
+vec2 cpolygamma(in vec2 z, in vec2 w) {
+  if(length(w) < 1e-6) {
+    return cpsi(z);
+  }
+  return cmul(cmul(cpow(-c1, cadd(w, c1)), cfactorial(w)), czeta(cadd(w, c1), z));
+}
 
+vec2 cpolygamma(in vec2 z, in float k) {
+  if(abs(k) < 1e-6) {
+    return cpsi(z);
+  }
+
+  if(fract(k) > 1e-6) {
+    return cpolygamma(z, R(k));
+  }
+  int n = int(k);
+  // Compute !n:
+  int fact = 1;
+  for(int i = 1; i < n; i++) {
+    fact *= i;
+  }
+  float sign = 1.;
+  if(n % 2 == 0) {
+    sign *= -1.;
+  }
+  return sign * float(fact) * czeta(float(fact + 1), z);
+}
+
+vec2 ceta(in vec2 z) {
+  return cmul(czeta(z), csub(c1, cpow(2., csub(c1, z))));
+}
 vec2 cdgamma(in vec2 z) {
   return cmul(cgamma(z), cpsi(z));
 }

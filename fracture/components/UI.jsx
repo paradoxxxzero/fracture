@@ -406,64 +406,91 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
                       onChange={handleChange}
                     />
                   ) : null}
-                  {['advanced', 'full'].includes(showUI) ? (
+
+                  {['full'].includes(showUI) ? (
                     <Number
-                      name="normGridScale"
                       label="Norm Grid"
-                      min={0}
-                      value={params.normGridScale}
+                      step={0.1}
+                      name="normGridWidth"
+                      value={params.normGridWidth}
                       togglerName="showNormGrid"
                       toggler={params.showNormGrid}
                       togglerOnly={showUI !== 'full'}
                       onChange={handleChange}
                     />
                   ) : null}
-                  {['advanced', 'full'].includes(showUI) &&
-                  params.showNormGrid ? (
-                    <Boolean
-                      name="normGridLog"
-                      label="Norm Grid Log"
-                      value={params.normGridLog}
+                  {['advanced', 'full'].includes(showUI) ? (
+                    <Number
+                      label="Norm Shade"
+                      className="button"
+                      name="normShadeValue"
+                      value={params.normShadeValue}
+                      togglerName="normShade"
+                      toggler={params.normShade}
                       togglerOnly={showUI !== 'full'}
                       onChange={handleChange}
                     />
                   ) : null}
-                  {['full'].includes(showUI) && params.showNormGrid ? (
+                  {['advanced', 'full'].includes(showUI) &&
+                  (params.showNormGrid || params.normShade) ? (
                     <Number
-                      label="Norm Grid Width"
-                      step={0.1}
-                      name="normGridWidth"
-                      value={params.normGridWidth}
+                      name="normGridScale"
+                      label="Norm Grid Scale"
+                      min={0}
+                      value={params.normGridScale}
                       onChange={handleChange}
                     />
                   ) : null}
-                  {['advanced', 'full'].includes(showUI) ? (
+                  {['advanced', 'full'].includes(showUI) &&
+                  (params.showNormGrid || params.normShade) ? (
+                    <Boolean
+                      name="normGridLog"
+                      label="Norm Grid Log"
+                      value={params.normGridLog}
+                      onChange={handleChange}
+                    />
+                  ) : null}
+
+                  {['full'].includes(showUI) ? (
                     <Number
-                      name="argGridScale"
                       label="Arg Grid"
-                      min={0}
-                      value={params.argGridScale}
+                      step={0.1}
+                      name="argGridWidth"
+                      value={params.argGridWidth}
                       togglerName="showArgGrid"
                       toggler={params.showArgGrid}
                       togglerOnly={showUI !== 'full'}
                       onChange={handleChange}
                     />
                   ) : null}
-                  {['full'].includes(showUI) && params.showArgGrid ? (
-                    <Boolean
-                      name="argGridLog"
-                      label="Arg Grid Log"
-                      value={params.argGridLog}
+                  {['advanced', 'full'].includes(showUI) ? (
+                    <Number
+                      label="Arg Shade"
+                      className="button"
+                      name="argShadeValue"
+                      value={params.argShadeValue}
+                      togglerName="argShade"
+                      toggler={params.argShade}
                       togglerOnly={showUI !== 'full'}
                       onChange={handleChange}
                     />
                   ) : null}
-                  {['full'].includes(showUI) && params.showArgGrid ? (
+                  {['advanced', 'full'].includes(showUI) &&
+                  (params.showArgGrid || params.argShade) ? (
                     <Number
-                      label="Arg Grid Width"
-                      step={0.1}
-                      name="argGridWidth"
-                      value={params.argGridWidth}
+                      name="argGridScale"
+                      label="Arg Grid Scale"
+                      min={0}
+                      value={params.argGridScale}
+                      onChange={handleChange}
+                    />
+                  ) : null}
+                  {['advanced', 'full'].includes(showUI) &&
+                  (params.showArgGrid || params.argShade) ? (
+                    <Boolean
+                      name="argGridLog"
+                      label="Arg Grid Log"
+                      value={params.argGridLog}
                       onChange={handleChange}
                     />
                   ) : null}
@@ -490,15 +517,6 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
                       togglerName="showPoles"
                       toggler={params.showPoles}
                       togglerOnly={showUI !== 'full'}
-                      onChange={handleChange}
-                    />
-                  ) : null}
-                  {['advanced', 'full'].includes(showUI) ? (
-                    <Boolean
-                      label="Shade Norm"
-                      className="button"
-                      name="shadeNorm"
-                      value={params.shadeNorm}
                       onChange={handleChange}
                     />
                   ) : null}

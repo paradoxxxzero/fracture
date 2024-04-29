@@ -87,6 +87,7 @@ export const functionShader = {
   zeta: 'czeta',
   "zeta'": 'cdzeta',
   psi: 'cpsi',
+  polygamma: 'cpolygamma',
   phi: 'cphi',
   sn: 'csn',
   cn: 'ccn',
