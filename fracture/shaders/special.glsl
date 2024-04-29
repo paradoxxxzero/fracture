@@ -704,6 +704,11 @@ vec2 cphi(in float k, in float s, in float a) {
   return cphi(vec2(k, 0.), vec2(s, 0.), vec2(a, 0.));
 }
 
+vec2 cxi(in vec2 z) {
+  vec2 hz = .5 * z;
+  return cmul(cmul(cmul(cmul(hz, csub(z, c1)), cpow(PI, -hz)), cgamma(hz)), czeta(z));
+}
+
 vec2 cfibonacci(in vec2 z) {
   // Using generalized Binet formula
   return cdiv(csub(cpow(PHI, z), cpow(-PHI, -z)), 2. * PHI - 1.);

@@ -89,6 +89,7 @@ export const functionShader = {
   psi: 'cpsi',
   polygamma: 'cpolygamma',
   phi: 'cphi',
+  xi: 'cxi',
   sn: 'csn',
   cn: 'ccn',
   dn: 'cdn',
