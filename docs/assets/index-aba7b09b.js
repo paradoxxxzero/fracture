@@ -1231,7 +1231,7 @@ vec2 cdn(vec2 z) {
   return cdn(z, .5);
 }
 
-vec2 cgammaL(in vec2 z) {
+vec2 cgammafast(in vec2 z) {
   // Lanczos
   float LG = 5.65;
   float[] P = float[](2.506628275635, 225.525584619175, -268.295973841305, 80.9030806934622, -5.007578639705, 0.0114684895435);
@@ -1247,15 +1247,18 @@ vec2 cgammaL(in vec2 z) {
 vec2 cgamma(vec2 z) {
   // Spouge
   const int N = 16;
+  float Nf = float(N);
   float c = sqrt(TAU);
-  vec2 s = vec2(c, 0.);
+  vec2 s = R(c);
   float f = 1.;
   for(int k = 1; k < N; k++) {
-    c = exp(float(N - k)) * pow(float(N - k), float(k) - .5) / f;
-    f *= -float(k);
-    s += c * cinv(z + vec2(float(k), 0.));
+    float kf = float(k);
+    float Nk = Nf - kf;
+    c = exp(Nk) * pow(Nk, kf - .5) / f;
+    f *= -kf;
+    s += c * cinv(z + R(kf));
   }
-  s = cmul(s, cmul(cexp(-z - vec2(float(N), 0.)), cpow(z + vec2(float(N), 0.), z + vec2(.5, 0.))));
+  s = cmul(s, cmul(cexp(-z - R(Nf)), cpow(z + R(Nf), z + R(.5))));
   return cdiv(s, z);
 }
 
@@ -1303,15 +1306,18 @@ vec2 czeta(in vec2 z, in vec2 a) {
     // zeta(s, a) = 2*gamma(1-s) / (TAU)^(1-s) (
     //    sin(ETA*s) * sum(1 -> inf, cos(TAU*n*a) * n^(1-s)) +
     //    cos(ETA*s) * sum(1 -> inf, sin(TAU*n*a) * n^(1-s)))
-    const float N = 20.;
+    const int N = 20;
     vec2 sum1 = c0;
     vec2 z_1 = csub(z, c1);
-    for(float i = 1.; i < N; i++) {
-      sum1 += cos(TAU * i * a.x) * cpow(i, z_1);
+    float k = TAU * a.x;
+    for(int i = 1; i < N; i++) {
+      float d = float(i);
+      sum1 += cos(d * k) * cpow(d, z_1);
     }
     vec2 sum2 = c0;
-    for(float i = 1.; i < N; i++) {
-      sum2 += sin(TAU * i * a.x) * cpow(i, z_1);
+    for(int i = 1; i < N; i++) {
+      float d = float(i);
+      sum2 += sin(d * k) * cpow(d, z_1);
     }
     vec2 f = cmul(csin(ETA * z), sum1) + cmul(ccos(ETA * z), sum2);
     return cadd(2. * cmul(cpow(TAU, z_1), cmul(cgamma(-z_1), f)), suffix);
