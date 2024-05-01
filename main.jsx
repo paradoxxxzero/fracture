@@ -68,6 +68,9 @@ const AppWithHistory = () => {
           if (Array.isArray(v)) {
             return !arrayEquals(v, params[k])
           }
+          if (typeof v === 'object' && v !== null) {
+            return !arrayEquals(Object.entries(v), Object.entries(params[k]))
+          }
           return params[k] !== v
         }).length
       ) {

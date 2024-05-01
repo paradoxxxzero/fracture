@@ -53,16 +53,16 @@ const julia = (name, n, c, extra = {}) => ({
     derivative: 85,
     velocity: 70,
     varying: 'z',
-    point: c,
+    args: { z: cx(), c },
     ...extra,
   },
 })
 
-const newt = (name, f, g, extra = {}) => ({
+const newt = (name, f, extra = {}) => ({
   name,
   params: {
     varying: 'z',
-    f: `z - ${g ? `${g} * ` : ''}(${f})# + c`,
+    f: `z - ${extra?.args?.a ? 'a * ' : ''}(${f})# + c`,
     iterations: 75,
     useDerivative: false,
     useRoots: true,
@@ -75,8 +75,7 @@ const newt = (name, f, g, extra = {}) => ({
 const nova = (name, f, g, extra = {}) => ({
   name,
   params: {
-    center: cx(1),
-    point: cx(-0.5),
+    args: { z: cx(1), c: cx(-0.5) },
     f: `z - ${g ? `${g} * ` : ''}(${f})# + c`,
     useDerivative: false,
     convergent: true,
@@ -116,10 +115,10 @@ const withDefaults = presets =>
 
 export const presets = withDefaults([
   {
-    ...brot('Mandelbrot', 2, { point: cx(-0.5) }),
+    ...brot('Mandelbrot', 2, { args: { z: cx(), c: cx(-0.5) } }),
     subforms: [
       brot('Minibrot', 2, {
-        point: cx(-1.71121, 0.00002),
+        args: { z: cx(), c: cx(-1.71121, 0.00002) },
         scale: cx(0.00085),
         smoothing: 'distance_scaled',
         velocity: 70,
@@ -136,13 +135,13 @@ export const presets = withDefaults([
       brot('Nonibrot', 10),
       brot('Decabrot', 11),
       brot('Invbibrot', -2, {
-        center: cx(10),
+        args: { z: cx(10), c: cx() },
         convergent: true,
         scale: cx(3),
         derivative: 250,
       }),
       brot('Invtribrot', -3, {
-        center: cx(10),
+        args: { z: cx(10), c: cx() },
         convergent: true,
         scale: cx(3),
         derivative: 350,
@@ -171,7 +170,7 @@ export const presets = withDefaults([
   {
     name: 'Burningship',
     params: {
-      point: cx(0.5, 0.5),
+      args: { z: cx(), c: cx(0.5, 0.5) },
       transform: rotate(Math.PI),
       derivative: 100,
       scale: cx(1.5),
@@ -183,7 +182,7 @@ export const presets = withDefaults([
       {
         name: 'Miniship',
         params: {
-          point: cx(1.85982, 0.004584),
+          args: { z: cx(), c: cx(1.85982, 0.004584) },
           transform: rotate(Math.PI),
           derivative: 100,
           smoothing: 'distance_scaled',
@@ -225,7 +224,7 @@ export const presets = withDefaults([
   {
     name: 'Tearbrot',
     params: {
-      point: cx(0, 1),
+      args: { z: cx(), c: cx(0, 1) },
       scale: cx(4),
       transform: rotate(-Math.PI / 2),
       f: '(z + 1)^2 / c',
@@ -254,7 +253,7 @@ export const presets = withDefaults([
   {
     name: 'Phoenix',
     params: {
-      point: cx(0.5667),
+      args: { z: cx(), c: cx(0.5667) },
       scale: cx(1.5),
       transform: rotate(-Math.PI / 2),
       varying: 'z',
@@ -266,8 +265,7 @@ export const presets = withDefaults([
   {
     name: 'Frothy',
     params: {
-      center: cx(0.5, 0),
-      point: cx(2 + 3e-2, -1e-2),
+      args: { z: cx(0.5), c: cx(2 + 3e-2, -1e-2) },
       varying: 'z',
       scale: cx(3),
       f: 'z^2 - c*~z',
@@ -278,7 +276,7 @@ export const presets = withDefaults([
     name: 'Whirlpool',
     params: {
       varying: 'z',
-      point: cx(2, 0),
+      args: { z: cx(), c: cx(2, 0) },
       scale: cx(3),
       f: '(c/z + (im(z)*z - re(z))/c)^2',
     },
@@ -286,7 +284,7 @@ export const presets = withDefaults([
   {
     name: 'Magnet',
     params: {
-      point: cx(1),
+      args: { z: cx(), c: cx(1) },
       scale: cx(3),
       f: '((z^2 + c - 1) / (2z + c - 2))^2',
       useDerivative: false,
@@ -296,8 +294,7 @@ export const presets = withDefaults([
   {
     name: 'Tetrate',
     params: {
-      center: cx(0.5),
-      point: cx(1),
+      args: { z: cx(0.5), c: cx(1) },
       scale: cx(3),
       f: 'c^z',
       useDerivative: false,
@@ -306,7 +303,7 @@ export const presets = withDefaults([
   {
     name: 'Celtic',
     params: {
-      point: cx(-0.7),
+      args: { z: cx(), c: cx(-0.7) },
       scale: cx(2),
       f: '|re(z^2)| + i * im(z^2) + c',
       useDerivative: false,
@@ -321,16 +318,19 @@ export const presets = withDefaults([
       newt('Newton', 'z^5 - 3i * z^3 - (5 + 2i) * z^2 + 3z + 1'),
       newt('Newton', 'z^6 + z^3 - 1'),
       newt('Newton', 'z^^3 - 1'),
-      newt('Newton', 'sin(z)', null, { center: cx(Math.PI / 2) }),
-      newt('Newton', 'cosh(z) - 1', null, { center: cx(-3.14, -3.14) }),
+      newt('Newton', 'sin(z)', { args: { z: cx(Math.PI / 2), c: cx() } }),
+      newt('Newton', 'cosh(z) - 1', {
+        args: { z: cx(-3.14, -3.14), c: cx() },
+      }),
       newt('Newton', 'z^4 * sin(z) - 1'),
-      newt('Newton generalized', 'z^3 - 1', -0.5, {
+      newt('Newton generalized', 'z^3 - 1', {
         divergent: true,
         convergent: false,
         smoothing: 'exp',
         velocity: 750,
+        args: { z: cx(), c: cx(), a: cx(-0.5) },
       }),
-      newt('Newton generalized', 'z^2 - 1', '(1 + i)', {
+      newt('Newton generalized', 'z^2 - 1', {
         divergent: true,
         convergent: false,
         smoothing: 'exp',
@@ -338,9 +338,10 @@ export const presets = withDefaults([
         bailout: 1.5,
         iterations: 100,
         useRoots: false,
+        args: { z: cx(), c: cx(), a: cx(1, 1) },
       }),
-      newt('Newton generalized', 'z^(4 + 3i) - 1', 2, {
-        center: cx(1, 0.25),
+      newt('Newton generalized', 'z^(4 + 3i) - 1', {
+        args: { z: cx(1, 0.25), c: cx(), a: cx(1.9) },
         scale: cx(0.05),
       }),
     ],
@@ -397,12 +398,16 @@ export const presets = withDefaults([
       domain('', 'exp(-z^2) + c', { scale: cx(1.5), showPolya: true }),
       domain('Square Root', 'sqrt(z) + c'),
       domain('Cubic Root', 'z^(1/3) + c'),
-      domain('Complex Exponentiation', 'z^c', { point: cx(2.5) }),
+      domain('Complex Exponentiation', 'z^c', {
+        args: { z: cx(), c: cx(2.5) },
+      }),
       domain('²z', 'z^^2 + c'),
       domain('³z', 'z^^3 + c'),
       domain('⁴z', 'z^^4 + c'),
-      domain('Beta', 'beta(z, c)', { point: cx(2) }),
-      domain('Beta First derivative', "beta'(z, c)", { point: cx(2) }),
+      domain('Beta', 'beta(z, c)', { args: { z: cx(), c: cx(2) } }),
+      domain('Beta First derivative', "beta'(z, c)", {
+        args: { z: cx(), c: cx(2) },
+      }),
       domain('Gamma', 'gamma(z) + c'),
       domain('Gamma First derivative', "gamma'(z) + c"),
       domain('Eta', 'eta(z) + c'),
@@ -417,8 +422,8 @@ export const presets = withDefaults([
       domain('Tet', 'tet(z) + c'),
       domain('Ate', 'ate(z) + c'),
       domain('Tetra', 'tetra(z, c)', {
-        center: cx(0, -1),
-        point: cx(2, 2),
+        args: { z: cx(0, -1), c: cx() },
+        args: { z: cx(), c: cx(2, 2) },
       }),
     ],
   },
@@ -446,7 +451,7 @@ export const presets = withDefaults([
       domain(
         'Wilmshurst',
         'im(exp(-i*PI / 4) * z^c) + i * im(exp(i * PI / 4) * (z - 1)^c)',
-        { point: cx(4) }
+        { args: { z: cx(), c: cx(4) } }
       ),
       domain(
         '',

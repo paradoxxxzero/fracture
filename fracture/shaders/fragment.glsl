@@ -3,8 +3,7 @@ precision highp float;
 
 ##CONFIG
 
-uniform vec2 center;
-uniform vec2 point;
+uniform vec2 args;
 uniform vec2 scale;
 uniform vec2 aspect;
 uniform mat2 transform;
@@ -52,44 +51,31 @@ void main(void) {
   float BAILOUT = pow(10., bailout);
   float BAILIN = pow(10., bailin);
 
-  #ifdef PERTURB
-  vec2 z = vec2(0.);
-  vec2 c = vec2(0.);
-  vec2 dz = vec2(0.);
-  vec2 dc = vec2(0.);
-  vec2 C = point;
-    #if VARYING == 0 || VARYING == 2
-  dz += pixel; // Mandelbrot-like
-  dz *= transform;
-    #endif
-    #if VARYING == 1 || VARYING == 2
-  dc += pixel; // Julia-like
-  dc *= transform;
-    #endif
-  vec2 dz_1 = vec2(0.);
-  #else
-  vec2 z = center;
-  vec2 c = point;
-    #if VARYING == 0 || VARYING == 2
-  z += pixel; // Mandelbrot-like
-  z *= transform;
-    #endif
-    #if VARYING == 1 || VARYING == 2
-  c += pixel; // Julia-like
-  c *= transform;
-    #endif
-  #endif
+  // #ifdef PERTURB
+  // vec2 z = vec2(0.);
+  // vec2 c = vec2(0.);
+  // vec2 dz = vec2(0.);
+  // vec2 dc = vec2(0.);
+  // vec2 C = point;
+  //   #if VARYING == 0 || VARYING == 2
+  // dz += pixel; // Mandelbrot-like
+  // dz *= transform;
+  //   #endif
+  //   #if VARYING == 1 || VARYING == 2
+  // dc += pixel; // Julia-like
+  // dc *= transform;
+  //   #endif
+  // vec2 dz_1 = vec2(0.);
+  // #else
+
+  vec2 arg = #arg_arg;
+  // #endif
 
   vec2 z_1 = vec2(0.);
   vec2 z_2 = vec2(0.);
 
   #if SMOOTHING >= 3
-    #if VARYING == 0 || VARYING == 2
-  vec2 zdc = vec2(0., 0.);// Mandelbrot-like
-    #else 
-  vec2 zdc = vec2(1., 0.);// Julia-like
-    #endif
-
+  vec2 zdc = vec2(0., 0.);// Julia-like
   vec2 zdc_1 = vec2(0., 0.);
   #endif
 

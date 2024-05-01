@@ -4,7 +4,6 @@ import { palettes, smoothings, varyings } from '../default.js'
 import {
   eyeIcon,
   lockIcon,
-  moveCenterIcon,
   moveConstantIcon,
   playIcon,
   presetsIcon,
@@ -57,6 +56,7 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
     },
     [updateParams]
   )
+
   const handleUI = useCallback(
     () =>
       setShowUI(showUI => {
@@ -112,6 +112,8 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
     }
   }, [handlePreset, presetIndex])
 
+  const args = Object.keys(params.args)
+
   return (
     <>
       <Presets
@@ -126,18 +128,6 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
               <button className="button" onClick={handleUI}>
                 {eyeIcon}
               </button>
-              {['simple', 'advanced', 'full'].includes(showUI) ? (
-                <button
-                  className="button"
-                  onClick={() =>
-                    updateParams({
-                      moveCenter: !params.moveCenter,
-                    })
-                  }
-                >
-                  {params.moveCenter ? moveCenterIcon : moveConstantIcon}
-                </button>
-              ) : null}
               {['advanced', 'full'].includes(showUI) ? (
                 <button
                   className="button"
@@ -559,20 +549,21 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
           ) : null}
           {['advanced', 'full'].includes(showUI) && (
             <aside className="bounds">
-              <Complex
-                name="center"
-                label="Center"
-                value={params.center}
-                maxWidth={null}
-                onChange={handleChange}
-              />
-              <Complex
-                name="point"
-                label="Point"
-                maxWidth={null}
-                value={params.point}
-                onChange={handleChange}
-              />
+              {args
+                .sort()
+                .reverse()
+                .map(arg => (
+                  <Complex
+                    key={arg}
+                    name={arg}
+                    label={arg}
+                    maxWidth={null}
+                    value={params.args}
+                    arg
+                    varying={params.varying}
+                    onChange={handleChange}
+                  />
+                ))}
               <Complex
                 name="scale"
                 label="Scale"
@@ -590,14 +581,12 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
               }`}
               onClick={() =>
                 updateParams({
-                  varying:
-                    varyings[
-                      (varyings.indexOf(params.varying) + 1) % varyings.length
-                    ] || 'c',
+                  move:
+                    args[(args.indexOf(params.move) + 1) % args.length] || 'c',
                 })
               }
             >
-              {params.varying}
+              𝚫{params.move}
             </button>
           ) : null}
         </div>

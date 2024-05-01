@@ -15,10 +15,10 @@ export const smoothings = ['none', 'log', 'exp', 'distance', 'distance_scaled']
 export const varyings = ['z', 'c', 'zc']
 
 export const defaultParams = {
-  center: cx(),
-  point: cx(),
+  args: { z: cx(), c: cx() },
   scale: cx(1.2),
   varying: 'c',
+  move: 'c',
   usePerturbation: null, // Auto
   useDerivative: true,
   derivative: 100,
@@ -70,7 +70,6 @@ export const defaultParams = {
   poles: 4,
   animate: false,
   speed: 100,
-  moveCenter: true,
   lockCenter: false,
   showPolya: false,
   polya: 15,
@@ -84,7 +83,9 @@ export const compileParams = [
   'f_prime_z',
   'f_prime_c',
   'f_perturb',
+  'args',
   'varying',
+  'move',
   'useRoots',
   'convergent',
   'divergent',
@@ -110,14 +111,6 @@ export const compileParams = [
   'animate',
 ]
 export const uniformParams = {
-  center: {
-    type: '2fv',
-    value: v => v.to2fv(),
-  },
-  point: {
-    type: '2fv',
-    value: v => v.to2fv(),
-  },
   scale: {
     type: '2fv',
     value: v => v.to2fv(),

@@ -619,9 +619,16 @@ class FunctionOp {
       return `${functionShader[this.name] || this.name}()`
     }
     if (this.name === 're') {
-      return `${this.args[0].toShader()}.x`
+      const child = this.args[0].toShader()
+      if (this.args[0].type === 'number') {
+        return child
+      }
+      return `${child}.x`
     }
     if (this.name === 'im') {
+      if (this.args[0].type === 'number') {
+        return new Leaf('number', 0).toShader()
+      }
       return `${this.args[0].toShader()}.y`
     }
     return `${functionShader[this.name] || this.name}(${this.args.map(a => a.toShader()).join(', ')})`
@@ -1125,7 +1132,7 @@ const parse = tokens => {
   return ast
 }
 
-const vars = (ast_, ids = []) => {
+export const vars = (ast_, ids = []) => {
   if (
     ast_.type === 'identifier' &&
     !ids.includes(ast_.value) &&

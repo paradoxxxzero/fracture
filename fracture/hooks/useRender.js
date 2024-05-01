@@ -3,6 +3,10 @@ import { allParams, compileParams, uniformParams } from '../default'
 import { recompileFragment, render, updateUniforms } from '../render'
 
 const params = (runtime, keys) => keys.map(key => runtime[key])
+const argValue = args =>
+  Object.entries(args)
+    .map(([key, arg]) => `${key}|${arg}`)
+    .join('#')
 
 export const useRender = (runtime, setRuntime) => {
   useEffect(() => {
@@ -22,8 +26,13 @@ export const useRender = (runtime, setRuntime) => {
       updateUniforms(runtime)
       return runtime
     })
+  }, [
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [...params(runtime, Object.keys(uniformParams)), setRuntime])
+    ...params(runtime, Object.keys(uniformParams)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    argValue(runtime.args),
+    setRuntime,
+  ])
 
   useEffect(() => {
     setRuntime(runtime => {

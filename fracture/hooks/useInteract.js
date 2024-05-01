@@ -7,26 +7,20 @@ export const useInteract = (runtime, updateParams) => {
   const loop = useRef(null)
 
   const local = useRef({
-    center: runtime.center,
-    point: runtime.point,
+    args: runtime.args,
     scale: runtime.scale,
     pointers: new Map(),
   })
   const update = debounce(() => {
     updateParams({
-      center: local.current.center,
-      point: local.current.point,
+      args: local.current.args,
       scale: local.current.scale,
     })
   }, 150)
 
   useEffect(() => {
-    local.current.center = runtime.center
-  }, [runtime.center])
-
-  useEffect(() => {
-    local.current.point = runtime.point
-  }, [runtime.point])
+    local.current.args = { ...runtime.args }
+  }, [runtime.args])
 
   useEffect(() => {
     local.current.scale = runtime.scale
@@ -41,22 +35,20 @@ export const useInteract = (runtime, updateParams) => {
     (dx, dy, zoom, alt) => {
       const aspect = runtime.gl.canvas.width / runtime.gl.canvas.height
       const width = local.current.scale.multiply(2)
-      alt = !alt === (zoom || runtime.moveCenter)
-      if (runtime.varying.includes('c') === alt) {
-        local.current.point = local.current.point.add(
+      const move = zoom ? runtime.varying : runtime.move
+      // alt = !alt === (zoom || runtime.moveCenter)
+      move.split('').forEach(key => {
+        // if (runtime.varying.includes(key) === alt) {
+        local.current.args[key] = local.current.args[key].add(
           cx(-dx * aspect, dy).multiply(width)
         )
-      }
-      if (runtime.varying.includes('z') === (alt || runtime.varying === 'zc')) {
-        local.current.center = local.current.center.add(
-          cx(-dx * aspect, dy).multiply(width)
-        )
-      }
+        // }
+      })
     },
     [
       runtime.gl.canvas.height,
       runtime.gl.canvas.width,
-      runtime.moveCenter,
+      runtime.move,
       runtime.varying,
     ]
   )
@@ -81,18 +73,15 @@ export const useInteract = (runtime, updateParams) => {
 
   const quickUpdate = useCallback(
     () => {
-      runtime.center = local.current.center
-      runtime.point = local.current.point
+      runtime.args = local.current.args
       runtime.scale = local.current.scale
 
-      runtime.gl.uniform2fv(
-        runtime.env.uniforms.center,
-        local.current.center.to2fv()
-      )
-      runtime.gl.uniform2fv(
-        runtime.env.uniforms.point,
-        local.current.point.to2fv()
-      )
+      Object.keys(runtime.args).forEach(key => {
+        runtime.gl.uniform2fv(
+          runtime.env.uniforms[`arg_${key}`],
+          local.current.args[key].to2fv()
+        )
+      })
       runtime.gl.uniform2fv(
         runtime.env.uniforms.scale,
         local.current.scale.to2fv()

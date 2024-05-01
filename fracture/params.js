@@ -1,5 +1,7 @@
+import { arrayEquals } from '../utils'
+import { cx } from './decimal'
 import { defaultParams } from './default'
-import { derive } from './formula'
+import { ast, derive, vars } from './formula'
 
 export const filterParams = (maybeBadParams, changed = [], oldParams) => {
   const params = {
@@ -29,26 +31,33 @@ export const filterParams = (maybeBadParams, changed = [], oldParams) => {
       }
     }
   })
-  if (
-    (changed.includes('f') && !changed.includes('f_prime_z')) ||
-    params.f_prime_z === null
-  ) {
-    try {
-      params.f_prime_z = derive(params.f, ['z', 'z_1']).toString()
-    } catch (e) {
-      badParams.push('f_prime_z')
-      console.warn(e)
+  if (changed.includes('f')) {
+    const args = vars(ast(params.f)).filter(a => a.length === 1)
+    if (!args.includes('z')) {
+      args.push('z')
     }
-  }
-  if (
-    (changed.includes('f') && !changed.includes('f_prime_c')) ||
-    params.f_prime_c === null
-  ) {
-    try {
-      params.f_prime_c = derive(params.f, ['z', 'z_1'], ['c']).toString()
-    } catch (e) {
-      badParams.push('f_prime_c')
-      console.warn(e)
+    const currentArguments = Object.keys(params.args)
+    if (!arrayEquals(args, currentArguments)) {
+      params.args = args.reduce((acc, a) => {
+        acc[a] = params.args[a] || cx(1)
+        return acc
+      }, {})
+    }
+    if (!changed.includes('f_prime_z') || params.f_prime_z === null) {
+      try {
+        params.f_prime_z = derive(params.f, ['z', 'z_1']).toString()
+      } catch (e) {
+        badParams.push('f_prime_z')
+        console.warn(e)
+      }
+    }
+    if (!changed.includes('f_prime_c') || params.f_prime_c === null) {
+      try {
+        params.f_prime_c = derive(params.f, ['z', 'z_1'], ['c']).toString()
+      } catch (e) {
+        badParams.push('f_prime_c')
+        console.warn(e)
+      }
     }
   }
   if (changed.includes('convergent') || changed.includes('divergent')) {
@@ -57,6 +66,9 @@ export const filterParams = (maybeBadParams, changed = [], oldParams) => {
       params.usePerturbation = false
       params.iterations = 1
     }
+  }
+  if (!params.args.z) {
+    params.args.z = cx()
   }
   // if (changed.includes('type')) {
   //   ;[params.center, params.point] = [params.point, params.center]

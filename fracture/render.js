@@ -50,11 +50,29 @@ export const preprocess = (rt, source) => {
       rt.scaled ? '#define SCALED' : '',
       rt.showPolya ? '#define SHOW_POLYA' : '',
       rt.polyaColor ? '#define POLYA_COLOR' : '',
-      `#define VARYING ${varyings.indexOf(rt.varying)}`,
       `#define PALETTE ${palettes.indexOf(rt.palette)}`,
       `#define SMOOTHING ${smoothings.indexOf(rt.smoothing)}`,
     ]
       .filter(Boolean)
+      .join('\n')
+  )
+  source = source.replace(
+    'uniform vec2 args;',
+    Object.keys(rt.args)
+      .map(arg => `uniform vec2 arg_${arg};`)
+      .join('\n')
+  )
+
+  source = source.replace(
+    'vec2 arg = #arg_arg;',
+    Object.keys(rt.args)
+      .map(
+        arg =>
+          `vec2 ${arg} = arg_${arg};` +
+          (rt.varying.includes(arg)
+            ? `\n  ${arg} += pixel;\n  ${arg} *= transform;`
+            : '')
+      )
       .join('\n')
   )
 
@@ -164,10 +182,12 @@ export const recompileFragment = rt => {
   linkProgram(rt)
   gl.useProgram(rt.env.program) // NEEDED?
 
-  rt.env.uniforms = Object.keys(uniformParams).reduce((acc, name) => {
-    acc[name] = gl.getUniformLocation(rt.env.program, name)
-    return acc
-  }, {})
+  rt.env.uniforms = Object.keys(uniformParams)
+    .concat(Object.keys(rt.args).map(arg => `arg_${arg}`))
+    .reduce((acc, name) => {
+      acc[name] = gl.getUniformLocation(rt.env.program, name)
+      return acc
+    }, {})
 
   if (window.location.search.includes('debug')) {
     ;['f', 'f_prime_z', 'f_prime_c', 'f_perturb'].forEach((name, i) => {
@@ -252,22 +272,29 @@ export const initializeGl = (rt, onContextLost, onContextRestored) => {
 export const updateUniforms = rt => {
   const { uniforms } = rt.env
 
-  Object.entries(uniformParams).forEach(([name, params]) => {
-    if (typeof params === 'string') {
-      params = { type: params, value: v => v }
-    }
-    const { type, value } = params
-    const uniform = uniforms[name]
-    if (!uniform) {
-      return
-    }
-    const v = value(rt[name], rt)
-    if (type.startsWith('m')) {
-      rt.gl['uniformMatrix' + type.slice(1)](uniform, false, v)
-    } else {
-      rt.gl['uniform' + type](uniform, v)
-    }
-  })
+  Object.entries(uniformParams)
+    .concat(
+      Object.entries(rt.args).map(([arg, value]) => [
+        `arg_${arg}`,
+        { type: '2fv', value: () => value.to2fv() },
+      ])
+    )
+    .forEach(([name, params]) => {
+      if (typeof params === 'string') {
+        params = { type: params, value: v => v }
+      }
+      const { type, value } = params
+      const uniform = uniforms[name]
+      if (!uniform) {
+        return
+      }
+      const v = value(rt[name], rt)
+      if (type.startsWith('m')) {
+        rt.gl['uniformMatrix' + type.slice(1)](uniform, false, v)
+      } else {
+        rt.gl['uniform' + type](uniform, v)
+      }
+    })
 }
 
 export const resizeCanvasToDisplaySize = (canvas, sampling) => {
