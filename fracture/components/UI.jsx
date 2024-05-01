@@ -128,18 +128,6 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
               <button className="button" onClick={handleUI}>
                 {eyeIcon}
               </button>
-              {['advanced', 'full'].includes(showUI) ? (
-                <button
-                  className="button"
-                  onClick={() =>
-                    updateParams({
-                      lockCenter: !params.lockCenter,
-                    })
-                  }
-                >
-                  {params.lockCenter ? lockIcon : unlockIcon}
-                </button>
-              ) : null}
               {['simple', 'advanced', 'full'].includes(showUI) ? (
                 <button
                   className="button"
@@ -199,13 +187,15 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
                 options={palettes}
                 onChange={handleChange}
               />
-              <Select
-                label="Smoothing"
-                name="smoothing"
-                value={params.smoothing}
-                options={smoothings}
-                onChange={handleChange}
-              />
+              {params.convergent || params.divergent ? (
+                <Select
+                  label="Smoothing"
+                  name="smoothing"
+                  value={params.smoothing}
+                  options={smoothings}
+                  onChange={handleChange}
+                />
+              ) : null}
               {['full'].includes(showUI) ? (
                 <Number
                   name="offset"

@@ -181,7 +181,7 @@ select option {
 }
 
 .bounds label {
-  margin: 0.2em 0.75em;
+  margin: 0 0.75em;
   color: rgba(255, 255, 255, 0.65);
   display: flex;
   align-items: center;
@@ -196,6 +196,9 @@ select option {
 }
 .bounds .number-control {
   font-size: 0.75em;
+}
+.bounds .complex-control {
+  height: 2.5em;
 }
 
 .formula {

@@ -64,15 +64,23 @@ export const preprocess = (rt, source) => {
   )
 
   source = source.replace(
-    'vec2 arg = #arg_arg;',
+    '#init_args',
     Object.keys(rt.args)
-      .map(
-        arg =>
-          `vec2 ${arg} = arg_${arg};` +
-          (rt.varying.includes(arg)
-            ? `\n  ${arg} += pixel;\n  ${arg} *= transform;`
-            : '')
+      .map(arg => `vec2 ${arg} = arg_${arg};`)
+      .join('\n')
+  )
+  source = source.replace(
+    '#transform_args',
+    Object.keys(rt.args)
+      .filter(arg => rt.varying.includes(arg))
+      .concat(
+        rt.perturb
+          ? ['z', 'c']
+              .filter(arg => rt.varying.includes(arg))
+              .map(arg => `d${arg}`)
+          : []
       )
+      .map(arg => `${arg} += pixel;\n  ${arg} *= transform;`)
       .join('\n')
   )
 
@@ -365,15 +373,15 @@ export const render = rt => {
   if (rt.perturb) {
     const orbit = new Float32Array(128 * 128 * 4)
     const max = [0, 0]
-    const center = rt.varying.includes('z')
-      ? multiply(rt.center, rt.transform)
-      : rt.center
-    const point = rt.varying.includes('c')
-      ? multiply(rt.point, rt.transform)
-      : rt.point
+    const z = rt.varying.includes('z')
+      ? multiply(rt.args.z, rt.transform)
+      : rt.args.z
+    const c = rt.varying.includes('c')
+      ? multiply(rt.args.c, rt.transform)
+      : rt.args.c
     try {
-      fillOrbit(rt, orbit, cx(), point, max)
-      fillOrbit(rt, orbit, center, point, max, true)
+      fillOrbit(rt, orbit, cx(), c, max)
+      fillOrbit(rt, orbit, z, c, max, true)
     } catch (e) {
       console.warn(e)
     }

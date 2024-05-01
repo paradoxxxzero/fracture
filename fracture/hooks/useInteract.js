@@ -57,9 +57,8 @@ export const useInteract = (runtime, updateParams) => {
     (delta, x, y) => {
       const dx = 0.5 - x
       const dy = 0.5 - y
-      if (!runtime.lockCenter) {
-        shift(dx * delta, dy * delta, true)
-      }
+      shift(dx * delta, dy * delta, true)
+
       const scaleDiff = local.current.scale.multiply(delta)
       const scaleDiffStr = scaleDiff.real().toString()
       const leading = scaleDiffStr.match(/^-?0\.(0*)/)
@@ -68,7 +67,7 @@ export const useInteract = (runtime, updateParams) => {
       }
       local.current.scale = local.current.scale.subtract(scaleDiff)
     },
-    [shift, runtime.lockCenter]
+    [shift]
   )
 
   const quickUpdate = useCallback(

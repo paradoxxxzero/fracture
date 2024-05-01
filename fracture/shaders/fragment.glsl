@@ -51,31 +51,28 @@ void main(void) {
   float BAILOUT = pow(10., bailout);
   float BAILIN = pow(10., bailin);
 
-  // #ifdef PERTURB
-  // vec2 z = vec2(0.);
-  // vec2 c = vec2(0.);
-  // vec2 dz = vec2(0.);
-  // vec2 dc = vec2(0.);
-  // vec2 C = point;
-  //   #if VARYING == 0 || VARYING == 2
-  // dz += pixel; // Mandelbrot-like
-  // dz *= transform;
-  //   #endif
-  //   #if VARYING == 1 || VARYING == 2
-  // dc += pixel; // Julia-like
-  // dc *= transform;
-  //   #endif
-  // vec2 dz_1 = vec2(0.);
-  // #else
+  #init_args
 
-  vec2 arg = #arg_arg;
-  // #endif
+  #ifdef PERTURB
+  vec2 dz = vec2(0.);
+  vec2 dz_1 = vec2(0.);
+  vec2 dc = vec2(0.);
+  int m = 0;
+  bool shift = true;
+  int max = maxIterations.y;
+  vec2 C = c;
+  vec2 Z = fetchRef(m, shift);
+  z = Z + dz;
+  c = C + dc;
+  #endif
+
+  #transform_args
 
   vec2 z_1 = vec2(0.);
   vec2 z_2 = vec2(0.);
 
   #if SMOOTHING >= 3
-  vec2 zdc = vec2(0., 0.);// Julia-like
+  vec2 zdc = vec2(0., 0.);
   vec2 zdc_1 = vec2(0., 0.);
   #endif
 
@@ -85,22 +82,13 @@ void main(void) {
   vec2 zdz_1 = vec2(0., 0.);
   #endif
 
-  #ifdef PERTURB
-  int m = 0;
-  bool shift = true;
-  int max = maxIterations.y;
-  vec2 Z = fetchRef(m, shift);
-  z = Z + dz;
-  c = C + dc;
-  #endif
-
   #ifdef SHOW_POLYA
   float polyasize = 2. / polya;
-    #ifdef SCALED
+    // #ifdef SCALED
   polyasize *= scale.x;
-    #endif
-  vec2 ztile = (floor(z / polyasize) + 0.5) * polyasize;
-  vec2 ptile = z - ztile;
+    // #endif
+  vec2 ztile = (floor(pixel / polyasize) + 0.5) * polyasize;
+  vec2 ptile = pixel - ztile;
   #endif
 
   #if SMOOTHING == 2
@@ -302,16 +290,17 @@ void main(void) {
     #ifdef SHOW_POLES
   col = mix(col, vec3(0.), smoothstep(0., PI, ll - poles));
     #endif
+  #endif
 
-    #ifdef SHOW_POLYA
+  #ifdef SHOW_POLYA
 
   vec2 zp = conj(z);
   vec2 zr = conj(ztile);
 
   float shade = 1.;
-      #ifdef ANIMATE
+    #ifdef ANIMATE
   shade = 1. - smoothstep(polyasize * .3, polyasize * .5, length(ptile));
-      #endif
+    #endif
 
   float arrow = 0.;
   float base = length(zr) * .1;
@@ -322,22 +311,21 @@ void main(void) {
 
   float sc = 1. / polyasize;
   ptile *= sc;
-      #ifdef ANIMATE
+    #ifdef ANIMATE
   ptile.x += k * base * 25.;
   float r = min(.35 / len, 2.);
   ptile.x -= round(ptile.x * r) / r;
-      #endif
+    #endif
   arrow = sdArrow(ptile, vec2(-len, 0.), vec2(len, 0.), .02, .08, 2.);
   arrow /= sc;
   vec3 arrowColor = col + polyaLightness - 1.;
-      #ifndef POLYA_COLOR
+    #ifndef POLYA_COLOR
   float al = log2(base + .1);
   arrowColor = color(al * 5.);
-      #endif
+    #endif
 
   float aaa = .003 * scale.x;
   col = mix(col, arrowColor, shade * (1.0 - smoothstep(0.0, aaa, arrow)));
-    #endif
 
   #endif
 

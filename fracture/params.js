@@ -62,16 +62,12 @@ export const filterParams = (maybeBadParams, changed = [], oldParams) => {
   }
   if (changed.includes('convergent') || changed.includes('divergent')) {
     if (!params.convergent && !params.divergent) {
-      // params.useDerivative = false
+      params.useDerivative = false
       params.usePerturbation = false
-      params.iterations = 1
     }
   }
   if (!params.args.z) {
     params.args.z = cx()
   }
-  // if (changed.includes('type')) {
-  //   ;[params.center, params.point] = [params.point, params.center]
-  // }
   return { params, badParams }
 }

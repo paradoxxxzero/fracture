@@ -70,7 +70,6 @@ export const defaultParams = {
   poles: 4,
   animate: false,
   speed: 100,
-  lockCenter: false,
   showPolya: false,
   polya: 15,
   polyaColor: true,

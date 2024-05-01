@@ -7,7 +7,6 @@ import { initializeGl } from './render'
 export default function App({ params, updateParams }) {
   const [runtime, setRuntime] = useState({
     ...params,
-    lockCenter: false,
     perturb: false,
     timeref: 0,
   })
