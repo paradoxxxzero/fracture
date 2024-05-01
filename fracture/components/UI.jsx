@@ -288,16 +288,14 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
           ) : null}
           {['simple', 'advanced', 'full'].includes(showUI) ? (
             <aside className="params">
-              {params.convergent || params.divergent ? (
-                <Number
-                  name="iterations"
-                  label="Iterations"
-                  min={0}
-                  step={1}
-                  value={params.iterations}
-                  onChange={handleChange}
-                />
-              ) : null}
+              <Number
+                name="iterations"
+                label="Iterations"
+                min={0}
+                step={1}
+                value={params.iterations}
+                onChange={handleChange}
+              />
               {['advanced', 'full'].includes(showUI) &&
               (params.convergent || params.divergent) ? (
                 <Boolean

@@ -55,6 +55,7 @@ export const filterParams = (maybeBadParams, changed = [], oldParams) => {
     if (!params.convergent && !params.divergent) {
       // params.useDerivative = false
       params.usePerturbation = false
+      params.iterations = 1
     }
   }
   // if (changed.includes('type')) {

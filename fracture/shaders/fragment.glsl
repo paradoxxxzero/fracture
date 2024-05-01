@@ -48,7 +48,7 @@ out vec4 fragColor;
 
 void main(void) {
   float k = -time * speed;
-  vec2 p = cmul(scale, vec2(aspect.x, 1.)) * (2. * uv - 1.);
+  vec2 pixel = cmul(scale, vec2(aspect.x, 1.)) * (2. * uv - 1.);
   float BAILOUT = pow(10., bailout);
   float BAILIN = pow(10., bailin);
 
@@ -59,11 +59,11 @@ void main(void) {
   vec2 dc = vec2(0.);
   vec2 C = point;
     #if VARYING == 0 || VARYING == 2
-  dz += p; // Mandelbrot-like
+  dz += pixel; // Mandelbrot-like
   dz *= transform;
     #endif
     #if VARYING == 1 || VARYING == 2
-  dc += p; // Julia-like
+  dc += pixel; // Julia-like
   dc *= transform;
     #endif
   vec2 dz_1 = vec2(0.);
@@ -71,11 +71,11 @@ void main(void) {
   vec2 z = center;
   vec2 c = point;
     #if VARYING == 0 || VARYING == 2
-  z += p; // Mandelbrot-like
+  z += pixel; // Mandelbrot-like
   z *= transform;
     #endif
     #if VARYING == 1 || VARYING == 2
-  c += p; // Julia-like
+  c += pixel; // Julia-like
   c *= transform;
     #endif
   #endif
@@ -83,16 +83,19 @@ void main(void) {
   vec2 z_1 = vec2(0.);
   vec2 z_2 = vec2(0.);
 
-  #if defined(USE_DERIVATIVE) || SMOOTHING >= 3
-  float zdzmax = exp(-derivative * .15);
-    #ifdef FIXED// Mandelbrot-like
-  vec2 zdc = vec2(0., 0.);
-    #else // Julia-like
-  vec2 zdc = vec2(1., 0.);
+  #if SMOOTHING >= 3
+    #if VARYING == 0 || VARYING == 2
+  vec2 zdc = vec2(0., 0.);// Mandelbrot-like
+    #else 
+  vec2 zdc = vec2(1., 0.);// Julia-like
     #endif
-  vec2 zdz = vec2(1., 0.);
 
   vec2 zdc_1 = vec2(0., 0.);
+  #endif
+
+  #ifdef USE_DERIVATIVE  
+  float zdzmax = exp(-derivative * .15);
+  vec2 zdz = vec2(1., 0.);
   vec2 zdz_1 = vec2(0., 0.);
   #endif
 
@@ -105,13 +108,23 @@ void main(void) {
   c = C + dc;
   #endif
 
+  #ifdef SHOW_POLYA
+  float polyasize = 2. / polya;
+    #ifdef SCALED
+  polyasize *= scale.x;
+    #endif
+  vec2 ztile = (floor(z / polyasize) + 0.5) * polyasize;
+  vec2 ptile = z - ztile;
+  #endif
+
   #if SMOOTHING == 2
   float zexp = 0.;
   #endif
 
   vec3 col = vec3(0.);
   for(int i = 0; i < iterations; i++) {
-    #if defined(USE_DERIVATIVE) || SMOOTHING >= 3
+    float n = float(i) + 1.;
+    #if SMOOTHING >= 3
     vec2 zdct = zdc;
     zdc = F_prime_c(z, c, zdc, zdc_1);
     zdc_1 = zdct;
@@ -120,13 +133,16 @@ void main(void) {
     vec2 zt = z;
     #ifdef PERTURB
     vec2 dzt = dz;
-    dz = F(Z, dz, dc);
+    dz = F_perturb(Z, dz, dc);
     dz_1 = dzt;
     m++;
     Z = fetchRef(m, shift);
     z = Z + dz;
     #else
     z = F(z, c);
+      #ifdef SHOW_POLYA
+    ztile = F(ztile, c);
+      #endif
     #endif
     z_2 = z_1;
     z_1 = zt;
@@ -143,13 +159,13 @@ void main(void) {
     float zdzzdz = dot(zdz, zdz);
     if(zdzzdz < zdzmax) {
       #ifdef SHOW_DERIVATIVE
-      float n = float(i) + 1.;
+      float c = n;
       #if SMOOTHING == 1
       // n -= log2(1. / log2(1. / zdzzdz));
       #elif SMOOTHING == 2
-      n = 10. * zexp;
+      c = 10. * zexp;
       #endif
-      col = color(n, .5 + k);
+      col = color(c, .5 + k);
       #endif
       break;
     }
@@ -158,7 +174,6 @@ void main(void) {
     #ifdef CONVERGENT
     float z_z_1 = dot2(z - z_1);
     if(z_z_1 < BAILIN) {
-      float n = float(i);
       float r = 0.;
       #ifdef USE_ROOTS
       if(abs(z.y) < BAILIN) {
@@ -176,17 +191,17 @@ void main(void) {
       #if SMOOTHING == 1
       float diff = dot2(z - z_1);
       float prev = dot2(z_1 - z_2);
-      n += log(BAILIN / prev) / log(diff / prev);
+      float c = n - 1. + log(BAILIN / prev) / log(diff / prev);
       #elif SMOOTHING == 2
-      n = 10. * zexp;
+      c = 10. * zexp;
       #elif SMOOTHING >= 3
       float d = sqrt(dot(z, z) / dot(zdc, zdc)) * .5 * log(dot(z, z));
         #if SMOOTHING == 4
       d /= scale.x;
         #endif
-      n = 130. / pow(d, .02);
+      c = 130. / pow(d, .02);
       #endif
-      col = color(n, r + k);
+      col = color(c, r + k);
       break;
     }
     #endif
@@ -194,7 +209,7 @@ void main(void) {
     #ifdef DIVERGENT
     float zz = dot(z, z);
     if(zz > BAILOUT) {
-      float n = float(i);
+      float c = n - 1.;
       float r = 0.;
       #ifdef USE_ROOTS
       r = carg(z) / (cnorm(z) * TAU);
@@ -202,140 +217,20 @@ void main(void) {
 
       // Smooth iteration count
       #if SMOOTHING == 1
-      n -= log2(log2(zz)) - 4.0;
+      c -= log2(log2(zz)) - 4.0;
       #elif SMOOTHING == 2
-      n = 10. * zexp;
+      c = 10. * zexp;
       #elif SMOOTHING >= 3
       float d = sqrt(zz / dot(zdc, zdc)) * .5 * log(zz);
         #if SMOOTHING == 4
       d /= scale.x;
         #endif
-      n = 130. / pow(d, .02);
+      c = 130. / pow(d, .02);
       #endif
 
-      col = color(n, r + k);
+      col = color(c, r + k);
       break;
     }
-    #endif
-
-    #if !defined(CONVERGENT) && !defined(DIVERGENT)
-    // Domain coloring of z:
-    float h = (atan(z.y, z.x)) / TAU;
-    float lz = length(z);
-      #ifdef SCALED
-    lz /= sqrt(dot2(scale));
-      #endif
-    float ll = log2(lz);
-
-        #ifdef ARG_GRID_LOG
-    float ag = log2(abs(h));
-        #else
-    float ag = h;
-        #endif
-        #ifdef NORM_GRID_LOG
-    float ng = ll;
-        #else
-    float ng = lz;
-        #endif
-
-    // float l = 2. * atan(length(z)) / PI;
-      #if !defined(SHOW_POLYA) || defined(POLYA_COLOR)
-    col = color((h + k) * 100.);
-      #endif
-
-      #ifdef SHADE_NORM
-    col *= 1. - normShadeValue * aafract(ng * normGridScale + k);
-      #endif
-      #ifdef SHADE_ARG
-    col *= 1. + argShadeValue * aafract(ag * argGridScale + k);
-      #endif
-    //     #if AMBIANCE == 2 || AMBIANCE == 3
-    // res *= scale * scale;
-    //     #endif
-      #ifdef SHOW_GRID
-    vec2 zs = z;
-        #ifdef SCALED
-    zs /= dot2(scale);
-        #endif
-        #ifdef GRID_LOG
-    vec2 g = log2(abs(zs));
-        #else
-    vec2 g = zs;
-        #endif
-    vec2 d = fract(2. * (g + vec2(k)) * gridScale);
-    d = min(d, 1. - d);
-    d /= fwidth(g) * gridScale;
-    col = mix(vec3(0.), col, smoothstep(0., gridWidth * 3., d.x));
-    col = mix(col * .3, col, smoothstep(0., gridWidth * 4., d.y));
-      #endif
-
-      #ifdef SHOW_NORM_GRID
-    float dl = fract((ng + k) * normGridScale);
-    dl = min(dl, 1. - dl);
-    dl /= fwidth(ng) * normGridScale / 2.;
-    col = mix(col, vec3(1.), smoothstep(normGridWidth * 3., 0., dl));
-      #endif
-
-      #ifdef SHOW_ARG_GRID
-    float dh = fract(2. * (ag + k * .25) * argGridScale);
-
-    dh = min(dh, 1. - dh);
-    dh /= min(fwidth(ag), .01) * argGridScale;
-
-    col = mix(col, col + .5, smoothstep(argGridWidth * 3., 0., dh));
-
-      #endif
-
-      #ifdef SHOW_ZEROES
-    col = mix(col, vec3(1.), smoothstep(0., PI, zeroes - ll));
-      #endif
-      #ifdef SHOW_POLES
-    col = mix(col, vec3(0.), smoothstep(0., PI, ll - poles));
-      #endif
-
-        #ifdef SHOW_POLYA
-    float size = 2. / polya;
-          #ifdef SCALED
-    size *= scale.x;
-          #endif
-
-    vec2 ztile = (floor(z_1 / size) + 0.5) * size;
-    vec2 zp = conj(F(z_1, c));
-    vec2 zr = conj(F(ztile, c));
-
-    vec2 p = z_1 - ztile;
-    float shade = 1.;
-          #ifdef ANIMATE
-    shade = 1. - smoothstep(size * .3, size * .5, length(p));
-          #endif
-
-    float arrow = 0.;
-    float base = length(zr) * .1;
-    float len = clamp(base, .08, .35);
-    float angle = atan(zp.y, zp.x);
-
-    p = opRotate(p, angle);
-
-    float sc = 1. / size;
-    p *= sc;
-          #ifdef ANIMATE
-    p.x += k * base * 25.;
-    float r = min(.35 / len, 2.);
-    p.x -= round(p.x * r) / r;
-          #endif
-    arrow = sdArrow(p, vec2(-len, 0.), vec2(len, 0.), .02, .08, 2.);
-    arrow /= sc;
-    vec3 arrowColor = col + polyaLightness - 1.;
-          #ifndef POLYA_COLOR
-    float al = log2(base + .1);
-    arrowColor = color(al * 5.);
-          #endif
-
-    float aaa = .003 * scale.x;
-    col = mix(col, arrowColor, shade * (1.0 - smoothstep(0.0, aaa, arrow)));
-        #endif
-
-    break;
     #endif
 
     #ifdef PERTURB
@@ -349,6 +244,116 @@ void main(void) {
     }
     #endif
   }
+
+  #if !defined(CONVERGENT) && !defined(DIVERGENT)
+  // Domain coloring of z:
+  float h = (atan(z.y, z.x)) / TAU;
+  float lz = length(z);
+    #ifdef SCALED
+  lz /= sqrt(dot2(scale));
+    #endif
+  float ll = log2(lz);
+
+    #ifdef ARG_GRID_LOG
+  float ag = log2(abs(h));
+    #else
+  float ag = h;
+    #endif
+    #ifdef NORM_GRID_LOG
+  float ng = ll;
+    #else
+  float ng = lz;
+    #endif
+
+    #if !defined(SHOW_POLYA) || defined(POLYA_COLOR)
+  col = color((h + k) * 100.);
+    #endif
+
+    #ifdef SHADE_NORM
+  col *= 1. - normShadeValue * aafract(ng * normGridScale + k);
+    #endif
+    #ifdef SHADE_ARG
+  col *= 1. + argShadeValue * aafract(ag * argGridScale + k);
+    #endif
+
+    #ifdef SHOW_GRID
+  vec2 zs = z;
+      #ifdef SCALED
+  zs /= dot2(scale);
+      #endif
+      #ifdef GRID_LOG
+  vec2 g = log2(abs(zs));
+      #else
+  vec2 g = zs;
+      #endif
+  vec2 d = fract(2. * (g + vec2(k)) * gridScale);
+  d = min(d, 1. - d);
+  d /= fwidth(g) * gridScale;
+  col = mix(vec3(0.), col, smoothstep(0., gridWidth * 3., d.x));
+  col = mix(col * .3, col, smoothstep(0., gridWidth * 4., d.y));
+    #endif
+
+    #ifdef SHOW_NORM_GRID
+  float dl = fract((ng + k) * normGridScale);
+  dl = min(dl, 1. - dl);
+  dl /= fwidth(ng) * normGridScale / 2.;
+  col = mix(col, vec3(1.), smoothstep(normGridWidth * 3., 0., dl));
+    #endif
+
+    #ifdef SHOW_ARG_GRID
+  float dh = fract(2. * (ag + k * .25) * argGridScale);
+
+  dh = min(dh, 1. - dh);
+  dh /= min(fwidth(ag), .01) * argGridScale;
+
+  col = mix(col, col + .5, smoothstep(argGridWidth * 3., 0., dh));
+
+    #endif
+
+    #ifdef SHOW_ZEROES
+  col = mix(col, vec3(1.), smoothstep(0., PI, zeroes - ll));
+    #endif
+    #ifdef SHOW_POLES
+  col = mix(col, vec3(0.), smoothstep(0., PI, ll - poles));
+    #endif
+
+    #ifdef SHOW_POLYA
+
+  vec2 zp = conj(z);
+  vec2 zr = conj(ztile);
+
+  float shade = 1.;
+      #ifdef ANIMATE
+  shade = 1. - smoothstep(polyasize * .3, polyasize * .5, length(ptile));
+      #endif
+
+  float arrow = 0.;
+  float base = length(zr) * .1;
+  float len = clamp(base, .08, .35);
+  float angle = atan(zp.y, zp.x);
+
+  ptile = opRotate(ptile, angle);
+
+  float sc = 1. / polyasize;
+  ptile *= sc;
+      #ifdef ANIMATE
+  ptile.x += k * base * 25.;
+  float r = min(.35 / len, 2.);
+  ptile.x -= round(ptile.x * r) / r;
+      #endif
+  arrow = sdArrow(ptile, vec2(-len, 0.), vec2(len, 0.), .02, .08, 2.);
+  arrow /= sc;
+  vec3 arrowColor = col + polyaLightness - 1.;
+      #ifndef POLYA_COLOR
+  float al = log2(base + .1);
+  arrowColor = color(al * 5.);
+      #endif
+
+  float aaa = .003 * scale.x;
+  col = mix(col, arrowColor, shade * (1.0 - smoothstep(0.0, aaa, arrow)));
+    #endif
+
+  #endif
 
   fragColor = vec4(col, 1.0);
 }

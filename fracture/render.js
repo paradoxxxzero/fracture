@@ -23,45 +23,45 @@ export const preprocess = (rt, source) => {
   Object.entries(includes).forEach(([key, value]) => {
     source = source.replace(`#include ${key}`, value)
   })
-  source = source
-    .replace(
-      '##CONFIG',
-      [
-        rt.perturb && rt.f_perturb ? '#define PERTURB' : '',
-        rt.convergent ? '#define CONVERGENT' : '',
-        rt.divergent ? '#define DIVERGENT' : '',
-        rt.useDerivative && rt.f_prime_z && rt.f_prime_c
-          ? '#define USE_DERIVATIVE'
-          : '',
-        rt.showDerivative ? '#define SHOW_DERIVATIVE' : '',
-        rt.useSmoothing ? '#define USE_SMOOTHING' : '',
-        rt.useDistanceEstimate ? '#define USE_DISTANCE_ESTIMATE' : '',
-        rt.useRoots ? '#define USE_ROOTS' : '',
-        rt.showGrid ? '#define SHOW_GRID' : '',
-        rt.showNormGrid ? '#define SHOW_NORM_GRID' : '',
-        rt.normShade ? '#define SHADE_NORM' : '',
-        rt.showArgGrid ? '#define SHOW_ARG_GRID' : '',
-        rt.argShade ? '#define SHADE_ARG' : '',
-        rt.gridLog ? '#define GRID_LOG' : '',
-        rt.normGridLog ? '#define NORM_GRID_LOG' : '',
-        rt.argGridLog ? '#define ARG_GRID_LOG' : '',
-        rt.showPoles ? '#define SHOW_POLES' : '',
-        rt.showZeroes ? '#define SHOW_ZEROES' : '',
-        rt.animate ? '#define ANIMATE' : '',
-        rt.scaled ? '#define SCALED' : '',
-        rt.showPolya ? '#define SHOW_POLYA' : '',
-        rt.polyaColor ? '#define POLYA_COLOR' : '',
-        `#define VARYING ${varyings.indexOf(rt.varying)}`,
-        `#define PALETTE ${palettes.indexOf(rt.palette)}`,
-        `#define SMOOTHING ${smoothings.indexOf(rt.smoothing)}`,
-      ]
-        .filter(Boolean)
-        .join('\n')
-    )
-    .replace(
-      /\bF\(\s*(.+?)\s*,\s*(.+?)\s*\)/g,
-      ast(rt.f).toShader().replace(/\bz\b/g, '$1').replace(/\bc\b/g, '$2')
-    )
+  source = source.replace(
+    '##CONFIG',
+    [
+      rt.perturb && rt.f_perturb ? '#define PERTURB' : '',
+      rt.convergent ? '#define CONVERGENT' : '',
+      rt.divergent ? '#define DIVERGENT' : '',
+      rt.useDerivative && rt.f_prime_z && rt.f_prime_c
+        ? '#define USE_DERIVATIVE'
+        : '',
+      rt.showDerivative ? '#define SHOW_DERIVATIVE' : '',
+      rt.useSmoothing ? '#define USE_SMOOTHING' : '',
+      rt.useDistanceEstimate ? '#define USE_DISTANCE_ESTIMATE' : '',
+      rt.useRoots ? '#define USE_ROOTS' : '',
+      rt.showGrid ? '#define SHOW_GRID' : '',
+      rt.showNormGrid ? '#define SHOW_NORM_GRID' : '',
+      rt.normShade ? '#define SHADE_NORM' : '',
+      rt.showArgGrid ? '#define SHOW_ARG_GRID' : '',
+      rt.argShade ? '#define SHADE_ARG' : '',
+      rt.gridLog ? '#define GRID_LOG' : '',
+      rt.normGridLog ? '#define NORM_GRID_LOG' : '',
+      rt.argGridLog ? '#define ARG_GRID_LOG' : '',
+      rt.showPoles ? '#define SHOW_POLES' : '',
+      rt.showZeroes ? '#define SHOW_ZEROES' : '',
+      rt.animate ? '#define ANIMATE' : '',
+      rt.scaled ? '#define SCALED' : '',
+      rt.showPolya ? '#define SHOW_POLYA' : '',
+      rt.polyaColor ? '#define POLYA_COLOR' : '',
+      `#define VARYING ${varyings.indexOf(rt.varying)}`,
+      `#define PALETTE ${palettes.indexOf(rt.palette)}`,
+      `#define SMOOTHING ${smoothings.indexOf(rt.smoothing)}`,
+    ]
+      .filter(Boolean)
+      .join('\n')
+  )
+
+  source = source.replace(
+    /\bF\(\s*(.+?)\s*,\s*(.+?)\s*\)/g,
+    ast(rt.f).toShader().replace(/\bz\b/g, '$1').replace(/\bc\b/g, '$2')
+  )
 
   if (rt.f_prime_z) {
     source = source.replace(
@@ -95,9 +95,12 @@ export const preprocess = (rt, source) => {
     )
   }
   if (rt.f_perturb) {
-    source = source.replace(/F\(Z,\s*dz,\s*dc\)/g, ast(rt.f_perturb).toShader())
+    source = source.replace(
+      /F_perturb\(Z,\s*dz,\s*dc\)/g,
+      ast(rt.f_perturb).toShader()
+    )
   } else {
-    source = source.replace(/F\(Z,\s*dz,\s*dc\)/g, 'vec2(0)')
+    source = source.replace(/F_perturb\(Z,\s*dz,\s*dc\)/g, 'vec2(0)')
   }
 
   if (window.location.search.includes('debug')) {

@@ -89,6 +89,7 @@ const domain = (name, f, extra = {}) => ({
   name,
   params: {
     f,
+    iterations: 1,
     varying: 'z',
     palette: 'rainbow',
     divergent: false,
