@@ -379,7 +379,7 @@ vec2 cdn(vec2 z) {
   return cdn(z, .5);
 }
 
-vec2 cgammafast(in vec2 z) {
+vec2 cgamma(in vec2 z) {
   // Lanczos
   float LG = 5.65;
   float[] P = float[](2.506628275635, 225.525584619175, -268.295973841305, 80.9030806934622, -5.007578639705, 0.0114684895435);
@@ -392,7 +392,7 @@ vec2 cgammafast(in vec2 z) {
   return ((z.x > 1.0) ? (w) : (PI * cinv(cmul(w, csin(PI * z)))));
 }
 
-vec2 cgamma(vec2 z) {
+vec2 cgammaem(vec2 z) {
   // Spouge
   const int N = 16;
   float Nf = float(N);
@@ -454,25 +454,23 @@ vec2 czeta(in vec2 z, in vec2 a) {
     // zeta(s, a) = 2*gamma(1-s) / (TAU)^(1-s) (
     //    sin(ETA*s) * sum(1 -> inf, cos(TAU*n*a) * n^(1-s)) +
     //    cos(ETA*s) * sum(1 -> inf, sin(TAU*n*a) * n^(1-s)))
-    const int N = 20;
+    const int N = 40;
     vec2 sum1 = c0;
+    vec2 sum2 = c0;
     vec2 z_1 = csub(z, c1);
     float k = TAU * a.x;
     for(int i = 1; i < N; i++) {
       float d = float(i);
-      sum1 += cos(d * k) * cpow(d, z_1);
-    }
-    vec2 sum2 = c0;
-    for(int i = 1; i < N; i++) {
-      float d = float(i);
-      sum2 += sin(d * k) * cpow(d, z_1);
+      vec2 p = cpow(d, z_1);
+      sum1 += cmul(cos(d * k), p);
+      sum2 += cmul(sin(d * k), p);
     }
     vec2 f = cmul(csin(ETA * z), sum1) + cmul(ccos(ETA * z), sum2);
     return cadd(2. * cmul(cpow(TAU, z_1), cmul(cgamma(-z_1), f)), suffix);
   }
 
   vec2 zeta = c0;
-  int n = 30;
+  int n = 15;
   vec2 N = R(float(n));
   vec2 aN = cadd(a, N);
   vec2 s = -z;
@@ -501,8 +499,7 @@ vec2 czeta(in vec2 z, in vec2 a) {
   vec2 spoch = s;
   int k = 1;
   while(k < 20) {
-    float bern = B2nN[k] / B2nD[k];
-    float ft = bern;
+    float ft = B2N[k];
     ft *= fact;
 
     term = cmul(deriv, ft);
@@ -514,7 +511,8 @@ vec2 czeta(in vec2 z, in vec2 a) {
       break;
     }
     k++;
-    fact /= (2. * float(k) - 1.) * (2. * float(k));
+    float k2 = 2. * float(k);
+    fact /= k2 * (k2 - 1.);
     deriv = cmul(deriv, emq);
     s = cadd(s, c1);
     spoch = cmul(spoch, s);
@@ -526,22 +524,6 @@ vec2 czeta(in vec2 z, in vec2 a) {
 
   return zeta;
 }
-
-// vec2 reflection(vec2 z, vec2 a) {
-//   const float N = 20.;
-//   vec2 sum1 = vec2(0);
-//   for(float i = 1.; i < N; i++) sum1 += cos(TAU * i * a) * cpow(i, z - c1);
-//   vec2 sum2 = vec2(0);
-//   for(float i = 1.; i < N; i++) sum2 += sin(TAU * i * a) * cpow(i, z - c1);
-//   vec2 f = cmul(csin(pi * z / 2.), sum1) + cmul(ccos(pi * z / 2.), sum2);
-//   return 2. * cmul(cpow(TAU, z - c1), cmul(cgamma(c1 - z), f));
-// }
-
-// vec2 czeta(vec2 z, vec2 a) {
-//   if(z.x < -1.)
-//     return reflection(z, a);
-//   return czeta3(z, a);
-// }
 
 vec2 czeta(in vec2 z, in float a) {
   return czeta(z, R(a));
@@ -864,18 +846,40 @@ vec2 cnome(in vec2 z) {
   return cexp(-PI * cdiv(cellk(c1 - z), cellk(z)));
 }
 
-float diffabs(in float X, in float x) {
-  if(X >= 0.) {
-    if(X + x >= 0.) {
-      return x;
-    } else {
-      return -(2. * X + x);
-    }
-  } else {
-    if(X + x > 0.) {
-      return 2. * X + x;
-    } else {
-      return -x;
-    }
+vec2 clinaive(in vec2 z, in vec2 w) {
+  vec2 sum = z;
+
+  vec2 zn = cmul(z, z);
+  for(int i = 2; i < 60; i++) {
+    vec2 term = cdiv(zn, cpow(float(i), w));
+    vec2 osum = sum;
+    sum = cadd(sum, term);
+    zn = cmul(zn, z);
   }
+  return sum;
+}
+
+// vec2 cli(in vec2 z, in vec2 w) {
+//   vec2 z2 = dot2(z);
+//   if(z2 <= .5625) {
+//     return clinaive(z, w);
+//   } else if(z2 > 1.96) {
+//     return cmul(cpow(-1., w), clinaive(cinv(z), w)))...;
+//   }
+//   return vec2(0.);
+// }
+
+vec2 cli(in vec2 z, in float s) {
+  float so = 1. - s;
+  vec2 rln = cdiv(clog(-z), ci * TAU);
+  vec2 sum = cadd(cmul(cpow(ci, so), czeta(so, cadd(R(.5), rln))), cmul(cpow(ci, -so), czeta(so, csub(R(.5), rln))));
+
+  return cmul(sum, cdiv(cgamma(R(so)), cpow(TAU, so)));
+}
+
+vec2 clcos(in vec2 z, in float k) {
+  vec2 a = cexp(cmul(z, ci));
+  vec2 b = cinv(a);
+
+  return .5 * cadd(cli(a, k), cli(b, k));
 }

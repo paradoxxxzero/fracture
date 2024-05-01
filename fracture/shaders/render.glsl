@@ -64,3 +64,19 @@ float sdArrow(in vec2 p, vec2 a, vec2 b, float w1, float w2, float k) {
   }
   return si * sqrt(di);
 }
+
+float diffabs(in float X, in float x) {
+  if(X >= 0.) {
+    if(X + x >= 0.) {
+      return x;
+    } else {
+      return -(2. * X + x);
+    }
+  } else {
+    if(X + x > 0.) {
+      return 2. * X + x;
+    } else {
+      return -x;
+    }
+  }
+}
