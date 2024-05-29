@@ -86,7 +86,7 @@ export default memo(function Preset({
             <div className="preset-content">
               <span className="preset-name">{name}</span>
               <code className="preset-formula">
-                <span className="preset-assignment"><Declaration args={params.args} /></span>
+                <span className="preset-assignment"><Declaration args={params.args} /></span>{' '}
                 {params.f}
               </code>
               <code className="preset-derivative_z">

@@ -124,7 +124,7 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
 
   const exportImage = useCallback(async () => {
     closePresets()
-    const res = window.prompt('Select image resolution', '500x500')
+    const res = window.prompt('Select image resolution', '5000x5000')
     if (!res || !res.includes('x')) {
       console.error('Invalid resolution')
       return

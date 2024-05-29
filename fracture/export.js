@@ -94,8 +94,8 @@ export const iterateChunks = async (
 }
 
 export async function makeBigPng(runtime, width, height) {
-  const chunkWidth = 100
-  const chunkHeight = 100
+  const chunkWidth = 1000
+  const chunkHeight = 1000
   const margin = 0
 
   const progress = document.createElement('div')
