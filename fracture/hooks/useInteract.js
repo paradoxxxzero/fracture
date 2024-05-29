@@ -34,13 +34,13 @@ export const useInteract = (runtime, updateParams) => {
   const shift = useCallback(
     (dx, dy, zoom, alt) => {
       const aspect = runtime.gl.canvas.width / runtime.gl.canvas.height
-      const width = local.current.scale.multiply(2)
+      const height = local.current.scale.multiply(2)
       const move = zoom ? runtime.varying : runtime.move
       // alt = !alt === (zoom || runtime.moveCenter)
       move.split('').forEach(key => {
         // if (runtime.varying.includes(key) === alt) {
         local.current.args[key] = local.current.args[key].add(
-          cx(-dx * aspect, dy).multiply(width)
+          cx(-dx * aspect, dy).multiply(height)
         )
         // }
       })
@@ -85,7 +85,6 @@ export const useInteract = (runtime, updateParams) => {
         runtime.env.uniforms.scale,
         local.current.scale.to2fv()
       )
-      update()
       if (!loop.current) {
         loop.current = requestAnimationFrame(animate)
       }
@@ -150,6 +149,7 @@ export const useInteract = (runtime, updateParams) => {
     }
 
     const onUp = e => {
+      update()
       local.current.pointers.clear()
       distance = null
       pinch = null
@@ -176,6 +176,7 @@ export const useInteract = (runtime, updateParams) => {
       const y = e.clientY / window.innerHeight
       rescale(delta, x, y)
       quickUpdate()
+      update()
     }
     document.addEventListener('wheel', handleWheel)
     return () => {

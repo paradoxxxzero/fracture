@@ -1,6 +1,17 @@
 import { memo, useEffect, useState } from 'react'
 import Preview from './Preview'
 
+const formatArgs = argsdict => {
+  const args = Object.keys(argsdict).filter(arg => arg != 'z').sort()
+  if (!args.length) {
+    return null
+  }
+  if (args.length === 1) {
+    return args[0]
+  }
+  return `{${args.join(', ')}}`
+}
+
 const getNodeText = node => {
   if (['string', 'number'].includes(typeof node)) {
     return node
@@ -56,6 +67,8 @@ export default memo(function Preset({
     setOpen(false)
   }, [name, search, subforms])
 
+  const args = formatArgs(params.args)
+
   return (
     <div style={{ display: visible ? 'block' : 'none' }}>
       <div
@@ -63,9 +76,8 @@ export default memo(function Preset({
         onClick={() => onPreset(params, index)}
       >
         <div
-          className={`preset-header preset-name-${
-            subforms.length ? 'button' : 'only'
-          }`}
+          className={`preset-header preset-name-${subforms.length ? 'button' : 'only'
+            }`}
         >
           {subforms.length ? (
             <button
@@ -82,13 +94,13 @@ export default memo(function Preset({
             <div className="preset-content">
               <span className="preset-name">{name}</span>
               <code className="preset-formula">
-                <span className="preset-assignment">F(z, c) = </span>
+                <span className="preset-assignment">F{args ? <sub>{args}</sub> : null}(z) = </span>
                 {params.f}
               </code>
-              {/* <code className="preset-derivative_z">
+              <code className="preset-derivative_z">
                 <span className="preset-assignment">dF(z, z', c)/dz = </span>
                 {params.f_prime_z}
-              </code> */}
+              </code>
               <code className="preset-derivative_c">
                 <span className="preset-assignment">dF(z, z', c)/dc = </span>
                 {params.f_prime_c}

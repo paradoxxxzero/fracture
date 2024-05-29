@@ -72,11 +72,11 @@ const newt = (name, f, extra = {}) => ({
   },
 })
 
-const nova = (name, f, g, extra = {}) => ({
+const nova = (name, f, extra = {}) => ({
   name,
   params: {
     args: { z: cx(1), c: cx(-0.5) },
-    f: `z - ${g ? `${g} * ` : ''}(${f})# + c`,
+    f: `z - ${extra?.args?.a ? 'a * ' : ''}(${f})# + c`,
     useDerivative: false,
     convergent: true,
     divergent: false,
@@ -146,6 +146,126 @@ export const presets = withDefaults([
         scale: cx(3),
         derivative: 350,
       }),
+      {
+        name: 'Mandelbar',
+        params: {
+          ...brot('Mandelbar', 2).params,
+          f: '~z^2 + c',
+          f_perturb: '~(2 * Z * dz + dz^2) + dc',
+        },
+      },
+      {
+        name: 'Tearbrot',
+        params: {
+          args: { z: cx(), c: cx(0, 1) },
+          scale: cx(4),
+          transform: rotate(-Math.PI / 2),
+          f: '(z + 1)^2 / c',
+          showDerivative: true,
+          derivative: 80,
+          f_perturb:
+            '(C * dz^2 + 2 * C * dz * Z + 2 * C * dz - dc * Z^2 - 2 * dc * Z - dc) / (C * (C + dc))',
+        },
+      },
+      {
+        name: 'Moonbrot',
+        params: {
+          scale: cx(6),
+          f: 'c / (z + 1)^2',
+          derivative: 120,
+        },
+      },
+      {
+        name: 'Mothbrot',
+        params: {
+          scale: cx(1.5),
+          f: 'z^2 * (|re(z)| + |im(z)|i)^3 + c',
+          derivative: 120,
+        },
+      },
+
+      {
+        name: 'Burningship',
+        params: {
+          args: { z: cx(), c: cx(0.5, 0.5) },
+          transform: rotate(Math.PI),
+          derivative: 100,
+          scale: cx(1.5),
+          f: '(|re(z)| + |im(z)|i)^2 + c',
+          f_perturb:
+            '(2 * re(dz) * re(Z) + re(dz) * re(dz) - 2 * im(Z) * im(dz) - im(dz) * im(dz) + 2 * (diffabs((re(Z) * im(Z)), (re(Z) * im(dz) + re(dz) * im(Z) + re(dz) * im(dz)))) * i) + dc',
+        },
+        subforms: [
+          {
+            name: 'Miniship',
+            params: {
+              args: { z: cx(), c: cx(1.85982, 0.004584) },
+              transform: rotate(Math.PI),
+              derivative: 100,
+              smoothing: 'distance_scaled',
+              scale: cx(0.008069),
+              velocity: 62,
+              lightness: 300,
+              saturation: 0,
+              f: '(|re(z)| + |im(z)|i)^2 + c',
+              f_perturb:
+                '(2 * re(dz) * re(Z) + re(dz) * re(dz) - 2 * im(Z) * im(dz) - im(dz) * im(dz) + 2i * diffabs((re(Z) * im(Z)), (re(Z) * im(dz) + re(dz) * im(Z) + re(dz) * im(dz)))) + dc',
+            },
+          },
+          {
+            name: 'Bird of Prey',
+            params: {
+              transform: rotate((-3 * Math.PI) / 4),
+              derivative: 100,
+              scale: cx(1.5),
+              f: '(|re(z)| + |im(z)|i)^3 + c',
+              f_perturb:
+                '(re(Z)^2 - 3 * im(Z)^2) * diffabs(re(Z), re(dz)) + (2 * (re(Z) * re(dz)) + re(dz)^2 - 6 * (im(Z) * im(dz)) - 3 * im(dz)^2) * abs(re(Z) + re(dz)) + i * ((3 * re(Z)^2 - im(Z)^2) * diffabs(im(Z), im(dz)) + (6 * (re(Z) * re(dz)) + 3 * re(dz)^2 - 2 * (im(Z) * im(dz)) - im(dz)^2) * abs(im(Z) + im(dz))) + dc',
+            },
+          },
+          {
+            name: 'Buffalo',
+            params: {
+              transform: rotate(Math.PI),
+              f: '(|re(z)| + |im(z)|i)^2 - (|re(z)| + |im(z)|i) + c',
+            },
+          },
+          {
+            name: 'Bird',
+            params: {
+              f: '(re(z) - |im(z)|i)^2 + c',
+            },
+          },
+        ],
+      },
+      {
+        name: 'Magnet',
+        params: {
+          args: { z: cx(), c: cx(1) },
+          scale: cx(3),
+          f: '((z^2 + c - 1) / (2z + c - 2))^2',
+          useDerivative: false,
+          convergent: true,
+        },
+      },
+      {
+        name: 'Tetrate',
+        params: {
+          args: { z: cx(0.5), c: cx(1) },
+          scale: cx(3),
+          f: 'c^z',
+          useDerivative: false,
+        },
+      },
+      {
+        name: 'Celtic',
+        params: {
+          args: { z: cx(), c: cx(-0.7) },
+          scale: cx(2),
+          f: '|re(z^2)| + i * im(z^2) + c',
+          useDerivative: false,
+        },
+      },
     ],
   },
   {
@@ -157,162 +277,46 @@ export const presets = withDefaults([
       julia('Trijulia -.29053 - .450488i', 4, cx(-0.29053, -0.450488), {
         derivative: 175,
       }),
-    ],
-  },
-  {
-    name: 'Mandelbar',
-    params: {
-      ...brot('Mandelbar', 2).params,
-      f: '~z^2 + c',
-      f_perturb: '~(2 * Z * dz + dz^2) + dc',
-    },
-  },
-  {
-    name: 'Burningship',
-    params: {
-      args: { z: cx(), c: cx(0.5, 0.5) },
-      transform: rotate(Math.PI),
-      derivative: 100,
-      scale: cx(1.5),
-      f: '(|re(z)| + |im(z)|i)^2 + c',
-      f_perturb:
-        '(2 * re(dz) * re(Z) + re(dz) * re(dz) - 2 * im(Z) * im(dz) - im(dz) * im(dz) + 2 * (diffabs((re(Z) * im(Z)), (re(Z) * im(dz) + re(dz) * im(Z) + re(dz) * im(dz)))) * i) + dc',
-    },
-    subforms: [
+      julia('2iJulia', '(2i)', cx(), { useDerivative: false, bailout: 4.1, iterations: 100 }),
       {
-        name: 'Miniship',
+        name: 'Phoenix',
         params: {
-          args: { z: cx(), c: cx(1.85982, 0.004584) },
-          transform: rotate(Math.PI),
-          derivative: 100,
-          smoothing: 'distance_scaled',
-          scale: cx(0.008069),
-          velocity: 62,
-          lightness: 300,
-          saturation: 0,
-          f: '(|re(z)| + |im(z)|i)^2 + c',
-          f_perturb:
-            '(2 * re(dz) * re(Z) + re(dz) * re(dz) - 2 * im(Z) * im(dz) - im(dz) * im(dz) + 2i * diffabs((re(Z) * im(Z)), (re(Z) * im(dz) + re(dz) * im(Z) + re(dz) * im(dz)))) + dc',
-        },
-      },
-      {
-        name: 'Bird of Prey',
-        params: {
-          transform: rotate((-3 * Math.PI) / 4),
-          derivative: 100,
+          args: { z: cx(), c: cx(0.5667) },
           scale: cx(1.5),
-          f: '(|re(z)| + |im(z)|i)^3 + c',
-          f_perturb:
-            '(re(Z)^2 - 3 * im(Z)^2) * diffabs(re(Z), re(dz)) + (2 * (re(Z) * re(dz)) + re(dz)^2 - 6 * (im(Z) * im(dz)) - 3 * im(dz)^2) * abs(re(Z) + re(dz)) + i * ((3 * re(Z)^2 - im(Z)^2) * diffabs(im(Z), im(dz)) + (6 * (re(Z) * re(dz)) + 3 * re(dz)^2 - 2 * (im(Z) * im(dz)) - im(dz)^2) * abs(im(Z) + im(dz))) + dc',
+          transform: rotate(-Math.PI / 2),
+          varying: 'z',
+          f: 'z^2 + c - 0.5 * z_1',
+          useDerivative: false,
+          f_perturb: '2 * Z * dz + dz^2 + dc - 0.5 * dz_1',
         },
       },
       {
-        name: 'Buffalo',
+        name: 'Frothy',
         params: {
-          transform: rotate(Math.PI),
-          f: '(|re(z)| + |im(z)|i)^2 - (|re(z)| + |im(z)|i) + c',
+          args: { z: cx(0.5), c: cx(2 + 3e-2, -1e-2) },
+          varying: 'z',
+          scale: cx(3),
+          f: 'z^2 - c*~z',
+          f_perturb: 'dz^2 + 2 * dz * Z - C * ~dz - dc * ~Z - dc * ~dz',
         },
       },
       {
-        name: 'Bird',
+        name: 'Whirlpool',
         params: {
-          f: '(re(z) - |im(z)|i)^2 + c',
+          varying: 'z',
+          args: { z: cx(), c: cx(2, 0) },
+          scale: cx(3),
+          f: '(c/z + (im(z)*z - re(z))/c)^2',
         },
       },
     ],
   },
   {
-    name: 'Tearbrot',
-    params: {
-      args: { z: cx(), c: cx(0, 1) },
-      scale: cx(4),
-      transform: rotate(-Math.PI / 2),
-      f: '(z + 1)^2 / c',
-      showDerivative: true,
-      derivative: 80,
-      f_perturb:
-        '(C * dz^2 + 2 * C * dz * Z + 2 * C * dz - dc * Z^2 - 2 * dc * Z - dc) / (C * (C + dc))',
-    },
-  },
-  {
-    name: 'Moonbrot',
-    params: {
-      scale: cx(6),
-      f: 'c / (z + 1)^2',
-      derivative: 120,
-    },
-  },
-  {
-    name: 'Mothbrot',
-    params: {
-      scale: cx(1.5),
-      f: 'z^2 * (|re(z)| + |im(z)|i)^3 + c',
-      derivative: 120,
-    },
-  },
-  {
-    name: 'Phoenix',
-    params: {
-      args: { z: cx(), c: cx(0.5667) },
-      scale: cx(1.5),
-      transform: rotate(-Math.PI / 2),
-      varying: 'z',
-      f: 'z^2 + c - 0.5 * z_1',
-      useDerivative: false,
-      f_perturb: '2 * Z * dz + dz^2 + dc - 0.5 * dz_1',
-    },
-  },
-  {
-    name: 'Frothy',
-    params: {
-      args: { z: cx(0.5), c: cx(2 + 3e-2, -1e-2) },
-      varying: 'z',
-      scale: cx(3),
-      f: 'z^2 - c*~z',
-      f_perturb: 'dz^2 + 2 * dz * Z - C * ~dz - dc * ~Z - dc * ~dz',
-    },
-  },
-  {
-    name: 'Whirlpool',
-    params: {
-      varying: 'z',
-      args: { z: cx(), c: cx(2, 0) },
-      scale: cx(3),
-      f: '(c/z + (im(z)*z - re(z))/c)^2',
-    },
-  },
-  {
-    name: 'Magnet',
-    params: {
-      args: { z: cx(), c: cx(1) },
-      scale: cx(3),
-      f: '((z^2 + c - 1) / (2z + c - 2))^2',
-      useDerivative: false,
-      convergent: true,
-    },
-  },
-  {
-    name: 'Tetrate',
-    params: {
-      args: { z: cx(0.5), c: cx(1) },
-      scale: cx(3),
-      f: 'c^z',
-      useDerivative: false,
-    },
-  },
-  {
-    name: 'Celtic',
-    params: {
-      args: { z: cx(), c: cx(-0.7) },
-      scale: cx(2),
-      f: '|re(z^2)| + i * im(z^2) + c',
-      useDerivative: false,
-    },
-  },
-  {
-    ...newt('Newton', 'z^3 - 1'),
+    ...newt('Newton', '(z - r)(z - s)(z - t)', { args: { r: cx(1), s: cx(-.5, -.86603), t: cx(-.5, .86603), a: cx(1), c: cx(), z: cx() } }),
     subforms: [
+      newt('Newton', 'z^3 + 1'),
       newt('Newton', 'z^4 - 1'),
+      newt('Newton', '(z^4 - b) / (z - d) - e', { args: { b: cx(-1), d: cx(3), e: cx(1), a: cx(1), z: cx(), c: cx() } }),
       newt('Newton', 'z^3 - 2z + 2'),
       newt('Newton', 'z^8 + 15z^4 - 16'),
       newt('Newton', 'z^5 - 3i * z^3 - (5 + 2i) * z^2 + 3z + 1'),
@@ -347,9 +351,13 @@ export const presets = withDefaults([
     ],
   },
   {
-    ...nova('Nova', 'z^3 - 1'),
+    ...nova('Nova', '(z - r)(z - s)(z - t)', { args: { r: cx(1), s: cx(-.5, -.86603), t: cx(-.5, .86603), a: cx(1), z: cx(1), c: cx(-0.5) } }),
     subforms: [
+      nova('Nova', 'z^3 - 1'),
       nova('Nova', 'z^4 - 1'),
+      nova('Nova', '(z - 1)(z - 4 + i * sqrt(2))(z + sqrt(3) - i * sqrt(3))', {
+        args: { z: cx(1), c: cx() }, scale: cx(2)
+      }),
       nova('Nova', 'z^3 - 2z + 2'),
       nova('Nova', 'z^8 + 15z^4 - 16'),
       nova('Nova', 'z^6 + z^3 - 1'),

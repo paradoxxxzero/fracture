@@ -18,6 +18,7 @@ import Number from './Number.jsx'
 import Presets from './Presets'
 import Select from './Select.jsx'
 import { cx } from '../decimal.js'
+import { makeBigPng } from '../export.js'
 
 const getShowUI = () => {
   try {
@@ -112,6 +113,30 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
     }
   }, [handlePreset, presetIndex])
 
+  const exportImage = useCallback(async () => {
+    closePresets()
+    const res = window.prompt('Select image resolution', '500x500')
+    if (!res || !res.includes('x')) {
+      console.error('Invalid resolution')
+      return
+    }
+    const [width, height] = res.split('x').map(x => parseInt(x))
+    if (isNaN(width) || isNaN(height)) {
+      console.error('Invalid resolution')
+      return
+    }
+
+    const url = await makeBigPng(runtime, width, height)
+    if (url) {
+      const a = document.createElement('a')
+      document.body.appendChild(a)
+      a.style.display = 'none'
+      a.href = url
+      a.download = `${document.title}-${width}x${height}`
+      a.click()
+    }
+  }, [closePresets, runtime])
+
   const args = Object.keys(params.args)
 
   return (
@@ -119,6 +144,7 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
       <Presets
         open={showPresets}
         onPreset={handlePreset}
+        onExportImage={exportImage}
         closePresets={closePresets}
       />
       <main className={runtime.error ? 'error ui' : 'ui'} title={runtime.error}>
@@ -277,7 +303,7 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
                 onChange={handleChange}
               />
               {['advanced', 'full'].includes(showUI) &&
-              (params.convergent || params.divergent) ? (
+                (params.convergent || params.divergent) ? (
                 <Boolean
                   className="button"
                   label="Roots"
@@ -324,7 +350,7 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
                     />
                   ) : null}
                   {['advanced', 'full'].includes(showUI) &&
-                  params.useDerivative ? (
+                    params.useDerivative ? (
                     <Boolean
                       label="Derivative"
                       className="button"
@@ -410,7 +436,7 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
                     />
                   ) : null}
                   {['advanced', 'full'].includes(showUI) &&
-                  (params.showNormGrid || params.normShade) ? (
+                    (params.showNormGrid || params.normShade) ? (
                     <Number
                       name="normGridScale"
                       label="Norm Grid Scale"
@@ -420,7 +446,7 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
                     />
                   ) : null}
                   {['advanced', 'full'].includes(showUI) &&
-                  (params.showNormGrid || params.normShade) ? (
+                    (params.showNormGrid || params.normShade) ? (
                     <Boolean
                       name="normGridLog"
                       label="Norm Grid Log"
@@ -454,7 +480,7 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
                     />
                   ) : null}
                   {['advanced', 'full'].includes(showUI) &&
-                  (params.showArgGrid || params.argShade) ? (
+                    (params.showArgGrid || params.argShade) ? (
                     <Number
                       name="argGridScale"
                       label="Arg Grid Scale"
@@ -464,7 +490,7 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
                     />
                   ) : null}
                   {['advanced', 'full'].includes(showUI) &&
-                  (params.showArgGrid || params.argShade) ? (
+                    (params.showArgGrid || params.argShade) ? (
                     <Boolean
                       name="argGridLog"
                       label="Arg Grid Log"
@@ -566,9 +592,8 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
           )}
           {['simple', 'advanced', 'full'].includes(showUI) ? (
             <button
-              className={`space-button button${
-                runtime.processing ? ' processing' : ''
-              }`}
+              className={`space-button button${runtime.processing ? ' processing' : ''
+                }`}
               onClick={() =>
                 updateParams({
                   move:

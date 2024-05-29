@@ -318,22 +318,22 @@ class BinaryOp {
         n <= 1
           ? new Leaf('number', 1)
           : new BinaryOp(
-              '*',
-              new BinaryOp('^^', expr, new Leaf('number', n)),
+            '*',
+            new BinaryOp('^^', expr, new Leaf('number', n)),
+            new BinaryOp(
+              '+',
               new BinaryOp(
-                '+',
-                new BinaryOp(
-                  '*',
-                  tetrationDerivative(expr, n - 1),
-                  new FunctionOp('log', [expr])
-                ),
-                new BinaryOp(
-                  '*',
-                  new BinaryOp('^^', expr, new Leaf('number', n - 1)),
-                  new BinaryOp('/', new Leaf('number', 1), expr)
-                )
+                '*',
+                tetrationDerivative(expr, n - 1),
+                new FunctionOp('log', [expr])
+              ),
+              new BinaryOp(
+                '*',
+                new BinaryOp('^^', expr, new Leaf('number', n - 1)),
+                new BinaryOp('/', new Leaf('number', 1), expr)
               )
             )
+          )
       if (this.right.type === 'number') {
         return new BinaryOp(
           '*',
@@ -964,6 +964,12 @@ class Leaf {
     // if (this.type === 'identifier' && this.value === 'i') {
     //   return new Complex(new Leaf('number', 0), new Leaf('number', 1))
     // }
+    if (this.type === 'identifier' && this.value === 'x') {
+      return new FunctionOp('re', [new Leaf('identifier', 'z')])
+    }
+    if (this.type === 'identifier' && this.value === 'y') {
+      return new FunctionOp('im', [new Leaf('identifier', 'z')])
+    }
     return this
   }
 }
@@ -983,7 +989,7 @@ const readToken = (input, i) => {
 
 const tokenize = input => {
   let tokens = []
-  for (let i = 0; i < input.length; ) {
+  for (let i = 0; i < input.length;) {
     const token = readToken(input, i)
     i = token.end
     if (token.type !== 'whitespace') {

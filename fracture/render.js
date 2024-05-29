@@ -76,8 +76,8 @@ export const preprocess = (rt, source) => {
       .concat(
         rt.perturb
           ? ['z', 'c']
-              .filter(arg => rt.varying.includes(arg))
-              .map(arg => `d${arg}`)
+            .filter(arg => rt.varying.includes(arg))
+            .map(arg => `d${arg}`)
           : []
       )
       .map(arg => `${arg} += pixel;\n  ${arg} *= transform;`)
@@ -305,11 +305,11 @@ export const updateUniforms = rt => {
     })
 }
 
-export const resizeCanvasToDisplaySize = (canvas, sampling) => {
+export const resizeCanvasToDisplaySize = (canvas, sampling, forceSize) => {
   let rw = canvas.clientWidth
   let rh = canvas.clientHeight
-  let cw = rw * sampling
-  let ch = rh * sampling
+  let cw = forceSize ? forceSize.width : rw * sampling
+  let ch = forceSize ? forceSize.height : rh * sampling
 
   if (cw !== canvas.width || ch !== canvas.height) {
     cw = Math.floor(cw)
@@ -319,6 +319,7 @@ export const resizeCanvasToDisplaySize = (canvas, sampling) => {
     canvas.height = ch
     return true
   }
+  return !!forceSize
 }
 
 const multiply = (c, matrix) => {
@@ -351,7 +352,7 @@ const fillOrbit = (rt, orbit, z, c, max, shift) => {
   return { orbit, max: i }
 }
 
-export const render = rt => {
+export const render = (rt, forceSize) => {
   if (!rt.gl) {
     // Context lost
     return
@@ -361,12 +362,34 @@ export const render = rt => {
     rt.env.uniforms.time,
     rt.animate ? performance.now() - rt.timeref : 0
   )
-  if (resizeCanvasToDisplaySize(gl.canvas, rt.supersampling)) {
+  if (resizeCanvasToDisplaySize(gl.canvas, rt.supersampling, forceSize)) {
     gl.viewport(0, 0, gl.canvas.width, gl.canvas.height)
     gl.uniform2fv(rt.env.uniforms.aspect, [
       gl.canvas.width / gl.canvas.height,
       1 / Math.max(gl.canvas.width, gl.canvas.height),
     ])
+    if (forceSize) {
+      const {
+        x, y, width, height, fullWidth, fullHeight,
+      } = forceSize
+      const { scale, varying, args } = rt
+      const { uniforms } = rt.env
+      gl.uniform2fv(uniforms.aspect, [width / height, 1 / Math.max(width, height)])
+      // Scale is the half height of the viewport so here it's fullheight/2
+      // We need scale down to half height
+      const newScale = scale.multiply(height / fullHeight)
+      gl.uniform2fv(uniforms.scale, newScale.to2fv())
+      // Next we need to shift the center to the new center
+      // We need to shift by (x - fullWidth/2) * scale
+      const currentCenter = cx(fullWidth / 2, fullHeight / 2)
+      const newCenter = cx(x + width / 2, y + height / 2)
+      const shift = newCenter.subtract(currentCenter).multiply(scale).divide(cx(fullHeight / 2))
+      varying.split('').forEach(key => {
+        const newVarying = args[key].add(shift)
+        gl.uniform2fv(uniforms[`arg_${key}`], newVarying.to2fv())
+      })
+      // ...
+    }
   }
 
   // TODO: In useProcess / worker + only in prevention if still in viewPort

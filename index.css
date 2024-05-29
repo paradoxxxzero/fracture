@@ -1,130 +1,137 @@
 :root {
-  line-height: 1.5;
-  font-weight: 400;
+    line-height: 1.5;
+    font-weight: 400;
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+    color-scheme: light dark;
+    color: rgba(255, 255, 255, 0.87);
+    background-color: #242424;
 
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  -webkit-text-size-adjust: 100%;
-  overflow: hidden;
-  margin: 0;
-  touch-action: none;
-  user-select: none;
-  background: black;
-  font-family: 'Fira Code', monospace;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-text-size-adjust: 100%;
+    overflow: hidden;
+    margin: 0;
+    touch-action: none;
+    user-select: none;
+    background: black;
+    font-family: 'Fira Code', monospace;
 }
 
 button,
 select,
 input {
-  font-family: 'Fira Code', monospace;
+    font-family: 'Fira Code', monospace;
 }
 
 :root,
 body,
 #webgl2,
 #root {
-  margin: 0;
-  width: 100%;
-  height: 100%;
+    margin: 0;
+    width: 100%;
+    height: 100%;
 }
 
 label {
-  white-space: nowrap;
+    white-space: nowrap;
 }
 
 select {
-  color: white;
-  border: none;
-  background-color: rgba(25, 25, 25);
-  padding: 0.25em;
-  font-size: 1.5em;
+    color: white;
+    border: none;
+    background-color: rgba(25, 25, 25);
+    padding: 0.25em;
+    font-size: 1.5em;
 }
+
 select option {
-  background-color: rgba(25, 25, 25);
+    background-color: rgba(25, 25, 25);
 }
 
 .error * {
-  color: red !important;
+    color: red !important;
 }
+
 .warning * {
-  color: orange !important;
+    color: orange !important;
 }
 
 #stats {
-  top: 225px !important;
-  left: 20px !important;
+    top: 225px !important;
+    left: 20px !important;
 }
 
 .button {
-  font-size: 2.5em;
-  line-height: 1;
-  color: rgba(255, 255, 255);
-  mix-blend-mode: difference;
-  cursor: pointer;
-  background: none;
-  border: none;
-  width: 2em;
-  height: 2em;
+    font-size: 2.5em;
+    line-height: 1;
+    color: rgba(255, 255, 255);
+    mix-blend-mode: difference;
+    cursor: pointer;
+    background: none;
+    border: none;
+    width: 2em;
+    height: 2em;
 }
 
 .button:hover {
-  background-color: rgba(255, 255, 255, 0.1);
+    background-color: rgba(255, 255, 255, 0.1);
 }
 
 .global-error {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  background-color: rgba(255, 0, 0, 0.5);
-  color: white;
-  padding: 0.5em;
-  z-index: 1000;
-  text-align: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background-color: rgba(255, 0, 0, 0.5);
+    color: white;
+    padding: 0.5em;
+    z-index: 1000;
+    text-align: center;
 }
 
 @keyframes processing {
-  0% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.25;
-  }
-  100% {
-    opacity: 1;
-  }
+    0% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.25;
+    }
+
+    100% {
+        opacity: 1;
+    }
 }
+
 @keyframes processing-slight {
-  0% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.75;
-  }
-  100% {
-    opacity: 1;
-  }
+    0% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.75;
+    }
+
+    100% {
+        opacity: 1;
+    }
 }
+
 .ui {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  font-size: calc(min(1.75vw, 1em));
-  display: flex;
-  flex-direction: column;
-  mix-blend-mode: difference;
-  justify-content: space-between;
-  padding: 0.5em;
-  box-sizing: border-box;
-  pointer-events: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    font-size: calc(min(1.75vw, 1em));
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 0.5em;
+    box-sizing: border-box;
+    pointer-events: none;
 }
 
 .ui input,
@@ -133,418 +140,500 @@ select option {
 .ui select,
 .ui svg,
 .ui [title] {
-  pointer-events: all;
+    pointer-events: all;
 }
 
 .ui-row {
-  display: flex;
-  flex-wrap: nowrap;
-  flex-direction: row;
-  justify-content: space-between;
+    display: flex;
+    flex-wrap: nowrap;
+    flex-direction: row;
+    justify-content: space-between;
 }
+
+.ui-row>* {
+    mix-blend-mode: difference;
+}
+
 .ui-row-top {
-  align-items: flex-start;
+    align-items: flex-start;
 }
+
 .ui-row-middle {
-  flex: 1;
-  align-items: center;
-  min-height: 0;
+    flex: 1;
+    align-items: center;
+    min-height: 0;
 }
+
 .ui-row-bottom {
-  align-items: flex-end;
+    align-items: flex-end;
 }
 
 .controls {
-  display: flex;
-  flex-direction: column;
-  /* align-self: flex-start; */
+    display: flex;
+    flex-direction: column;
+    /* align-self: flex-start; */
 }
 
 .subcontrols {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  font-size: 0.6em;
-  margin: 0.5em;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    font-size: 0.6em;
+    margin: 0.5em;
 }
+
 .subcontrols button {
-  margin: 0.25em;
-  font-size: 2em;
+    margin: 0.25em;
+    font-size: 2em;
 }
 
 .bounds {
-  display: flex;
-  flex-wrap: wrap;
-  font-size: 0.9em;
-  align-items: center;
-  font-size: 0.75em;
-  justify-content: center;
+    display: flex;
+    flex-wrap: wrap;
+    font-size: 0.9em;
+    align-items: center;
+    font-size: 0.75em;
+    justify-content: center;
 }
 
 .bounds label {
-  margin: 0 0.75em;
-  color: rgba(255, 255, 255, 0.65);
-  display: flex;
-  align-items: center;
+    margin: 0 0.75em;
+    color: rgba(255, 255, 255, 0.65);
+    display: flex;
+    align-items: center;
 }
 
 .bounds .boolean-label input {
-  margin-left: 0.5em;
+    margin-left: 0.5em;
 }
 
 .bounds .select-label select {
-  margin-left: 0.25em;
+    margin-left: 0.25em;
 }
+
 .bounds .number-control {
-  font-size: 0.75em;
+    font-size: 0.75em;
 }
+
 .bounds .complex-control {
-  height: 2.5em;
+    height: 2.5em;
 }
 
 .formula {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  margin-bottom: 0.75em;
-  font-size: 0.75em;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    margin-bottom: 0.75em;
+    font-size: 0.75em;
 }
 
 .formula .button {
-  font-size: 0.5em;
-  width: auto;
+    font-size: 0.5em;
+    width: auto;
 }
+
 .formula .fixed {
-  text-decoration: underline;
+    text-decoration: underline;
 }
+
 .complex-formula input {
-  color: white;
-  border: none;
-  background-color: rgba(150, 150, 150, 0.15);
-  font-size: 1.5em;
-  padding: 0.25em;
-  text-align: center;
+    color: white;
+    border: none;
+    background-color: rgba(150, 150, 150, 0.15);
+    font-size: 1.5em;
+    padding: 0.25em;
+    text-align: center;
 }
+
 .complex-formula-label {
-  font-size: 1.5em;
-  margin-right: 0.25em;
+    font-size: 1.5em;
+    margin-right: 0.25em;
 }
+
 .complex-formula.invalid input {
-  outline: 2px solid red;
+    outline: 2px solid red;
 }
 
 .view,
 .params {
-  display: flex;
-  flex-direction: column;
-  flex-wrap: wrap;
-  font-size: 0.9em;
-  align-items: baseline;
-  font-size: 0.75em;
-  display: flex;
-  justify-content: center;
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+    font-size: 0.9em;
+    align-items: baseline;
+    font-size: 0.75em;
+    display: flex;
+    justify-content: center;
 }
+
 .view,
 .view .number {
-  align-items: flex-start;
+    align-items: flex-start;
 }
+
 .params,
 .params .number {
-  align-items: flex-end;
+    align-items: flex-end;
 }
 
 .view label,
 .params label {
-  margin: 0.2em 0.75em;
-  color: rgba(255, 255, 255, 0.65);
+    margin: 0.2em 0.75em;
+    color: rgba(255, 255, 255, 0.65);
 }
+
 .number {
-  display: flex;
+    display: flex;
 }
+
 .select-label {
-  display: flex;
+    display: flex;
 }
+
 .view .number,
 .params .number,
 .view .select-label,
 .params .select-label {
-  flex-direction: column;
+    flex-direction: column;
 }
+
 .number-control {
-  position: relative;
+    position: relative;
 }
+
 .number input {
-  color: white;
-  border: none;
-  background-color: rgba(150, 150, 150, 0.15);
-  font-size: 1.5em;
-  padding: 0.25em 1.75em;
-  text-align: center;
+    color: white;
+    border: none;
+    background-color: rgba(150, 150, 150, 0.15);
+    font-size: 1.5em;
+    padding: 0.25em 1.75em;
+    text-align: center;
 }
+
 .number .noplusminus input {
-  padding-right: 0.25em;
-  padding-left: 0.25em;
+    padding-right: 0.25em;
+    padding-left: 0.25em;
 }
 
 .number-label {
-  margin-right: 0.25em;
+    margin-right: 0.25em;
 }
+
 .clean-rels-button {
-  margin: 0 -0.5em 0 -0.75em;
-  font-size: 1.25em;
+    margin: 0 -0.5em 0 -0.75em;
+    font-size: 1.25em;
 }
 
 .number .plusminus {
-  background: none;
-  border: none;
-  color: rgba(255, 255, 255, 0.65);
-  background-color: rgba(255, 255, 255, 0.01);
-  border-radius: 50%;
-  font-size: 2.5em;
-  cursor: pointer;
-  padding: 0.25em;
-  line-height: 0;
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%) scale(0.75);
-  padding: 0.5em 0.25em;
-  z-index: 1000;
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.65);
+    background-color: rgba(255, 255, 255, 0.01);
+    border-radius: 50%;
+    font-size: 2.5em;
+    cursor: pointer;
+    padding: 0.25em;
+    line-height: 0;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%) scale(0.75);
+    padding: 0.5em 0.25em;
+    z-index: 1000;
 }
+
 .number .plusminus:hover,
 .number .plusminus:focus,
 .number .plusminus:active {
-  color: rgba(255, 255, 255);
-  background-color: rgba(255, 255, 255, 0.05);
-  transform: translateY(-50%) scale(1);
-  transition: all 0.25s;
+    color: rgba(255, 255, 255);
+    background-color: rgba(255, 255, 255, 0.05);
+    transform: translateY(-50%) scale(1);
+    transition: all 0.25s;
 }
 
 .number .minus {
-  left: -0.1em;
+    left: -0.1em;
 }
+
 .number .plus {
-  right: -0.1em;
+    right: -0.1em;
 }
+
 .number.invalid input {
-  outline: 2px solid red;
+    outline: 2px solid red;
 }
+
 .complex-control {
-  position: relative;
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
+    position: relative;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
 }
+
 .complex-control .button {
-  font-size: 1.5em;
+    font-size: 1.5em;
 }
 
 .complex-inner-label {
-  font-size: 1.5em;
-  margin: 0 0 0 -0.5em;
+    font-size: 1.5em;
+    margin: 0 0 0 -0.5em;
 }
 
 .presets {
-  display: flex;
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  flex-direction: column;
-  align-items: flex-end;
-  width: 80vw;
-  height: 75vh;
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  z-index: 10;
+    display: flex;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    flex-direction: column;
+    align-items: flex-end;
+    width: 80vw;
+    height: 75vh;
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    z-index: 10;
 }
+
 .presets-overlay {
-  position: fixed;
-  left: 0;
-  top: 0;
-  width: 100vw;
-  height: 100vh;
-  z-index: 9;
-  background-color: rgba(0, 0, 0, 0.2);
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 9;
+    background-color: rgba(0, 0, 0, 0.2);
 }
+
 .presets-modal {
-  width: 100%;
-  height: 100%;
-  color: white;
-  background-color: black;
-  display: flex;
-  flex-direction: column;
-  font-size: calc(min(2vw, 1em));
+    width: 100%;
+    height: 100%;
+    color: white;
+    background-color: black;
+    display: flex;
+    flex-direction: column;
+    font-size: calc(min(2vw, 1em));
 }
+
 .presets-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
 }
+
 .presets-actions {
-  display: flex;
-  min-width: fit-content;
+    display: flex;
+    min-width: fit-content;
 }
-.presets-actions > * {
-  font-size: 1.5em;
-  line-height: 1;
-  padding: 0.5em 0.75em;
+
+.presets-actions>* {
+    font-size: 1.5em;
+    line-height: 1;
+    padding: 0.5em 0.75em;
 }
-.presets-actions > *:hover {
-  background-color: rgba(255, 255, 255, 0.1);
+
+.presets-actions>*:hover {
+    background-color: rgba(255, 255, 255, 0.1);
 }
 
 .presets-action {
-  color: rgba(255, 255, 255, 0.75);
-  background: none;
-  cursor: pointer;
-  border: none;
-  text-decoration: none;
-  display: block;
+    color: rgba(255, 255, 255, 0.75);
+    background: none;
+    cursor: pointer;
+    border: none;
+    text-decoration: none;
+    display: block;
 }
+
 .presets-action svg,
 .presets-clear svg {
-  height: 1em;
-  width: 1em;
+    height: 1em;
+    width: 1em;
 }
 
 .presets-search {
-  position: relative;
-  display: flex;
-  flex: 1;
+    position: relative;
+    display: flex;
+    flex: 1;
 }
+
 .presets-search input {
-  flex: 1;
-  color: white;
-  border: none;
-  background-color: rgba(150, 150, 150, 0.15);
-  padding: 0.5em 3.5em 0.5em 0.5em;
-  font-size: 1.5em;
-  outline: 1px solid rgba(150, 150, 150, 0.5);
+    flex: 1;
+    color: white;
+    border: none;
+    background-color: rgba(150, 150, 150, 0.15);
+    padding: 0.5em 3.5em 0.5em 0.5em;
+    font-size: 1.5em;
+    outline: 1px solid rgba(150, 150, 150, 0.5);
 }
+
 .presets-search input::placeholder {
-  color: rgba(255, 255, 255, 0.5);
+    color: rgba(255, 255, 255, 0.5);
 }
+
 .presets-clear {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  right: 0;
-  font-size: 2em;
-  line-height: 1;
-  color: rgba(255, 255, 255);
-  cursor: pointer;
-  background: none;
-  border: none;
-  padding: 0.25em 0.5em;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    right: 0;
+    font-size: 2em;
+    line-height: 1;
+    color: rgba(255, 255, 255);
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 0.25em 0.5em;
 }
 
 .presets-list {
-  flex: 1;
-  overflow-y: auto;
-  margin: 1em 0 2em;
-}
-.presets-list h2 {
-  position: sticky;
-  top: 0;
-  padding-left: 0.75em;
-  background-color: black;
-}
-.presets-list h4 {
-  position: sticky;
-  top: 3.25em;
-  padding-left: 2em;
-  background-color: black;
+    flex: 1;
+    overflow-y: auto;
+    margin: 1em 0 2em;
 }
 
-.presets-list h4 + h4,
+.presets-list h2 {
+    position: sticky;
+    top: 0;
+    padding-left: 0.75em;
+    background-color: black;
+}
+
+.presets-list h4 {
+    position: sticky;
+    top: 3.25em;
+    padding-left: 2em;
+    background-color: black;
+}
+
+.presets-list h4+h4,
 .presets-list h4:has(+ h4) {
-  display: none;
+    display: none;
 }
 
 .preset {
-  cursor: pointer;
-  padding: 0.5em;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
-  display: flex;
-  justify-content: space-between;
+    cursor: pointer;
+    padding: 0.5em;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+    display: flex;
+    justify-content: space-between;
 }
+
 .preset:hover {
-  background-color: rgba(255, 255, 255, 0.1);
+    background-color: rgba(255, 255, 255, 0.1);
 }
+
 .preset.sub {
-  background-color: rgba(255, 255, 255, 0.1);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.5);
+    background-color: rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.5);
 }
+
 .preset.sub:hover {
-  background-color: rgba(255, 255, 255, 0.15);
+    background-color: rgba(255, 255, 255, 0.15);
 }
 
 .preset-header {
-  flex: 1;
-  display: flex;
-  align-items: center;
-}
-.preset-content-preview {
-  flex: 1;
-  display: flex;
-  justify-content: space-between;
-}
-@media screen and (max-width: 800px) {
-  .preset-content-preview {
-    flex-direction: column;
-    justify-content: center;
+    flex: 1;
+    display: flex;
     align-items: center;
-  }
 }
+
+.preset-content-preview {
+    flex: 1;
+    display: flex;
+    justify-content: space-between;
+}
+
+@media screen and (max-width: 800px) {
+    .preset-content-preview {
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+}
+
 .preview {
-  object-fit: contain;
+    object-fit: contain;
 }
+
 .preset-content {
-  display: flex;
-  flex-direction: column;
-  margin: auto 0.5em;
-  vertical-align: middle;
-  align-self: baseline;
+    display: flex;
+    flex-direction: column;
+    margin: auto 0.5em;
+    vertical-align: middle;
+    align-self: baseline;
 }
+
 .preset-name {
-  font-size: 1.5em;
+    font-size: 1.5em;
 }
+
 .preset-assignment {
-  opacity: 0.7;
+    opacity: 0.7;
 }
+
 .preset-formula {
-  font-size: 1em;
+    font-size: 1em;
 }
+
 .preset-formula,
 .preset-derivative_z,
 .preset-derivative_c {
-  font-size: 0.85em;
+    font-size: 0.85em;
 }
+
+.preset-derivative_c,
+.preset-derivative_z {
+    display: none;
+}
+
+/*
+.preset:hover .preset-derivative_c {
+    display: block;
+} */
+
 .preset-name-only {
-  margin-left: 2.5em;
+    margin-left: 2.5em;
 }
+
 .preset-name-button {
-  margin-left: 0.5em;
+    margin-left: 0.5em;
 }
+
 .preset-spacer {
-  flex: 1;
+    flex: 1;
 }
+
 .preset-toggle {
-  background-color: #222222;
-  border: none;
-  padding: 0.75em 1em;
-  top: 1em;
-  left: -1em;
-  cursor: pointer;
+    background-color: #222222;
+    border: none;
+    padding: 0.75em 1em;
+    top: 1em;
+    left: -1em;
+    cursor: pointer;
 }
+
 .preset-toggle:hover {
-  background-color: #333333;
+    background-color: #333333;
 }
+
 .presets-list .space {
-  font-size: 1.5em;
+    font-size: 1.5em;
 }
+
 .preset:last-child {
-  border-bottom: none;
+    border-bottom: none;
 }
 
 .presets-list .coxeter-diagram {
-  font-size: 1.5em;
+    font-size: 1.5em;
+}
+
+.export-progress {
+    position: fixed;
+    font-size: 6em;
+    color: rgba(255, 255, 255, 0.5);
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 0.5em;
+    padding: 0.5em;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1000;
+    mix-blend-mode: difference;
 }
