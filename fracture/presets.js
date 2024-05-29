@@ -462,11 +462,13 @@ export const presets = withDefaults([
         { args: { z: cx(), c: cx(4) } }
       ),
       domain(
-        '',
-        range(1, 21)
-          .map(i => `z^${i} / (1 - z^${i})`)
-          .join(' + ') + ' + c'
+        '', 'sum(n, 1, 20, z^n / (c - z^n))',
+        { args: { z: cx(), c: cx(1) } }
       ),
-    ],
+      domain(
+        '', 'product(n, 1, 20, (c - z^n))',
+        { args: { z: cx(), c: cx(1) } }
+      )
+    ]
   },
 ])

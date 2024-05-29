@@ -2,9 +2,11 @@ import { useCallback, useEffect, useState } from 'react'
 
 import { palettes, smoothings, varyings } from '../default.js'
 import {
+  contrastIcon,
   eyeIcon,
   lockIcon,
   moveConstantIcon,
+  noContrastIcon,
   playIcon,
   presetsIcon,
   stopIcon,
@@ -19,6 +21,7 @@ import Presets from './Presets'
 import Select from './Select.jsx'
 import { cx } from '../decimal.js'
 import { makeBigPng } from '../export.js'
+import Declaration from './Declaration.jsx'
 
 const getShowUI = () => {
   try {
@@ -32,6 +35,8 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
   const [showUI, setShowUI] = useState(getShowUI)
   const [showPresets, setShowPresets] = useState(false)
   const [presetIndex, setPresetIndex] = useState(0)
+  const [readable, setReadable] = useState(false)
+
   const openPresets = useCallback(() => {
     updateParams({
       animate: false,
@@ -76,6 +81,10 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
       }),
     []
   )
+
+  const handleReadable = useCallback(() => {
+    setReadable(readable => !readable)
+  }, [])
 
   useEffect(() => {
     const keydown = e => {
@@ -147,13 +156,18 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
         onExportImage={exportImage}
         closePresets={closePresets}
       />
-      <main className={runtime.error ? 'error ui' : 'ui'} title={runtime.error}>
+      <main className={'ui' + (readable ? ' readable ' : '') + (runtime.error ? ' error' : '')} title={runtime.error}>
         <div className="ui-row ui-row-top">
           <aside className="controls">
             <div className="subcontrols">
               <button className="button" onClick={handleUI}>
                 {eyeIcon}
               </button>
+              {['advanced', 'full'].includes(showUI) ? (
+                <button className="button" onClick={handleReadable}>
+                  {readable ? contrastIcon : noContrastIcon}
+                </button>
+              ) : null}
               {['simple', 'advanced', 'full'].includes(showUI) ? (
                 <button
                   className="button"
@@ -171,7 +185,7 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
           {['simple', 'advanced', 'full'].includes(showUI) ? (
             <aside className="formula">
               <ComplexFormula
-                label="F(z, c) ="
+                label={<Declaration args={params.args} />}
                 name="f"
                 value={params.f}
                 onChange={handleChange}
@@ -411,7 +425,7 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
                     />
                   ) : null}
 
-                  {['full'].includes(showUI) ? (
+                  {['advanced', 'full'].includes(showUI) ? (
                     <Number
                       label="Norm Grid"
                       step={0.1}
@@ -455,7 +469,7 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
                     />
                   ) : null}
 
-                  {['full'].includes(showUI) ? (
+                  {['advanced', 'full'].includes(showUI) ? (
                     <Number
                       label="Arg Grid"
                       step={0.1}

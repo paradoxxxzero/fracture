@@ -1,16 +1,6 @@
 import { memo, useEffect, useState } from 'react'
 import Preview from './Preview'
-
-const formatArgs = argsdict => {
-  const args = Object.keys(argsdict).filter(arg => arg != 'z').sort()
-  if (!args.length) {
-    return null
-  }
-  if (args.length === 1) {
-    return args[0]
-  }
-  return `{${args.join(', ')}}`
-}
+import Declaration from './Declaration'
 
 const getNodeText = node => {
   if (['string', 'number'].includes(typeof node)) {
@@ -24,6 +14,9 @@ const getNodeText = node => {
   }
 }
 const match = (name, search) => {
+  if (search === '*') {
+    return true
+  }
   if (typeof name === 'string') {
     return getNodeText(name).toLowerCase().includes(search.toLowerCase())
   }
@@ -54,20 +47,19 @@ export default memo(function Preset({
       setOpen(false)
       return
     }
-    if (match(name, search)) {
-      setVisible(true)
-      return
-    }
     if (subforms.length && subforms.some(({ name }) => match(name, search))) {
       setVisible(true)
       setOpen(true)
+      return
+    }
+    if (match(name, search)) {
+      setVisible(true)
       return
     }
     setVisible(false)
     setOpen(false)
   }, [name, search, subforms])
 
-  const args = formatArgs(params.args)
 
   return (
     <div style={{ display: visible ? 'block' : 'none' }}>
@@ -94,7 +86,7 @@ export default memo(function Preset({
             <div className="preset-content">
               <span className="preset-name">{name}</span>
               <code className="preset-formula">
-                <span className="preset-assignment">F{args ? <sub>{args}</sub> : null}(z) = </span>
+                <span className="preset-assignment"><Declaration args={params.args} /></span>
                 {params.f}
               </code>
               <code className="preset-derivative_z">

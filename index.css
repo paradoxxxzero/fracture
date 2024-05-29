@@ -67,7 +67,6 @@ select option {
     font-size: 2.5em;
     line-height: 1;
     color: rgba(255, 255, 255);
-    mix-blend-mode: difference;
     cursor: pointer;
     background: none;
     border: none;
@@ -120,7 +119,7 @@ select option {
 }
 
 .ui {
-    position: fixed;
+    position: absolute;
     top: 0;
     left: 0;
     width: 100%;
@@ -141,6 +140,19 @@ select option {
 .ui svg,
 .ui [title] {
     pointer-events: all;
+    mix-blend-mode: difference;
+}
+
+
+.ui.readable input,
+.ui.readable button,
+.ui.readable label,
+.ui.readable select,
+.ui.readable svg,
+.ui.readable [title] {
+    mix-blend-mode: unset;
+    filter: drop-shadow(0 0 3px black);
+    backdrop-filter: blur(2px);
 }
 
 .ui-row {
@@ -150,9 +162,6 @@ select option {
     justify-content: space-between;
 }
 
-.ui-row>* {
-    mix-blend-mode: difference;
-}
 
 .ui-row-top {
     align-items: flex-start;
@@ -549,6 +558,12 @@ select option {
 
 .preview {
     object-fit: contain;
+}
+
+.preset-button {
+    padding: 0.5em;
+    font-size: 3em;
+    color: rgba(33, 150, 243);
 }
 
 .preset-content {

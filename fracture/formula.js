@@ -95,7 +95,7 @@ export const functionShader = {
   cn: 'ccn',
   dn: 'cdn',
   arg: 'carg',
-  norm: 'length',
+  norm: 'cnorm',
   tania: 'ctania',
   "tania'": 'cdtania',
   atania: 'catania',
@@ -153,6 +153,23 @@ class BinaryOp {
     this.type = type
     this.left = left
     this.right = right
+  }
+  is(other) {
+    return this.type === other.type && this.left.is(other.left) && this.right.is(other.right)
+  }
+  clone(replace = null, value = null) {
+    let left = this.left
+    let right = this.right
+
+    if (replace) {
+      if (left.is(replace)) {
+        left = value
+      }
+      if (right.is(replace)) {
+        right = value
+      }
+    }
+    return new BinaryOp(this.type, left.clone(replace, value), right.clone(replace, value))
   }
   isPureReal() {
     return (
@@ -528,6 +545,20 @@ class UnaryOp {
     this.type = type
     this.operand = operand
   }
+
+  is(other) {
+    return this.type === other.type && this.operand.is(other.operand)
+  }
+  clone(replace = null, value = null) {
+    let op = this.operand
+
+    if (replace) {
+      if (op.is(replace)) {
+        op = value
+      }
+    }
+    return new UnaryOp(this.type, op.clone(replace, value))
+  }
   isPureReal() {
     return this.operand.isPureReal()
   }
@@ -601,6 +632,12 @@ class FunctionOp {
     this.args = args
     this.type = 'function'
   }
+  is(other) {
+    return this.type === other.type && this.name === other.name && this.args.every((a, i) => a.is(other.args[i]))
+  }
+  clone(replace = null, value = null) {
+    return new FunctionOp(this.name, this.args.map(a => a.clone(replace, value)))
+  }
   isPureReal() {
     return ['abs', 're', 'im'].includes(this.name)
   }
@@ -615,6 +652,22 @@ class FunctionOp {
     return `${this.name}(${this.args.map(a => a.toString()).join(', ')})`
   }
   toShader() {
+    if (['sum', 'product'].includes(this.name) && this.args.length === 4
+      && this.args[0].type === 'identifier'
+      && this.args[1].type === 'number'
+      && this.args[2].type === 'number'
+    ) {
+      const [identifier, start, end, expr] = this.args
+      let node = new Leaf('number', this.name === 'sum' ? 0 : 1)
+      for (let i = start.value; i <= end.value; i++) {
+        node = new BinaryOp(
+          this.name === 'sum' ? '+' : '*',
+          node,
+          expr.clone(identifier, new Leaf('number', i))
+        )
+      }
+      return node.simplify().toShader()
+    }
     if (this.args.length === 0) {
       return `${functionShader[this.name] || this.name}()`
     }
@@ -623,13 +676,13 @@ class FunctionOp {
       if (this.args[0].type === 'number') {
         return child
       }
-      return `${child}.x`
+      return `vec2(${child}.x, 0.)`
     }
     if (this.name === 'im') {
       if (this.args[0].type === 'number') {
         return new Leaf('number', 0).toShader()
       }
-      return `${this.args[0].toShader()}.y`
+      return `vec2(${this.args[0].toShader()}.y, 0.)`
     }
     return `${functionShader[this.name] || this.name}(${this.args.map(a => a.toShader()).join(', ')})`
   }
@@ -884,6 +937,12 @@ class Complex {
     this.imag = imag
     this.type = 'complex'
   }
+  is(other) {
+    return this.type === other.type && this.real === other.real && this.imag === other.imag
+  }
+  clone(replace, value) {
+    return new Complex(this.real, this.imag)
+  }
   isPureReal() {
     return false
   }
@@ -916,6 +975,12 @@ class Leaf {
     this.type = type
     this.value = value
   }
+  is(other) {
+    return this.type === other.type && this.value === other.value
+  }
+  clone(replace, value) {
+    return new Leaf(this.type, this.value)
+  }
   isPureReal() {
     return this.type === 'number'
   }
@@ -933,10 +998,13 @@ class Leaf {
     if (this.isPureImag()) {
       return 'vec2(0., 1.)'
     }
+    if (consts.includes(this.value)) {
+      return `vec2(${this.value}, 0.)`
+    }
     if (this.type === 'identifier') {
       return this.value.replace(/'/g, '_prime')
     }
-    return `${this.value.toFixed(6)}`
+    return `vec2(${this.value.toFixed(6)}, 0.)`
   }
   toComplex() {
     if (this.isPureImag()) {
@@ -1153,8 +1221,13 @@ export const vars = (ast_, ids = []) => {
     ids = vars(ast_.right, ids)
   }
   if (ast_.args) {
-    ast_.args.forEach(arg => {
-      ids = vars(arg, ids)
+    const args = [...ast_.args]
+    let iter_var = null
+    if (['sum', 'product'].includes(ast_.name)) {
+      iter_var = args.shift().value
+    }
+    args.forEach(arg => {
+      ids = vars(arg, ids).filter(arg => arg != iter_var)
     })
   }
   if (ast_.operand) {

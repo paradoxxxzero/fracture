@@ -29,8 +29,14 @@ const vec2 c1 = vec2(1., 0.);
 const vec2 ci = vec2(0., 1.);
 
 vec2 R(float x) {
-  return vec2(x, 0.);
+    return vec2(x, 0.);
+}
+vec2 R(int x) {
+    return vec2(float(x), 0.);
 }
 vec2 I(float y) {
-  return vec2(0., y);
+    return vec2(0., y);
+}
+vec2 I(int y) {
+    return vec2(0., float(y));
 }
