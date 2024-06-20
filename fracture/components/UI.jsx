@@ -371,6 +371,14 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
                   onChange={handleChange}
                 />
               ) : null}
+              {['advanced', 'full'].includes(showUI) ? (
+                <Boolean
+                  name="useCycle"
+                  label="Cycle"
+                  value={params.useCycle}
+                  onChange={handleChange}
+                />
+              ) : null}
               {showUI === 'full' ? (
                 <Boolean
                   label="Perturbation"

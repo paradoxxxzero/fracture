@@ -56,7 +56,7 @@ export const preprocess = (rt, source) => {
     Object.keys(rt.args)
       .filter(arg => rt.varying.includes(arg))
       .concat(
-        rt.perturb
+        rt.perturb && rt.f_perturb
           ? ['z', 'c']
               .filter(arg => rt.varying.includes(arg))
               .map(arg => `d${arg}`)

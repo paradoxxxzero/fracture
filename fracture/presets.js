@@ -1,5 +1,5 @@
 import { cx } from './decimal'
-import { defaultParams, shadings } from './default'
+import { defaultParams } from './default'
 import { derive } from './formula'
 
 const rotate = o => [
@@ -72,6 +72,7 @@ const newt = (name, f, extra = {}) => ({
     f: `z - ${extra?.args?.a ? 'a * ' : ''}(${f})# + c`,
     iterations: 75,
     useDerivative: false,
+    useCycle: false,
     useRoots: true,
     convergent: true,
     divergent: false,
@@ -112,11 +113,13 @@ const domain = (name, f, extra = {}) => ({
   params: {
     f,
     shading: 'domain_coloring',
+    offset: 0,
     iterations: 1,
     varying: 'z',
     palette: 'rainbow',
     divergent: false,
     useDerivative: false,
+    useCycle: false,
     usePerturbation: false,
     onlyBailed: false,
     showGrid: true,
@@ -180,15 +183,26 @@ export const presets = withDefaults([
       brot('Decabrot', 11),
       brot('Invbibrot', -2, {
         args: { z: cx(10), c: cx() },
-        convergent: true,
+        divergent: false,
+        shading: 'lyapunov_exponent',
+        iterations: 250,
+        useDerivative: false,
+        useCycle: false,
+        offset: 25,
+        onlyBailed: false,
         scale: cx(3),
-        derivative: 250,
       }),
       brot('Invtribrot', -3, {
         args: { z: cx(10), c: cx() },
-        convergent: true,
+        divergent: false,
+        shading: 'lyapunov_exponent',
+        iterations: 250,
+        useDerivative: false,
+        useCycle: false,
+        offset: 140,
+        onlyBailed: false,
+        palette: 'red_green',
         scale: cx(3),
-        derivative: 350,
       }),
       {
         name: 'Mandelbar',
@@ -421,7 +435,20 @@ export const presets = withDefaults([
         velocity: 150,
         shading: 'lyapunov_exponent',
         onlyBailed: false,
+        useRoots: false,
         args: { z: cx(), c: cx(), a: cx(-0.5) },
+      }),
+      newt('Newton generalized', 'z^4 - 1', {
+        divergent: false,
+        convergent: false,
+        velocity: 150,
+        shading: 'lyapunov_exponent',
+        onlyBailed: false,
+        useRoots: false,
+        args: { z: cx(), c: cx(), a: cx(0.03357, -0.4829) },
+        scale: cx(1.5),
+        palette: 'red_green',
+        offset: 220,
       }),
       newt('Newton generalized', 'z^2 - 1', {
         divergent: false,
@@ -452,7 +479,14 @@ export const presets = withDefaults([
       },
     }),
     subforms: [
-      nova('Nova', 'z^3 - 1'),
+      nova('Nova', 'z^3 - 1', {
+        shading: 'lyapunov_exponent',
+        convergent: false,
+        divergent: false,
+        onlyBailed: false,
+        useCycle: false,
+        iterations: 100,
+      }),
       nova('Nova', 'z^4 - 1'),
       nova('Nova', '(z - 1)(z - 4 + i * sqrt(2))(z + sqrt(3) - i * sqrt(3))', {
         args: { z: cx(1), c: cx() },

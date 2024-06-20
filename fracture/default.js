@@ -10,6 +10,11 @@ export const palettes = [
   'yellow_purple',
   'pink_green',
   'pink_yellow',
+  'viridis',
+  'plasma',
+  'magma',
+  'inferno',
+  'turbo',
 ]
 export const shadings = [
   'domain_coloring',
@@ -29,8 +34,8 @@ export const defaultParams = {
   move: 'c',
   usePerturbation: null, // Auto
   useDerivative: true,
+  useCycle: true,
   derivative: 100,
-  useDistanceEstimate: false,
   onlyBailed: true,
   shading: 'bail_time_log',
   offset: 80,
@@ -93,7 +98,7 @@ export const compileConstants = {
   convergent: null,
   divergent: null,
   onlyBailed: null,
-  useDistanceEstimate: null,
+  useCycle: null,
   useRoots: null,
   showGrid: null,
   showNormGrid: null,

@@ -11,7 +11,6 @@ uniform mat2 transform;
 uniform int iterations;
 uniform float bailin;
 uniform float bailout;
-uniform float chaosness;
 uniform float derivative;
 
 uniform float offset;
@@ -96,10 +95,16 @@ void main(void) {
     float itercoef = 0.;
     #endif
 
+    #ifdef USE_CYCLE
+    ivec4 cycle = ivec4(3, 0, 10, 0);
+    vec2 zcy = vec2(0.);
+    #endif
+
     vec3 col = vec3(0.);
     float n = 0.;
     for (int i = 0; i < iterations; i++) {
         n = float(i) + 1.;
+
         #if SHADING >= 5
         vec2 zdct = zdc;
         zdc = F_prime_c(z, c, zdc, zdc_1);
@@ -131,6 +136,7 @@ void main(void) {
         vec2 zdzt = zdz;
         zdz = F_prime_z(z, c, zdz, zdz_1);
         zdz_1 = zdzt;
+        #endif
 
         #if SHADING == 4
         // Prevent overflow
@@ -139,15 +145,33 @@ void main(void) {
 
         #ifdef USE_DERIVATIVE
         if (dot(zdz, zdz) < zdzmax) {
-            n += 1.;
+            n = float(iterations);
             break;
         }
         #endif
+
+        #ifdef USE_CYCLE
+        if (dot2(z - zcy) < 1e-16) {
+            // fragColor = vec4(1., 0., 0., 1.);
+            // return;
+            n = float(iterations);
+            break;
+        }
+
+        if (cycle.x == cycle.y) {
+            cycle.y = 0;
+            if (cycle.z == cycle.w) {
+                cycle.w = 0;
+                cycle.x *= 2;
+            }
+            cycle.w++;
+            zcy = z;
+        }
+        cycle.y++;
         #endif
 
         #ifdef CONVERGENT
-        float z_z_1 = dot2(z - z_1);
-        if (z_z_1 < BAILIN) {
+        if (dot2(z - z_1) < BAILIN) {
             break;
         }
         #endif
@@ -194,10 +218,6 @@ void main(void) {
         float hcol = 0.;
         float root = 0.;
         #ifdef USE_ROOTS
-        #ifdef DIVERGENT
-        root = atan(z.y, z.x) / (length(z) * TAU);
-        #endif
-        #ifdef CONVERGENT
         if (abs(z.y) < BAILIN) {
             z.y = 0.;
             if (abs(z.x) < BAILIN) {
@@ -209,19 +229,19 @@ void main(void) {
             root = (mod(atan(z.y, z.x) + l * TAU, TAU)) / (TAU);
         }
         #endif
-        #endif
         #if SHADING == 0
-        hcol = (h + k) * 100.;
+        hcol = (h + k + .5) * 100.;
         #elif SHADING == 1
         hcol = n + 1.;
         #elif SHADING == 2
-        #ifdef CONVERGENT
-        float diff = dot2(z - z_1);
-        float prev = dot2(z_1 - z_2);
-        hcol = n - 1. + log(BAILIN / prev) / log(diff / prev);
-        #endif
-        #ifdef DIVERGENT
         hcol = n + 1. - log2(log2(dot2(z))) - 4.0;
+
+        #ifdef CONVERGENT
+        if (dot2(z - z_1) < BAILIN) {
+            float diff = dot2(z - z_1);
+            float prev = dot2(z_1 - z_2);
+            hcol = n - 1. + log(BAILIN / prev) / log(diff / prev);
+        }
         #endif
 
         #elif SHADING == 3
