@@ -1,16 +1,13 @@
 import { useCallback, useEffect, useState } from 'react'
 
-import { palettes, smoothings, varyings } from '../default.js'
+import { palettes, shadings } from '../default.js'
 import {
   contrastIcon,
   eyeIcon,
-  lockIcon,
-  moveConstantIcon,
   noContrastIcon,
   playIcon,
   presetsIcon,
   stopIcon,
-  unlockIcon,
 } from '../icons'
 import { presets } from '../presets.js'
 import Boolean from './Boolean.jsx'
@@ -156,7 +153,14 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
         onExportImage={exportImage}
         closePresets={closePresets}
       />
-      <main className={'ui' + (readable ? ' readable ' : '') + (runtime.error ? ' error' : '')} title={runtime.error}>
+      <main
+        className={
+          'ui' +
+          (readable ? ' readable ' : '') +
+          (runtime.error ? ' error' : '')
+        }
+        title={runtime.error}
+      >
         <div className="ui-row ui-row-top">
           <aside className="controls">
             <div className="subcontrols">
@@ -227,15 +231,13 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
                 options={palettes}
                 onChange={handleChange}
               />
-              {params.convergent || params.divergent ? (
-                <Select
-                  label="Smoothing"
-                  name="smoothing"
-                  value={params.smoothing}
-                  options={smoothings}
-                  onChange={handleChange}
-                />
-              ) : null}
+              <Select
+                label="Shading"
+                name="shading"
+                value={params.shading}
+                options={shadings}
+                onChange={handleChange}
+              />
               {['full'].includes(showUI) ? (
                 <Number
                   name="offset"
@@ -311,13 +313,12 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
               <Number
                 name="iterations"
                 label="Iterations"
-                min={0}
+                min={1}
                 step={1}
                 value={params.iterations}
                 onChange={handleChange}
               />
-              {['advanced', 'full'].includes(showUI) &&
-                (params.convergent || params.divergent) ? (
+              {['advanced', 'full'].includes(showUI) ? (
                 <Boolean
                   className="button"
                   label="Roots"
@@ -350,220 +351,212 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
                   onChange={handleChange}
                 />
               ) : null}
-              {params.convergent || params.divergent ? (
-                <>
-                  {['advanced', 'full'].includes(showUI) ? (
-                    <Number
-                      name="derivative"
-                      label="Derivative"
-                      min={0}
-                      value={params.derivative}
-                      togglerName="useDerivative"
-                      toggler={params.useDerivative}
-                      onChange={handleChange}
-                    />
-                  ) : null}
-                  {['advanced', 'full'].includes(showUI) &&
-                    params.useDerivative ? (
-                    <Boolean
-                      label="Derivative"
-                      className="button"
-                      name="showDerivative"
-                      value={params.showDerivative}
-                      onChange={handleChange}
-                    />
-                  ) : null}
-                  {showUI === 'full' ? (
-                    <Boolean
-                      label="Perturbation"
-                      className="button"
-                      name="usePerturbation"
-                      allowNull
-                      value={params.usePerturbation}
-                      onChange={handleChange}
-                    />
-                  ) : null}
-                </>
-              ) : (
-                <>
-                  {['full'].includes(showUI) ? (
-                    <Boolean
-                      name="scaled"
-                      label="Scaled"
-                      value={params.scaled}
-                      onChange={handleChange}
-                    />
-                  ) : null}
-                  {['advanced', 'full'].includes(showUI) ? (
-                    <Number
-                      name="gridScale"
-                      label="Grid"
-                      min={0}
-                      value={params.gridScale}
-                      togglerName="showGrid"
-                      toggler={params.showGrid}
-                      togglerOnly={showUI !== 'full'}
-                      onChange={handleChange}
-                    />
-                  ) : null}
-                  {['full'].includes(showUI) && params.showGrid ? (
-                    <Number
-                      name="gridWidth"
-                      label="Grid Width"
-                      step={0.1}
-                      value={params.gridWidth}
-                      onChange={handleChange}
-                    />
-                  ) : null}
-                  {['full'].includes(showUI) && params.showGrid ? (
-                    <Boolean
-                      name="gridLog"
-                      label="Grid Log"
-                      value={params.gridLog}
-                      togglerOnly={showUI !== 'full'}
-                      onChange={handleChange}
-                    />
-                  ) : null}
-
-                  {['advanced', 'full'].includes(showUI) ? (
-                    <Number
-                      label="Norm Grid"
-                      step={0.1}
-                      name="normGridWidth"
-                      value={params.normGridWidth}
-                      togglerName="showNormGrid"
-                      toggler={params.showNormGrid}
-                      togglerOnly={showUI !== 'full'}
-                      onChange={handleChange}
-                    />
-                  ) : null}
-                  {['advanced', 'full'].includes(showUI) ? (
-                    <Number
-                      label="Norm Shade"
-                      className="button"
-                      name="normShadeValue"
-                      value={params.normShadeValue}
-                      togglerName="normShade"
-                      toggler={params.normShade}
-                      togglerOnly={showUI !== 'full'}
-                      onChange={handleChange}
-                    />
-                  ) : null}
-                  {['advanced', 'full'].includes(showUI) &&
-                    (params.showNormGrid || params.normShade) ? (
-                    <Number
-                      name="normGridScale"
-                      label="Norm Grid Scale"
-                      min={0}
-                      value={params.normGridScale}
-                      onChange={handleChange}
-                    />
-                  ) : null}
-                  {['advanced', 'full'].includes(showUI) &&
-                    (params.showNormGrid || params.normShade) ? (
-                    <Boolean
-                      name="normGridLog"
-                      label="Norm Grid Log"
-                      value={params.normGridLog}
-                      onChange={handleChange}
-                    />
-                  ) : null}
-
-                  {['advanced', 'full'].includes(showUI) ? (
-                    <Number
-                      label="Arg Grid"
-                      step={0.1}
-                      name="argGridWidth"
-                      value={params.argGridWidth}
-                      togglerName="showArgGrid"
-                      toggler={params.showArgGrid}
-                      togglerOnly={showUI !== 'full'}
-                      onChange={handleChange}
-                    />
-                  ) : null}
-                  {['advanced', 'full'].includes(showUI) ? (
-                    <Number
-                      label="Arg Shade"
-                      className="button"
-                      name="argShadeValue"
-                      value={params.argShadeValue}
-                      togglerName="argShade"
-                      toggler={params.argShade}
-                      togglerOnly={showUI !== 'full'}
-                      onChange={handleChange}
-                    />
-                  ) : null}
-                  {['advanced', 'full'].includes(showUI) &&
-                    (params.showArgGrid || params.argShade) ? (
-                    <Number
-                      name="argGridScale"
-                      label="Arg Grid Scale"
-                      min={0}
-                      value={params.argGridScale}
-                      onChange={handleChange}
-                    />
-                  ) : null}
-                  {['advanced', 'full'].includes(showUI) &&
-                    (params.showArgGrid || params.argShade) ? (
-                    <Boolean
-                      name="argGridLog"
-                      label="Arg Grid Log"
-                      value={params.argGridLog}
-                      onChange={handleChange}
-                    />
-                  ) : null}
-                  {['advanced', 'full'].includes(showUI) ? (
-                    <Number
-                      label="Zeroes"
-                      className="button"
-                      name="zeroes"
-                      min={-Infinity}
-                      value={params.zeroes}
-                      togglerName="showZeroes"
-                      toggler={params.showZeroes}
-                      togglerOnly={showUI !== 'full'}
-                      onChange={handleChange}
-                    />
-                  ) : null}
-                  {['advanced', 'full'].includes(showUI) ? (
-                    <Number
-                      label="Poles"
-                      className="button"
-                      name="poles"
-                      min={-Infinity}
-                      value={params.poles}
-                      togglerName="showPoles"
-                      toggler={params.showPoles}
-                      togglerOnly={showUI !== 'full'}
-                      onChange={handleChange}
-                    />
-                  ) : null}
-                  {['advanced', 'full'].includes(showUI) ? (
-                    <Number
-                      name="polya"
-                      label="Polya Plot"
-                      min={0}
-                      value={params.polya}
-                      togglerName="showPolya"
-                      toggler={params.showPolya}
-                      togglerOnly={showUI !== 'full'}
-                      onChange={handleChange}
-                    />
-                  ) : null}
-                  {['full'].includes(showUI) && params.showPolya ? (
-                    <Number
-                      name="polyaLightness"
-                      label="Polya Lightness"
-                      min={0}
-                      step={10}
-                      togglerName="polyaColor"
-                      toggler={params.polyaColor}
-                      value={params.polyaLightness}
-                      onChange={handleChange}
-                    />
-                  ) : null}
-                </>
+              {['advanced', 'full'].includes(showUI) && (
+                <Boolean
+                  label="Only Bailed"
+                  className="button"
+                  name="onlyBailed"
+                  value={params.onlyBailed}
+                  onChange={handleChange}
+                />
               )}
+              {['advanced', 'full'].includes(showUI) ? (
+                <Number
+                  name="derivative"
+                  label="Derivative"
+                  min={0}
+                  value={params.derivative}
+                  togglerName="useDerivative"
+                  toggler={params.useDerivative}
+                  onChange={handleChange}
+                />
+              ) : null}
+              {showUI === 'full' ? (
+                <Boolean
+                  label="Perturbation"
+                  className="button"
+                  name="usePerturbation"
+                  allowNull
+                  value={params.usePerturbation}
+                  onChange={handleChange}
+                />
+              ) : null}
+              {['full'].includes(showUI) ? (
+                <Boolean
+                  name="scaled"
+                  label="Scaled"
+                  value={params.scaled}
+                  onChange={handleChange}
+                />
+              ) : null}
+              {['advanced', 'full'].includes(showUI) ? (
+                <Number
+                  name="gridScale"
+                  label="Grid"
+                  min={0}
+                  value={params.gridScale}
+                  togglerName="showGrid"
+                  toggler={params.showGrid}
+                  togglerOnly={showUI !== 'full'}
+                  onChange={handleChange}
+                />
+              ) : null}
+              {['full'].includes(showUI) && params.showGrid ? (
+                <Number
+                  name="gridWidth"
+                  label="Grid Width"
+                  step={0.1}
+                  value={params.gridWidth}
+                  onChange={handleChange}
+                />
+              ) : null}
+              {['full'].includes(showUI) && params.showGrid ? (
+                <Boolean
+                  name="gridLog"
+                  label="Grid Log"
+                  value={params.gridLog}
+                  togglerOnly={showUI !== 'full'}
+                  onChange={handleChange}
+                />
+              ) : null}
+
+              {['advanced', 'full'].includes(showUI) ? (
+                <Number
+                  label="Norm Grid"
+                  step={0.1}
+                  name="normGridWidth"
+                  value={params.normGridWidth}
+                  togglerName="showNormGrid"
+                  toggler={params.showNormGrid}
+                  togglerOnly={showUI !== 'full'}
+                  onChange={handleChange}
+                />
+              ) : null}
+              {['advanced', 'full'].includes(showUI) ? (
+                <Number
+                  label="Norm Shade"
+                  className="button"
+                  name="normShadeValue"
+                  value={params.normShadeValue}
+                  togglerName="normShade"
+                  toggler={params.normShade}
+                  togglerOnly={showUI !== 'full'}
+                  onChange={handleChange}
+                />
+              ) : null}
+              {['advanced', 'full'].includes(showUI) &&
+              (params.showNormGrid || params.normShade) ? (
+                <Number
+                  name="normGridScale"
+                  label="Norm Grid Scale"
+                  min={0}
+                  value={params.normGridScale}
+                  onChange={handleChange}
+                />
+              ) : null}
+              {['advanced', 'full'].includes(showUI) &&
+              (params.showNormGrid || params.normShade) ? (
+                <Boolean
+                  name="normGridLog"
+                  label="Norm Grid Log"
+                  value={params.normGridLog}
+                  onChange={handleChange}
+                />
+              ) : null}
+
+              {['advanced', 'full'].includes(showUI) ? (
+                <Number
+                  label="Arg Grid"
+                  step={0.1}
+                  name="argGridWidth"
+                  value={params.argGridWidth}
+                  togglerName="showArgGrid"
+                  toggler={params.showArgGrid}
+                  togglerOnly={showUI !== 'full'}
+                  onChange={handleChange}
+                />
+              ) : null}
+              {['advanced', 'full'].includes(showUI) ? (
+                <Number
+                  label="Arg Shade"
+                  className="button"
+                  name="argShadeValue"
+                  value={params.argShadeValue}
+                  togglerName="argShade"
+                  toggler={params.argShade}
+                  togglerOnly={showUI !== 'full'}
+                  onChange={handleChange}
+                />
+              ) : null}
+              {['advanced', 'full'].includes(showUI) &&
+              (params.showArgGrid || params.argShade) ? (
+                <Number
+                  name="argGridScale"
+                  label="Arg Grid Scale"
+                  min={0}
+                  value={params.argGridScale}
+                  onChange={handleChange}
+                />
+              ) : null}
+              {['advanced', 'full'].includes(showUI) &&
+              (params.showArgGrid || params.argShade) ? (
+                <Boolean
+                  name="argGridLog"
+                  label="Arg Grid Log"
+                  value={params.argGridLog}
+                  onChange={handleChange}
+                />
+              ) : null}
+              {['advanced', 'full'].includes(showUI) ? (
+                <Number
+                  label="Zeroes"
+                  className="button"
+                  name="zeroes"
+                  min={-Infinity}
+                  value={params.zeroes}
+                  togglerName="showZeroes"
+                  toggler={params.showZeroes}
+                  togglerOnly={showUI !== 'full'}
+                  onChange={handleChange}
+                />
+              ) : null}
+              {['advanced', 'full'].includes(showUI) ? (
+                <Number
+                  label="Poles"
+                  className="button"
+                  name="poles"
+                  min={-Infinity}
+                  value={params.poles}
+                  togglerName="showPoles"
+                  toggler={params.showPoles}
+                  togglerOnly={showUI !== 'full'}
+                  onChange={handleChange}
+                />
+              ) : null}
+              {['advanced', 'full'].includes(showUI) ? (
+                <Number
+                  name="polya"
+                  label="Polya Plot"
+                  min={0}
+                  value={params.polya}
+                  togglerName="showPolya"
+                  toggler={params.showPolya}
+                  togglerOnly={showUI !== 'full'}
+                  onChange={handleChange}
+                />
+              ) : null}
+              {['full'].includes(showUI) && params.showPolya ? (
+                <Number
+                  name="polyaLightness"
+                  label="Polya Lightness"
+                  min={0}
+                  step={10}
+                  togglerName="polyaColor"
+                  toggler={params.polyaColor}
+                  value={params.polyaLightness}
+                  onChange={handleChange}
+                />
+              ) : null}
             </aside>
           ) : null}
         </div>
@@ -606,8 +599,9 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
           )}
           {['simple', 'advanced', 'full'].includes(showUI) ? (
             <button
-              className={`space-button button${runtime.processing ? ' processing' : ''
-                }`}
+              className={`space-button button${
+                runtime.processing ? ' processing' : ''
+              }`}
               onClick={() =>
                 updateParams({
                   move:

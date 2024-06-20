@@ -1,6 +1,5 @@
-import { range } from '../utils'
 import { cx } from './decimal'
-import { defaultParams } from './default'
+import { defaultParams, shadings } from './default'
 import { derive } from './formula'
 
 const rotate = o => [
@@ -42,6 +41,14 @@ const brot = (name, n, extra = {}) => ({
   params: {
     f: `z^${n} + c`,
     f_perturb: `${pascal('Z', 'dz', n, 1)} + dc`,
+    showGrid: false,
+    showNormGrid: false,
+    showArgGrid: false,
+    normShade: false,
+    argShade: false,
+    showZeroes: false,
+    showPoles: false,
+    onlyBailed: true,
     ...extra,
   },
 })
@@ -68,6 +75,14 @@ const newt = (name, f, extra = {}) => ({
     useRoots: true,
     convergent: true,
     divergent: false,
+    showGrid: false,
+    showNormGrid: false,
+    showArgGrid: false,
+    normShade: false,
+    argShade: false,
+    showZeroes: false,
+    showPoles: false,
+    onlyBailed: true,
     ...extra,
   },
 })
@@ -80,6 +95,14 @@ const nova = (name, f, extra = {}) => ({
     useDerivative: false,
     convergent: true,
     divergent: false,
+    showGrid: false,
+    showNormGrid: false,
+    showArgGrid: false,
+    normShade: false,
+    argShade: false,
+    showZeroes: false,
+    showPoles: false,
+    onlyBailed: true,
     ...extra,
   },
 })
@@ -88,12 +111,33 @@ const domain = (name, f, extra = {}) => ({
   name,
   params: {
     f,
+    shading: 'domain_coloring',
     iterations: 1,
     varying: 'z',
     palette: 'rainbow',
     divergent: false,
     useDerivative: false,
     usePerturbation: false,
+    onlyBailed: false,
+    showGrid: true,
+    gridScale: 100,
+    gridLog: false,
+    gridWidth: 1,
+    showNormGrid: true,
+    normShade: true,
+    normShadeValue: 70,
+    normGridScale: 100,
+    normGridLog: true,
+    normGridWidth: 1,
+    showArgGrid: true,
+    argShade: true,
+    argShadeValue: 40,
+    argGridScale: 200,
+    argGridLog: false,
+    argGridWidth: 1,
+    scaled: false,
+    showZeroes: true,
+    showPoles: true,
     scale: cx(2.5),
     ...extra,
   },
@@ -120,7 +164,7 @@ export const presets = withDefaults([
       brot('Minibrot', 2, {
         args: { z: cx(), c: cx(-1.71121, 0.00002) },
         scale: cx(0.00085),
-        smoothing: 'distance_scaled',
+        shading: 'distance_scaled',
         velocity: 70,
         saturation: 0,
         lightness: 250,
@@ -161,7 +205,7 @@ export const presets = withDefaults([
           scale: cx(4),
           transform: rotate(-Math.PI / 2),
           f: '(z + 1)^2 / c',
-          showDerivative: true,
+          bailed: true,
           derivative: 80,
           f_perturb:
             '(C * dz^2 + 2 * C * dz * Z + 2 * C * dz - dc * Z^2 - 2 * dc * Z - dc) / (C * (C + dc))',
@@ -202,7 +246,7 @@ export const presets = withDefaults([
               args: { z: cx(), c: cx(1.85982, 0.004584) },
               transform: rotate(Math.PI),
               derivative: 100,
-              smoothing: 'distance_scaled',
+              shading: 'distance_scaled',
               scale: cx(0.008069),
               velocity: 62,
               lightness: 300,
@@ -277,7 +321,24 @@ export const presets = withDefaults([
       julia('Trijulia -.29053 - .450488i', 4, cx(-0.29053, -0.450488), {
         derivative: 175,
       }),
-      julia('2iJulia', '(2i)', cx(), { useDerivative: false, bailout: 4.1, iterations: 100 }),
+      julia('2iJulia', '(2i)', cx(), {
+        useDerivative: false,
+        bailout: 4.1,
+        iterations: 100,
+      }),
+      {
+        name: 'Collatz',
+        params: {
+          args: { z: cx(), c: cx() },
+          scale: cx(2),
+          f: 'z/2+(z/2+1/4)(1-exp(z*i*PI))+ c',
+          varying: 'z',
+          shading: 'lyapunov_exponent',
+          onlyBailed: false,
+          useDerivative: false,
+          divergent: false,
+        },
+      },
       {
         name: 'Phoenix',
         params: {
@@ -303,7 +364,7 @@ export const presets = withDefaults([
       {
         name: 'Floral',
         params: {
-          args: { z: cx(-.24, .13), c: cx(-0.348, -.58) },
+          args: { z: cx(-0.24, 0.13), c: cx(-0.348, -0.58) },
           scale: cx(3),
           varying: 'z',
           f: 'sin(z^-2) + c',
@@ -327,11 +388,22 @@ export const presets = withDefaults([
     ],
   },
   {
-    ...newt('Newton', '(z - r)(z - s)(z - t)', { args: { r: cx(1), s: cx(-.5, -.86603), t: cx(-.5, .86603), a: cx(1), c: cx(), z: cx() } }),
+    ...newt('Newton', '(z - r)(z - s)(z - t)', {
+      args: {
+        r: cx(1),
+        s: cx(-0.5, -0.86603),
+        t: cx(-0.5, 0.86603),
+        a: cx(1),
+        c: cx(),
+        z: cx(),
+      },
+    }),
     subforms: [
       newt('Newton', 'z^3 + 1'),
       newt('Newton', 'z^4 - 1'),
-      newt('Newton', '(z^4 - b) / (z - d) - e', { args: { b: cx(-1), d: cx(3), e: cx(1), a: cx(1), z: cx(), c: cx() } }),
+      newt('Newton', '(z^4 - b) / (z - d) - e', {
+        args: { b: cx(-1), d: cx(3), e: cx(1), a: cx(1), z: cx(), c: cx() },
+      }),
       newt('Newton', 'z^3 - 2z + 2'),
       newt('Newton', 'z^8 + 15z^4 - 16'),
       newt('Newton', 'z^5 - 3i * z^3 - (5 + 2i) * z^2 + 3z + 1'),
@@ -343,18 +415,21 @@ export const presets = withDefaults([
       }),
       newt('Newton', 'z^4 * sin(z) - 1'),
       newt('Newton generalized', 'z^3 - 1', {
-        divergent: true,
+        divergent: false,
         convergent: false,
-        smoothing: 'exp',
-        velocity: 750,
+        offset: 100,
+        velocity: 150,
+        shading: 'lyapunov_exponent',
+        onlyBailed: false,
         args: { z: cx(), c: cx(), a: cx(-0.5) },
       }),
       newt('Newton generalized', 'z^2 - 1', {
-        divergent: true,
+        divergent: false,
         convergent: false,
-        smoothing: 'exp',
-        velocity: 750,
-        bailout: 1.5,
+        offset: 100,
+        velocity: 150,
+        shading: 'lyapunov_exponent',
+        onlyBailed: false,
         iterations: 100,
         useRoots: false,
         args: { z: cx(), c: cx(), a: cx(1, 1) },
@@ -366,12 +441,22 @@ export const presets = withDefaults([
     ],
   },
   {
-    ...nova('Nova', '(z - r)(z - s)(z - t)', { args: { r: cx(1), s: cx(-.5, -.86603), t: cx(-.5, .86603), a: cx(1), z: cx(1), c: cx(-0.5) } }),
+    ...nova('Nova', '(z - r)(z - s)(z - t)', {
+      args: {
+        r: cx(1),
+        s: cx(-0.5, -0.86603),
+        t: cx(-0.5, 0.86603),
+        a: cx(1),
+        z: cx(1),
+        c: cx(-0.5),
+      },
+    }),
     subforms: [
       nova('Nova', 'z^3 - 1'),
       nova('Nova', 'z^4 - 1'),
       nova('Nova', '(z - 1)(z - 4 + i * sqrt(2))(z + sqrt(3) - i * sqrt(3))', {
-        args: { z: cx(1), c: cx() }, scale: cx(2)
+        args: { z: cx(1), c: cx() },
+        scale: cx(2),
       }),
       nova('Nova', 'z^3 - 2z + 2'),
       nova('Nova', 'z^8 + 15z^4 - 16'),
@@ -476,14 +561,12 @@ export const presets = withDefaults([
         'im(exp(-i*PI / 4) * z^c) + i * im(exp(i * PI / 4) * (z - 1)^c)',
         { args: { z: cx(), c: cx(4) } }
       ),
-      domain(
-        '', 'sum(n, 1, 20, z^n / (c - z^n))',
-        { args: { z: cx(), c: cx(1) } }
-      ),
-      domain(
-        '', 'product(n, 1, 20, (c - z^n))',
-        { args: { z: cx(), c: cx(1) } }
-      )
-    ]
+      domain('', 'sum(n, 1, 20, z^n / (c - z^n))', {
+        args: { z: cx(), c: cx(1) },
+      }),
+      domain('', 'product(n, 1, 20, (c - z^n))', {
+        args: { z: cx(), c: cx(1) },
+      }),
+    ],
   },
 ])

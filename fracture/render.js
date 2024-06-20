@@ -1,5 +1,5 @@
 import { cx, m } from './decimal'
-import { palettes, smoothings, uniformParams, varyings } from './default'
+import { uniformParams, compileConstants } from './default'
 import { ast } from './formula'
 import fragmentSource from './shaders/fragment.glsl?raw'
 import includesSource from './shaders/includes.glsl?raw'
@@ -19,43 +19,25 @@ export const includes = {
   special: specialSource,
 }
 
+export const camelCaseToSnakeCase = str =>
+  str.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`).toUpperCase()
+
+export const constants = rt =>
+  Object.entries(compileConstants)
+    .map(([key, value]) =>
+      (res =>
+        res !== false
+          ? `#define ${camelCaseToSnakeCase(key)}${res === true ? '' : ` ${res}`}`
+          : '')(typeof value === 'function' ? value(rt) : rt[key])
+    )
+    .filter(s => s)
+    .join('\n')
+
 export const preprocess = (rt, source) => {
   Object.entries(includes).forEach(([key, value]) => {
     source = source.replace(`#include ${key}`, value)
   })
-  source = source.replace(
-    '##CONFIG',
-    [
-      rt.perturb && rt.f_perturb ? '#define PERTURB' : '',
-      rt.convergent ? '#define CONVERGENT' : '',
-      rt.divergent ? '#define DIVERGENT' : '',
-      rt.useDerivative && rt.f_prime_z && rt.f_prime_c
-        ? '#define USE_DERIVATIVE'
-        : '',
-      rt.showDerivative ? '#define SHOW_DERIVATIVE' : '',
-      rt.useSmoothing ? '#define USE_SMOOTHING' : '',
-      rt.useDistanceEstimate ? '#define USE_DISTANCE_ESTIMATE' : '',
-      rt.useRoots ? '#define USE_ROOTS' : '',
-      rt.showGrid ? '#define SHOW_GRID' : '',
-      rt.showNormGrid ? '#define SHOW_NORM_GRID' : '',
-      rt.normShade ? '#define SHADE_NORM' : '',
-      rt.showArgGrid ? '#define SHOW_ARG_GRID' : '',
-      rt.argShade ? '#define SHADE_ARG' : '',
-      rt.gridLog ? '#define GRID_LOG' : '',
-      rt.normGridLog ? '#define NORM_GRID_LOG' : '',
-      rt.argGridLog ? '#define ARG_GRID_LOG' : '',
-      rt.showPoles ? '#define SHOW_POLES' : '',
-      rt.showZeroes ? '#define SHOW_ZEROES' : '',
-      rt.animate ? '#define ANIMATE' : '',
-      rt.scaled ? '#define SCALED' : '',
-      rt.showPolya ? '#define SHOW_POLYA' : '',
-      rt.polyaColor ? '#define POLYA_COLOR' : '',
-      `#define PALETTE ${palettes.indexOf(rt.palette)}`,
-      `#define SMOOTHING ${smoothings.indexOf(rt.smoothing)}`,
-    ]
-      .filter(Boolean)
-      .join('\n')
-  )
+  source = source.replace('##CONFIG', constants(rt))
   source = source.replace(
     'uniform vec2 args;',
     Object.keys(rt.args)
@@ -76,8 +58,8 @@ export const preprocess = (rt, source) => {
       .concat(
         rt.perturb
           ? ['z', 'c']
-            .filter(arg => rt.varying.includes(arg))
-            .map(arg => `d${arg}`)
+              .filter(arg => rt.varying.includes(arg))
+              .map(arg => `d${arg}`)
           : []
       )
       .map(arg => `${arg} += pixel;\n  ${arg} *= transform;`)
@@ -333,7 +315,7 @@ const fillOrbit = (rt, orbit, z, c, max, shift) => {
   const [a, b] = shift ? [2, 3] : [0, 1]
   // eslint-disable-next-line no-new-func
   const F = new Function('z', 'c', 'z_1', `return ${ast(rt.f).toComplex()}`)
-  const bailout = m(rt.bailout)
+  const bailout = m(Math.pow(10, rt.bailout))
   let i = 0
   let z_1 = cx()
   for (; i < rt.iterations; i++) {
@@ -369,12 +351,13 @@ export const render = (rt, forceSize) => {
       1 / Math.max(gl.canvas.width, gl.canvas.height),
     ])
     if (forceSize) {
-      const {
-        x, y, width, height, fullWidth, fullHeight,
-      } = forceSize
+      const { x, y, width, height, fullWidth, fullHeight } = forceSize
       const { scale, varying, args } = rt
       const { uniforms } = rt.env
-      gl.uniform2fv(uniforms.aspect, [width / height, 1 / Math.max(width, height)])
+      gl.uniform2fv(uniforms.aspect, [
+        width / height,
+        1 / Math.max(width, height),
+      ])
       // Scale is the half height of the viewport so here it's fullheight/2
       // We need scale down to half height
       const newScale = scale.multiply(height / fullHeight)
@@ -383,7 +366,10 @@ export const render = (rt, forceSize) => {
       // We need to shift by (x - fullWidth/2) * scale
       const currentCenter = cx(fullWidth / 2, fullHeight / 2)
       const newCenter = cx(x + width / 2, y + height / 2)
-      const shift = newCenter.subtract(currentCenter).multiply(scale).divide(cx(fullHeight / 2))
+      const shift = newCenter
+        .subtract(currentCenter)
+        .multiply(scale)
+        .divide(cx(fullHeight / 2))
       varying.split('').forEach(key => {
         const newVarying = args[key].add(shift)
         gl.uniform2fv(uniforms[`arg_${key}`], newVarying.to2fv())
