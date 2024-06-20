@@ -358,6 +358,57 @@ vec2 cdn(vec2 z) {
     return cdn(z, R(.5));
 }
 
+// https://www.sci.utah.edu/~vpegorar/research/2011_JGT.pdf
+vec2 cexpintpower(in vec2 z) {
+    vec2 ei = cadd(R(GAMMA), clog(z));
+    vec2 tmp = c1;
+    for (float k = 1.; k < 20.; k += 1.) {
+        tmp = cmul(tmp, z / k);
+        ei = cadd(ei, tmp / k);
+    }
+    return ei;
+}
+
+vec2 cexpintasymp(in vec2 z) {
+    vec2 ei = I(sign(z.y) * PI);
+    vec2 tmp = cdiv(cexp(z), z);
+    for (float k = 1.; k <= length(z) + 1.; k += 1.) {
+        ei = cadd(ei, tmp);
+        tmp = cmul(tmp, k * cinv(z));
+    }
+    return ei;
+}
+vec2 cexpintcontinuedff(in vec2 z) {
+    vec2 ei = I(sign(z.y) * PI);
+    vec2 c = c0;
+    vec2 d = c0;
+    c = cinv(ei);
+    c = cinv(csub(csub(c1, z), cmul(cexp(z), c)));
+    d = cinv(csub(csub(c1, z), cmul(cexp(z), d)));
+    ei = cmul(ei, cdiv(d, c));
+
+    for (float k = 1.; k <= 20.; k += 1.) {
+        c = cinv(csub(csub(R(2. * k + 1.), z), k * k * c));
+        d = cinv(csub(csub(R(2. * k + 1.), z), k * k * d));
+        ei = cmul(ei, cdiv(d, c));
+    }
+    return ei;
+}
+
+vec2 cexpint(in vec2 z) {
+    if (length(z) > 2. - 1.035 * log(1e-3)) {
+        return cexpintasymp(z);
+    }
+    if (length(z) > 1. && (z.x < 0. || abs(z.y) > 1.)) {
+        return cexpintcontinuedff(z);
+    }
+    return cexpintpower(z);
+}
+
+vec2 clint(in vec2 z) {
+    return cexpint(clog(z));
+}
+
 vec2 cgamma(in vec2 z) {
     // Lanczos
     float LG = 5.65;

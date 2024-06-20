@@ -301,6 +301,21 @@ export const presets = withDefaults([
         },
       },
       {
+        name: 'Floral',
+        params: {
+          args: { z: cx(-.24, .13), c: cx(-0.348, -.58) },
+          scale: cx(3),
+          varying: 'z',
+          f: 'sin(z^-2) + c',
+          iterations: 300,
+          palette: 'yellow_green',
+          lightness: 180,
+          velocity: 40,
+          bailout: 3,
+          useDerivative: false,
+        },
+      },
+      {
         name: 'Whirlpool',
         params: {
           varying: 'z',

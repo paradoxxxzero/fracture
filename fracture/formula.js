@@ -77,6 +77,8 @@ export const functionShader = {
   atanh: 'catanh',
   log: 'clog',
   exp: 'cexp',
+  expint: 'cexpint',
+  lint: 'clint',
   abs: 'cnorm',
   beta: 'cbeta',
   "beta'": 'cdbeta',
