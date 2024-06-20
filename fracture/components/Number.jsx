@@ -79,7 +79,7 @@ export default function Number({
       let val =
         parseInt(step) === parseFloat(step)
           ? parseInt(raw)
-          : parseFloat(raw) + 1e-9
+          : parseFloat(raw) + 1e-9 * Math.sign(raw)
       val -= val % step
       val -= step
       if (step > 0 && step < 1) {
@@ -144,9 +144,8 @@ export default function Number({
             name={name}
             value={raw}
             style={{
-              width: `${
-                Math.max(...[step, raw].map(c => c.toString().length)) + 0.3
-              }ch`,
+              width: `${Math.max(...[step, raw].map(c => c.toString().length)) + 0.3
+                }ch`,
               maxWidth: `${maxWidth}ch`,
             }}
             onChange={handleChange}

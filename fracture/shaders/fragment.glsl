@@ -148,6 +148,7 @@ void main(void) {
         #ifdef CONVERGENT
         float z_z_1 = dot2(z - z_1);
         if (z_z_1 < BAILIN) {
+            float c = n - 1.;
             float r = 0.;
             #ifdef USE_ROOTS
             if (abs(z.y) < BAILIN) {
@@ -165,7 +166,7 @@ void main(void) {
             #if SMOOTHING == 1
             float diff = dot2(z - z_1);
             float prev = dot2(z_1 - z_2);
-            float c = n - 1. + log(BAILIN / prev) / log(diff / prev);
+            c = n - 1. + log(BAILIN / prev) / log(diff / prev);
             #elif SMOOTHING == 2
             c = 10. * zexp;
             #elif SMOOTHING >= 3
