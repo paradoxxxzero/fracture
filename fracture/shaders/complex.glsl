@@ -25,18 +25,32 @@ vec2 conj(in vec2 z) {
     return vec2(z.x, -z.y);
 }
 
-vec2 expi(in float x) {
+vec2 cis(in float x) {
     return vec2(cos(x), sin(x));
 }
+
 vec2 cexp(in vec2 z) {
-    return exp(z.x) * expi(z.y);
+    return exp(z.x) * cis(z.y);
 }
 
 vec2 cnorm(in vec2 z) {
     return R(length(z));
 }
+
 vec2 carg(in vec2 z) {
     return R(atan(z.y, z.x));
+}
+
+vec2 cpolar(in vec2 z) {
+    return vec2(length(z), atan(z.y, z.x));
+}
+
+vec2 cunpolar(in vec2 z) {
+    return z.x * cis(z.y);
+}
+
+vec2 cmod(in vec2 z, in vec2 m) {
+    return csub(z, cmul(m, round(cdiv(z, m))));
 }
 
 vec2 csqrt(in vec2 z) {

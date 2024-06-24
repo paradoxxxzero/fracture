@@ -2,7 +2,7 @@ const tokens = {
   whitespace: /^\s+/,
   float: /^([0-9]+([.][0-9]*)?|[.][0-9]+)/,
   integer: /^[0-9]+/,
-  operator: /^(\*\*|[+\-*/]|\^{1,2}|\|-\|)/,
+  operator: /^(\*\*|[+\-*/%]|\^{1,2}|\|-\|)/,
   unaryPrefix: /^~/,
   unarySuffix: /^#/,
   identifier: /^[a-zA-Z_][a-zA-Z0-9_]*'*/,
@@ -16,6 +16,7 @@ const precedence = {
   '-': 2,
   '*': 3,
   '/': 4,
+  '%': 5,
   '~': 5,
   '^': 6,
   '^^': 6,
@@ -54,6 +55,7 @@ const shaderBinary = {
   '-': 'csub',
   '*': 'cmul',
   '/': 'cdiv',
+  '%': 'cmod',
   '^': 'cpow',
   '^^': 'ctetra',
   '|-|': 'diffabs',
@@ -80,6 +82,11 @@ export const functionShader = {
   expint: 'cexpint',
   lint: 'clint',
   abs: 'cnorm',
+  norm: 'cnorm',
+  arg: 'carg',
+  polar: 'cpolar',
+  unpolar: 'cunpolar',
+  mod: 'cmod',
   beta: 'cbeta',
   "beta'": 'cdbeta',
   gamma: 'cgamma',
@@ -96,8 +103,6 @@ export const functionShader = {
   sn: 'csn',
   cn: 'ccn',
   dn: 'cdn',
-  arg: 'carg',
-  norm: 'cnorm',
   tania: 'ctania',
   "tania'": 'cdtania',
   atania: 'catania',
@@ -110,15 +115,25 @@ export const functionShader = {
   fibonacci: 'cfibonacci',
   weierstrass: 'cweierstrass',
   "weierstrass'": 'cdweierstrass',
+  weierstrassr: 'cweierstrassr',
   nome: 'cnome',
   ellk: 'cellk',
   ellfi: 'cellipticFi',
+  erf: 'cerf',
+  "erf'": 'cderf',
+  erfc: 'cerfc',
+  erfcx: 'cerfcx',
+  erfi: 'cerfi',
+  dawson: 'cdawson',
+  faddeeva: 'cfaddeeva',
+  "faddeeva'": 'cdfaddeeva',
 }
 const opFunctions = {
   '+': (a, b) => a + b,
   '-': (a, b) => a - b,
   '*': (a, b) => a * b,
   '/': (a, b) => a / b,
+  '%': (a, b) => a % b,
   '^': (a, b) => a ** b,
   '^^': (a, b) => {
     let result = 1
@@ -140,6 +155,7 @@ const complexBinary = {
   '-': 'subtract',
   '*': 'multiply',
   '/': 'divide',
+  '%': 'mod',
   '^': 'pow',
   '^^': 'tetra',
 }
@@ -157,7 +173,11 @@ class BinaryOp {
     this.right = right
   }
   is(other) {
-    return this.type === other.type && this.left.is(other.left) && this.right.is(other.right)
+    return (
+      this.type === other.type &&
+      this.left.is(other.left) &&
+      this.right.is(other.right)
+    )
   }
   clone(replace = null, value = null) {
     let left = this.left
@@ -171,7 +191,11 @@ class BinaryOp {
         right = value
       }
     }
-    return new BinaryOp(this.type, left.clone(replace, value), right.clone(replace, value))
+    return new BinaryOp(
+      this.type,
+      left.clone(replace, value),
+      right.clone(replace, value)
+    )
   }
   isPureReal() {
     return (
@@ -337,22 +361,22 @@ class BinaryOp {
         n <= 1
           ? new Leaf('number', 1)
           : new BinaryOp(
-            '*',
-            new BinaryOp('^^', expr, new Leaf('number', n)),
-            new BinaryOp(
-              '+',
+              '*',
+              new BinaryOp('^^', expr, new Leaf('number', n)),
               new BinaryOp(
-                '*',
-                tetrationDerivative(expr, n - 1),
-                new FunctionOp('log', [expr])
-              ),
-              new BinaryOp(
-                '*',
-                new BinaryOp('^^', expr, new Leaf('number', n - 1)),
-                new BinaryOp('/', new Leaf('number', 1), expr)
+                '+',
+                new BinaryOp(
+                  '*',
+                  tetrationDerivative(expr, n - 1),
+                  new FunctionOp('log', [expr])
+                ),
+                new BinaryOp(
+                  '*',
+                  new BinaryOp('^^', expr, new Leaf('number', n - 1)),
+                  new BinaryOp('/', new Leaf('number', 1), expr)
+                )
               )
             )
-          )
       if (this.right.type === 'number') {
         return new BinaryOp(
           '*',
@@ -635,10 +659,17 @@ class FunctionOp {
     this.type = 'function'
   }
   is(other) {
-    return this.type === other.type && this.name === other.name && this.args.every((a, i) => a.is(other.args[i]))
+    return (
+      this.type === other.type &&
+      this.name === other.name &&
+      this.args.every((a, i) => a.is(other.args[i]))
+    )
   }
   clone(replace = null, value = null) {
-    return new FunctionOp(this.name, this.args.map(a => a.clone(replace, value)))
+    return new FunctionOp(
+      this.name,
+      this.args.map(a => a.clone(replace, value))
+    )
   }
   isPureReal() {
     return ['abs', 're', 'im'].includes(this.name)
@@ -654,10 +685,12 @@ class FunctionOp {
     return `${this.name}(${this.args.map(a => a.toString()).join(', ')})`
   }
   toShader() {
-    if (['sum', 'product'].includes(this.name) && this.args.length === 4
-      && this.args[0].type === 'identifier'
-      && this.args[1].type === 'number'
-      && this.args[2].type === 'number'
+    if (
+      ['sum', 'product'].includes(this.name) &&
+      this.args.length === 4 &&
+      this.args[0].type === 'identifier' &&
+      this.args[1].type === 'number' &&
+      this.args[2].type === 'number'
     ) {
       const [identifier, start, end, expr] = this.args
       let node = new Leaf('number', this.name === 'sum' ? 0 : 1)
@@ -940,7 +973,11 @@ class Complex {
     this.type = 'complex'
   }
   is(other) {
-    return this.type === other.type && this.real === other.real && this.imag === other.imag
+    return (
+      this.type === other.type &&
+      this.real === other.real &&
+      this.imag === other.imag
+    )
   }
   clone(replace, value) {
     return new Complex(this.real, this.imag)
@@ -1059,7 +1096,7 @@ const readToken = (input, i) => {
 
 const tokenize = input => {
   let tokens = []
-  for (let i = 0; i < input.length;) {
+  for (let i = 0; i < input.length; ) {
     const token = readToken(input, i)
     i = token.end
     if (token.type !== 'whitespace') {
@@ -1098,7 +1135,7 @@ const parse = tokens => {
       if (!token) {
         throw new SyntaxError('Unexpected EOF')
       }
-      if (token.type === 'operator' && ['*', '/'].includes(token.value)) {
+      if (token.type === 'operator' && ['*', '/', '%'].includes(token.value)) {
         i++
         node = new BinaryOp(token.value, node, exponentiation())
       } else if (['lparen', 'identifier'].includes(token.type)) {

@@ -46,7 +46,7 @@ in vec2 uv;
 out vec4 fragColor;
 
 void main(void) {
-    float k = -time * speed;
+    float timeFactor = -time * speed;
     vec2 pixel = cmul(scale, vec2(aspect.x, 1.)) * (2. * uv - 1.);
     float BAILOUT = pow(10., bailout);
     float BAILIN = pow(10., bailin);
@@ -83,12 +83,12 @@ void main(void) {
     #endif
 
     #ifdef SHOW_POLYA
-    float polyasize = 2. / polya;
+    float polyaSize = 2. / polya;
     // #ifdef SCALED
-    polyasize *= scale.x;
+    polyaSize *= scale.x;
     // #endif
-    vec2 ztile = (floor(pixel / polyasize) + 0.5) * polyasize;
-    vec2 ptile = pixel - ztile;
+    vec2 tileZ = (floor(pixel / polyaSize) + 0.5) * polyaSize;
+    vec2 polyaTile = pixel - tileZ;
     #endif
 
     #if SHADING == 3 || SHADING == 4
@@ -97,7 +97,7 @@ void main(void) {
 
     #ifdef USE_CYCLE
     ivec4 cycle = ivec4(3, 0, 10, 0);
-    vec2 zcy = vec2(0.);
+    vec2 cycleZRef = vec2(0.);
     #endif
 
     vec3 col = vec3(0.);
@@ -122,7 +122,7 @@ void main(void) {
         #else
         z = F(z, c);
         #ifdef SHOW_POLYA
-        ztile = F(ztile, c);
+        tileZ = F(tileZ, c);
         #endif
         #endif
         z_2 = z_1;
@@ -144,16 +144,14 @@ void main(void) {
         #endif
 
         #ifdef USE_DERIVATIVE
-        if (dot(zdz, zdz) < zdzmax) {
+        if (dot2(zdz) < zdzmax) {
             n = float(iterations);
             break;
         }
         #endif
 
         #ifdef USE_CYCLE
-        if (dot2(z - zcy) < 1e-16) {
-            // fragColor = vec4(1., 0., 0., 1.);
-            // return;
+        if (dot2(z - cycleZRef) < 1e-16) {
             n = float(iterations);
             break;
         }
@@ -165,7 +163,7 @@ void main(void) {
                 cycle.x *= 2;
             }
             cycle.w++;
-            zcy = z;
+            cycleZRef = z;
         }
         cycle.y++;
         #endif
@@ -194,157 +192,150 @@ void main(void) {
         #endif
     }
     // Domain coloring of z:
-    float h = (atan(z.y, z.x)) / TAU;
-    float lz = length(z);
+    float argZ = (atan(z.y, z.x)) / TAU;
+    float lengthZ = length(z);
     #ifdef SCALED
-    lz /= sqrt(dot2(scale));
+    lengthZ /= sqrt(dot2(scale));
     #endif
-    float ll = log2(lz);
+    float log2LengthZ = log2(lengthZ);
 
     #ifdef ARG_GRID_LOG
-    float ag = log2(abs(h));
+    float argGrid = log2(abs(argZ));
     #else
-    float ag = h;
+    float argGrid = argZ;
     #endif
     #ifdef NORM_GRID_LOG
-    float ng = ll;
+    float normGrid = log2LengthZ;
     #else
-    float ng = lz;
+    float normGrid = lengthZ;
     #endif
 
     #ifdef ONLY_BAILED
     if (n < float(iterations)) {
         #endif
-        float hcol = 0.;
+        float colorLevel = 0.;
         float root = 0.;
         #ifdef USE_ROOTS
-        if (abs(z.y) < BAILIN) {
-            z.y = 0.;
-            if (abs(z.x) < BAILIN) {
-                z.x = 0.;
-            }
-        }
-        float l = length(z);
-        if (l > .002) {
-            root = (mod(atan(z.y, z.x) + l * TAU, TAU)) / (TAU);
+        if (lengthZ > .002) {
+            root = (mod((argZ + lengthZ) * TAU, TAU)) / TAU;
         }
         #endif
         #if SHADING == 0
-        hcol = (h + k + .5) * 100.;
+        colorLevel = (argZ + timeFactor + .5) * 100.;
         #elif SHADING == 1
-        hcol = n + 1.;
+        colorLevel = n + 1.;
         #elif SHADING == 2
-        hcol = n + 1. - log2(log2(dot2(z))) - 4.0;
+        colorLevel = n + 1. - log2(2. * log2(lengthZ)) - 4.0;
 
         #ifdef CONVERGENT
         if (dot2(z - z_1) < BAILIN) {
             float diff = dot2(z - z_1);
             float prev = dot2(z_1 - z_2);
-            hcol = n - 1. + log(BAILIN / prev) / log(diff / prev);
+            colorLevel = n - 1. + log(BAILIN / prev) / log(diff / prev);
         }
         #endif
 
         #elif SHADING == 3
-        hcol = 10. * itercoef;
+        colorLevel = 10. * itercoef;
         #elif SHADING == 4
-        hcol = itercoef / float(iterations);
+        colorLevel = itercoef / float(iterations);
         #elif SHADING >= 5
-        float d = sqrt(dot2(z) / dot(zdc, zdc)) * .5 * log(dot2(z));
+        float distEstimate = sqrt(dot2(z) / dot2(zdc)) * .5 * log(dot2(z));
         #if SHADING == 6
-        d /= scale.x;
+        distEstimate /= scale.x;
         #endif
-        hcol = 130. / pow(d, .02);
+        colorLevel = 130. / pow(distEstimate, .02);
         #endif
 
-        col = color(hcol, root + k);
+        col = color(colorLevel, root + timeFactor);
 
         #ifdef ONLY_BAILED
     }
     #endif
 
     #ifdef NORM_SHADE
-    col *= 1. - normShadeValue * aafract(ng * normGridScale + k);
+    col *= 1. - normShadeValue * aafract(normGrid * normGridScale + timeFactor);
     #endif
 
     #ifdef ARG_SHADE
-    col *= 1. + argShadeValue * aafract(ag * argGridScale + k);
+    col *= 1. + argShadeValue * aafract(argGrid * argGridScale + timeFactor);
     #endif
 
     #ifdef SHOW_GRID
-    vec2 zs = z;
+    vec2 gridZ = z;
 
     #ifdef SCALED
-    zs /= dot2(scale);
+    gridZ /= dot2(scale);
     #endif
 
     #ifdef GRID_LOG
-    vec2 g = log2(abs(zs));
+    vec2 grid = log2(abs(gridZ));
     #else
-    vec2 g = zs;
+    vec2 grid = gridZ;
     #endif
 
-    vec2 d = fract(2. * (g + vec2(k)) * gridScale);
-    d = min(d, 1. - d);
-    d /= fwidth(g) * gridScale;
-    col = mix(vec3(0.), col, smoothstep(0., gridWidth * 3., d.x));
-    col = mix(col * .3, col, smoothstep(0., gridWidth * 4., d.y));
+    vec2 gridDist = fract(2. * (grid + vec2(timeFactor)) * gridScale);
+    gridDist = min(gridDist, 1. - gridDist);
+    gridDist /= fwidth(grid) * gridScale;
+    col = mix(vec3(0.), col, smoothstep(0., gridWidth * 3., gridDist.x));
+    col = mix(col * .3, col, smoothstep(0., gridWidth * 4., gridDist.y));
     #endif
 
     #ifdef SHOW_NORM_GRID
-    float dl = fract((ng + k) * normGridScale);
-    dl = min(dl, 1. - dl);
-    dl /= fwidth(ng) * normGridScale / 2.;
-    col = mix(col, vec3(1.), smoothstep(normGridWidth * 3., 0., dl));
+    float normGridDist = fract((normGrid + timeFactor) * normGridScale);
+    normGridDist = min(normGridDist, 1. - normGridDist);
+    normGridDist /= fwidth(normGrid) * normGridScale / 2.;
+    col = mix(col, vec3(1.), smoothstep(normGridWidth * 3., 0., normGridDist));
     #endif
 
     #ifdef SHOW_ARG_GRID
-    float dh = fract(2. * (ag + k * .25) * argGridScale);
-    dh = min(dh, 1. - dh);
-    dh /= min(fwidth(ag), .01) * argGridScale;
-    col = mix(col, col + .5, smoothstep(argGridWidth * 3., 0., dh));
+    float argGridDist = fract(2. * (argGrid + timeFactor * .25) * argGridScale);
+    argGridDist = min(argGridDist, 1. - argGridDist);
+    argGridDist /= min(fwidth(argGrid), .01) * argGridScale;
+    col = mix(col, col + .5, smoothstep(argGridWidth * 3., 0., argGridDist));
     #endif
 
     #ifdef SHOW_ZEROES
-    col = mix(col, vec3(1.), smoothstep(0., PI, zeroes - ll));
+    col = mix(col, vec3(1.), smoothstep(0., PI, zeroes - log2LengthZ));
     #endif
 
     #ifdef SHOW_POLES
-    col = mix(col, vec3(0.), smoothstep(0., PI, ll - poles));
+    col = mix(col, vec3(0.), smoothstep(0., PI, log2LengthZ - poles));
     #endif
 
     #ifdef SHOW_POLYA
-    vec2 zp = conj(z);
-    vec2 zr = conj(ztile);
+    vec2 polyaZ = conj(z);
 
     float shade = 1.;
     #ifdef ANIMATE
-    shade = 1. - smoothstep(polyasize * .3, polyasize * .5, length(ptile));
+    shade = 1. - smoothstep(polyaSize * .3, polyaSize * .5, length(polyaTile));
     #endif
 
     float arrow = 0.;
-    float base = length(zr) * .1;
-    float len = clamp(base, .08, .35);
-    float angle = atan(zp.y, zp.x);
+    float arrowBase = length(conj(tileZ)) * .1;
+    float arrowLength = clamp(arrowBase, .08, .35);
+    float arrowAngle = atan(polyaZ.y, polyaZ.x);
 
-    ptile = opRotate(ptile, angle);
+    polyaTile = opRotate(polyaTile, arrowAngle);
 
-    float sc = 1. / polyasize;
-    ptile *= sc;
+    float polyaScale = 1. / polyaSize;
+    polyaTile *= polyaScale;
 
     #ifdef ANIMATE
-    ptile.x += k * base * 25.;
-    float r = min(.35 / len, 2.);
-    ptile.x -= round(ptile.x * r) / r;
+    polyaTile.x += timeFactor * arrowBase * 25.;
+    float arrowRound = min(.35 / arrowLength, 2.);
+    polyaTile.x -= round(polyaTile.x * arrowRound) / arrowRound;
     #endif
 
-    arrow = sdArrow(ptile, vec2(-len, 0.), vec2(len, 0.), .02, .08, 2.);
-    arrow /= sc;
-    vec3 arrowColor = col + polyaLightness - 1.;
+    arrow = sdArrow(polyaTile, vec2(-arrowLength, 0.), vec2(arrowLength, 0.), .02, .08, 2.);
+    arrow /= polyaScale;
 
     #ifndef POLYA_COLOR
-    float al = log2(base + .1);
-    arrowColor = color(al * 5.);
+    float arrowCol = log2(arrowBase + .1);
+    vec3 arrowColor = color(arrowCol * 5.);
     col = vec3(0.);
+    #else
+    vec3 arrowColor = col + polyaLightness - 1.;
     #endif
 
     float aaa = .003 * scale.x;

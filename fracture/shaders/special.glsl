@@ -699,6 +699,7 @@ vec2 cfibonacci(in vec2 z) {
 
 vec2 cweierstrass(in vec2 z) {
     // Weierstrass elliptic function
+    // https://www.shadertoy.com/view/WtXGzs
     const float om = 1.529954037057; // real semiperiod
     const float o3 = 0.57735026919; // 1/sqrt(3)
     const vec2 ep = vec2(0.5, 0.866025403784); // exp(i * pi/3)
@@ -746,6 +747,20 @@ vec2 cdweierstrass(in vec2 z) {
 
     return pd;
 }
+
+vec2 cweierstrassr(in vec2 z, in vec2 w) {
+    // Generalization of the weierstrass function
+    vec2 res = c0;
+    float a = 1.;
+    float b = 1.;
+    for (int i = 0; i < 15; i++) {
+        res = cadd(res, a * ccos(b * PI * z));
+        a *= w.x;
+        b *= w.y;
+    }
+    return res;
+}
+
 vec2 cellk(in vec2 z) {
     vec2 agA = c1, agB = csqrt(agA - z);
     vec2 tmp = vec2(0.0), h = tmp;
@@ -885,4 +900,67 @@ vec2 clcos(in vec2 z, in vec2 w) {
     vec2 b = cinv(a);
 
     return .5 * cadd(cli(a, w), cli(b, w));
+}
+
+vec2 cfaddeeva(vec2 z) {
+    // https://arxiv.org/pdf/1511.00774
+    int num = 16;
+    float vm = 6. / TAU;
+    float hi = vm / float(num);
+    float sig = 2.5;
+    float sig2 = sig * sig;
+    float tauhi = TAU * hi;
+
+    bool is_neg = z.y < 0.;
+    if (is_neg) {
+        z = -z;
+    }
+    vec2 t = cadd(z, ci * sig);
+    vec2 tt = cpow(t, 2);
+
+    vec2 res = cdiv(ci * 2. * hi * exp(sig * sig), t);
+    for (int i = 1; i <= num; i++) {
+        float n = float(i);
+        float tauhin = tauhi * n;
+        float k = exp(sig2 - (tauhin * tauhin));
+        float th = 2. * tauhin * sig;
+        float hik = 4. * hi * k;
+
+        float A = tauhin * hik * sin(th);
+        float B = hik * cos(th);
+        float C = tauhin;
+        res = cadd(res, cdiv(csub(R(A), cmul(ci, t) * B), csub(R(C * C), tt)));
+    }
+    if (is_neg) {
+        res = csub(2. * cexp(-cpow(z, 2)), res);
+    }
+    return res;
+}
+
+vec2 cerf(vec2 z) {
+    return csub(c1, cmul(cexp(-cpow(z, 2)), cfaddeeva(cmul(ci, z))));
+}
+
+vec2 cerfc(vec2 z) {
+    return csub(c1, cerf(z));
+}
+
+vec2 cerfcx(vec2 z) {
+    return cfaddeeva(cmul(ci, z));
+}
+
+vec2 cerfi(vec2 z) {
+    return -cmul(ci, cerf(cmul(ci, z)));
+}
+
+vec2 cdawson(vec2 z) {
+    return sqrt(PI) * .5 * cmul(cexp(-cpow(z, 2)), cerfi(z));
+}
+
+vec2 cdfaddeeva(vec2 z) {
+    return 2. * csub(ci / sqrt(PI), cmul(z, cfaddeeva(z)));
+}
+
+vec2 cderf(vec2 z) {
+    return 2. / sqrt(PI) * cexp(-cpow(z, 2));
 }

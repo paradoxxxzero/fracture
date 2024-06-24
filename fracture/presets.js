@@ -399,6 +399,23 @@ export const presets = withDefaults([
           f: '(c/z + (im(z)*z - re(z))/c)^2',
         },
       },
+      {
+        name: 'Smokey',
+        params: {
+          varying: 'z',
+          args: { z: cx(53.95, 211.7435), c: cx(-1.247, -0.9564) },
+          scale: cx(395),
+          iterations: 50,
+          divergent: false,
+          onlyBailed: false,
+          palette: 'viridis',
+          cycle: false,
+          derivative: false,
+          offset: 0,
+          shading: 'lyapunov_exponent',
+          f: 'faddeeva(z) + c',
+        },
+      },
     ],
   },
   {
@@ -535,9 +552,12 @@ export const presets = withDefaults([
   {
     ...domain('Domain coloring Transcendental', 'exp(z) + c'),
     subforms: [
-      domain('Log', 'log(z) + c'),
-      domain('', 'exp(z^-1) + c', { scale: cx(1.5) }),
-      domain('', 'exp(-z^2) + c', { scale: cx(1.5), showPolya: true }),
+      domain('Logarithm', 'log(z) + c'),
+      domain('Exponential Inverse', 'exp(z^-1) + c', { scale: cx(1.5) }),
+      domain('Exponential Square Inverse', 'exp(-z^2) + c', {
+        scale: cx(1.5),
+        showPolya: true,
+      }),
       domain('Square Root', 'sqrt(z) + c'),
       domain('Cubic Root', 'z^(1/3) + c'),
       domain('Complex Exponentiation', 'z^c', {
@@ -546,6 +566,14 @@ export const presets = withDefaults([
       domain('²z', 'z^^2 + c'),
       domain('³z', 'z^^3 + c'),
       domain('⁴z', 'z^^4 + c'),
+      domain('Exponential Integral', 'expint(z) + c'),
+      domain('Logarithm Integral', 'lint(z) + c'),
+      domain('Error Function', 'erf(z) + c'),
+      domain('Faddeeva', 'faddeeva(z) + c'),
+      domain('Error Function Complementary', 'erfc(z) + c'),
+      domain('Error Function Scaled Complementary', 'erfcx(z) + c'),
+      domain('Error Function Imaginary', 'erfi(z) + c'),
+      domain('Dawson', 'dawson(z) + c'),
       domain('Beta', 'beta(z, c)', { args: { z: cx(), c: cx(2) } }),
       domain('Beta First derivative', "beta'(z, c)", {
         args: { z: cx(), c: cx(2) },
@@ -564,8 +592,7 @@ export const presets = withDefaults([
       domain('Tet', 'tet(z) + c'),
       domain('Ate', 'ate(z) + c'),
       domain('Tetra', 'tetra(z, c)', {
-        args: { z: cx(0, -1), c: cx() },
-        args: { z: cx(), c: cx(2, 2) },
+        args: { z: cx(0), c: cx(2, 2) },
       }),
     ],
   },
@@ -590,6 +617,11 @@ export const presets = withDefaults([
       domain('', '(z - 1) cos(1 / z) + c'),
       domain('', 'z / i - i / z + c'),
       domain('', 'z^(4z^(3z^(2z^z))) + c'),
+      domain('Weierstrass Elliptic', 'weierstrass(z) + c'),
+      domain('Weierstrass', 'weierstrassr(z, c)', {
+        args: { z: cx(), c: cx(0.9, 1.12) },
+        scale: cx(0.35),
+      }),
       domain(
         'Wilmshurst',
         'im(exp(-i*PI / 4) * z^c) + i * im(exp(i * PI / 4) * (z - 1)^c)',
