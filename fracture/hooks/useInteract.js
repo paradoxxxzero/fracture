@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef } from 'react'
 import { debounce } from '../../utils'
 import { render } from '../render'
 import { cx } from '../decimal'
+import { columnMajor, multiply, rotate } from '../matrix'
 
 export const useInteract = (runtime, updateParams) => {
   const loop = useRef(null)
@@ -9,12 +10,16 @@ export const useInteract = (runtime, updateParams) => {
   const local = useRef({
     args: runtime.args,
     scale: runtime.scale,
+    matrix: runtime.matrix,
+    anakata: runtime.anakata,
     pointers: new Map(),
   })
   const update = debounce(() => {
     updateParams({
       args: local.current.args,
       scale: local.current.scale,
+      matrix: local.current.matrix,
+      anakata: local.current.anakata,
     })
   }, 150)
 
@@ -26,6 +31,14 @@ export const useInteract = (runtime, updateParams) => {
     local.current.scale = runtime.scale
   }, [runtime.scale])
 
+  useEffect(() => {
+    local.current.matrix = runtime.matrix
+  }, [runtime.matrix])
+
+  useEffect(() => {
+    local.current.anakata = runtime.anakata
+  }, [runtime.anakata])
+
   const animate = useCallback(() => {
     loop.current = null
     render(runtime)
@@ -33,6 +46,40 @@ export const useInteract = (runtime, updateParams) => {
 
   const shift = useCallback(
     (dx, dy, zoom, alt) => {
+      if (runtime.mode === '4d') {
+        if (runtime.control === '4d') {
+          const pairs = [
+            [
+              [1, 2],
+              [0, 1],
+            ],
+            [
+              [2, 3],
+              [0, 3],
+            ],
+            [
+              [1, 3],
+              [0, 2],
+            ],
+          ]
+          local.current.matrix = multiply(
+            multiply(
+              rotate(5 * dx, ...pairs[runtime.rotation][1]),
+              rotate(5 * dy, ...pairs[runtime.rotation][0])
+            ),
+            local.current.matrix
+          )
+          return
+        }
+        if (runtime.control === '3d') {
+          runtime.env.camera.rotation = multiply(
+            runtime.env.camera.rotation,
+            multiply(rotate(5 * dx, 0, 2), rotate(-5 * dy, 1, 2))
+          )
+          runtime.env.camera.update()
+          return
+        }
+      }
       const aspect = runtime.gl.canvas.width / runtime.gl.canvas.height
       const height = local.current.scale.multiply(2)
       const move = zoom ? runtime.varying : runtime.move
@@ -49,6 +96,9 @@ export const useInteract = (runtime, updateParams) => {
       runtime.gl.canvas.height,
       runtime.gl.canvas.width,
       runtime.move,
+      runtime.mode,
+      runtime.control,
+      runtime.rotation,
       runtime.varying,
     ]
   )
@@ -57,7 +107,20 @@ export const useInteract = (runtime, updateParams) => {
     (delta, x, y) => {
       const dx = 0.5 - x
       const dy = 0.5 - y
-      shift(dx * delta, dy * delta, true)
+      if (runtime.mode === '2d') {
+        shift(dx * delta, dy * delta, true)
+      }
+      if (runtime.mode === '4d') {
+        if (runtime.control === '3d') {
+          runtime.env.camera.zoom -= delta
+          runtime.env.camera.update()
+          return
+        }
+        if (runtime.control === '4d') {
+          local.current.anakata += delta
+          return
+        }
+      }
 
       const scaleDiff = local.current.scale.multiply(delta)
       const scaleDiffStr = scaleDiff.real().toString()
@@ -67,13 +130,15 @@ export const useInteract = (runtime, updateParams) => {
       }
       local.current.scale = local.current.scale.subtract(scaleDiff)
     },
-    [shift]
+    [shift, runtime.mode, runtime.control]
   )
 
   const quickUpdate = useCallback(
     () => {
       runtime.args = local.current.args
       runtime.scale = local.current.scale
+      runtime.matrix = local.current.matrix
+      runtime.anakata = local.current.anakata
 
       Object.keys(runtime.args).forEach(key => {
         runtime.gl.uniform2fv(
@@ -85,6 +150,13 @@ export const useInteract = (runtime, updateParams) => {
         runtime.env.uniforms.scale,
         local.current.scale.to2fv()
       )
+
+      runtime.gl.uniformMatrix4fv(
+        runtime.env.uniforms.matrix,
+        false,
+        columnMajor(local.current.matrix)
+      )
+      runtime.gl.uniform1f(runtime.env.uniforms.anakata, local.current.anakata)
       if (!loop.current) {
         loop.current = requestAnimationFrame(animate)
       }

@@ -1,53 +1,17 @@
-#version 300 es
-precision highp float;
 
-##CONFIG
+float aafract(float x) {
+    float v = fract(x);
+    float w = length(vec2(dFdx(x), dFdy(x)));
+    return v < 1. - w ? v / (1. - w) : (1. - v) / w;
+}
 
-uniform vec2 args;
-uniform vec2 scale;
-uniform vec2 aspect;
-uniform mat2 transform;
+float aastep(float x) {
+    float w = length(vec2(dFdx(x), dFdy(x)));
+    return smoothstep(.7, -.7, (abs(fract(x - .25) - .5) - .25) / w);
+}
 
-uniform int iterations;
-uniform float bailin;
-uniform float bailout;
-uniform float derivative;
-
-uniform float offset;
-uniform float velocity;
-uniform float hue;
-uniform float saturation;
-uniform float lightness;
-
-uniform float gridScale;
-uniform float gridWidth;
-uniform float normGridScale;
-uniform float normGridWidth;
-uniform float normShadeValue;
-uniform float argGridWidth;
-uniform float argGridScale;
-uniform float argShadeValue;
-uniform float zeroes;
-uniform float poles;
-uniform float polya;
-uniform float polyaLightness;
-
-uniform float speed;
-uniform float time;
-
-#ifdef PERTURB
-uniform sampler2D orbit;
-uniform ivec2 maxIterations;
-#endif
-
-#include includes
-
-in vec2 uv;
-out vec4 fragColor;
-
-void main(void) {
+vec4 iterate(vec2 pixel) {
     float timeFactor = -time * speed;
-    vec2 pixel = cmul(scale, vec2(aspect.x, 1.)) * (2. * uv - 1.);
     float BAILOUT = pow(10., bailout);
     float BAILIN = pow(10., bailin);
 
@@ -100,7 +64,6 @@ void main(void) {
     vec2 cycleZRef = vec2(0.);
     #endif
 
-    vec3 col = vec3(0.);
     float n = 0.;
     for (int i = 0; i < iterations; i++) {
         n = float(i) + 1.;
@@ -210,6 +173,7 @@ void main(void) {
     float normGrid = lengthZ;
     #endif
 
+    vec3 col = vec3(0.);
     #ifdef ONLY_BAILED
     if (n < float(iterations)) {
         #endif
@@ -342,5 +306,5 @@ void main(void) {
     col = mix(col, arrowColor, shade * (1.0 - smoothstep(0.0, aaa, arrow)));
     #endif
 
-    fragColor = vec4(col, 1.0);
+    return vec4(col, 1.);
 }

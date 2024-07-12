@@ -1,6 +1,12 @@
 import { useEffect, useRef } from 'react'
 import { allParams, compileParams, uniformParams } from '../default'
-import { recompileFragment, render, updateUniforms } from '../render'
+import {
+  recompileFragment,
+  recompileVertex,
+  render,
+  updateUniforms,
+  changeProgram,
+} from '../render'
 
 const params = (runtime, keys) => keys.map(key => runtime[key])
 const argValue = args =>
@@ -23,6 +29,22 @@ export const useRender = (runtime, setRuntime) => {
 
   useEffect(() => {
     setRuntime(runtime => {
+      changeProgram(runtime)
+      return runtime
+    })
+  }, [runtime.mode, setRuntime])
+
+  useEffect(() => {
+    setRuntime(runtime => {
+      recompileVertex(runtime)
+      recompileFragment(runtime)
+      return runtime
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [...params(runtime, compileParams), setRuntime])
+
+  useEffect(() => {
+    setRuntime(runtime => {
       updateUniforms(runtime)
       return runtime
     })
@@ -33,14 +55,6 @@ export const useRender = (runtime, setRuntime) => {
     argValue(runtime.args),
     setRuntime,
   ])
-
-  useEffect(() => {
-    setRuntime(runtime => {
-      recompileFragment(runtime)
-      return runtime
-    })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [...params(runtime, compileParams), setRuntime])
 
   useEffect(() => {
     if (!runtime.gl.canvas) {

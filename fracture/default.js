@@ -1,5 +1,6 @@
 import { cx } from './decimal'
 import './formula'
+import { columnMajor, ident } from './matrix'
 
 export const palettes = [
   'yellow_blue',
@@ -26,12 +27,16 @@ export const shadings = [
   'distance_scaled',
 ]
 export const varyings = ['z', 'c', 'zc']
+export const controls = ['3d', '4d', 'arg']
 
 export const defaultParams = {
+  mode: '2d',
   args: { z: cx(), c: cx() },
   scale: cx(1.2),
   varying: 'c',
   move: 'c',
+  control: '3d',
+  anakata: 10,
   usePerturbation: null, // Auto
   useDerivative: true,
   useCycle: true,
@@ -50,6 +55,8 @@ export const defaultParams = {
     [1, 0],
     [0, 1],
   ],
+  matrix: ident(),
+  rotation: 0,
   f: 'z^2 + c',
   f_prime_z: null, // Auto
   f_prime_c: null, // Auto
@@ -140,6 +147,7 @@ export const uniformParams = {
     type: 'm2fv',
     value: v => v.flat(1),
   },
+  anakata: '1f',
 
   iterations: '1i',
   maxIterations: {
@@ -211,5 +219,9 @@ export const uniformParams = {
   polyaLightness: {
     type: '1f',
     value: v => v / 100,
+  },
+  matrix: {
+    type: 'm4fv',
+    value: v => columnMajor(v),
   },
 }

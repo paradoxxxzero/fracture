@@ -1,11 +1,5 @@
 import { cx } from '../decimal'
-import {
-  backspaceIcon,
-  eyeIcon,
-  eyeOffIcon,
-  monitorIcon,
-  monitorLockIcon,
-} from '../icons'
+import { backspaceIcon, monitorIcon, monitorLockIcon } from '../icons'
 import Float from './Float'
 
 export default function Complex({

@@ -86,7 +86,7 @@ export const iterateChunks = async (
 
       combinedCtx.putImageData(data, chunkX, chunkY)
 
-      progress.innerHTML = `${(++i / total * 100).toFixed(0)}%`
+      progress.innerHTML = `${((++i / total) * 100).toFixed(0)}%`
 
       await wait()
     }

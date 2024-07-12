@@ -1,14 +1,27 @@
 import { cx, m } from './decimal'
 import { uniformParams, compileConstants } from './default'
 import { ast } from './formula'
-import fragmentSource from './shaders/fragment.glsl?raw'
+import fragment2dSource from './shaders/fragment-2d.glsl?raw'
+import fragment4dSource from './shaders/fragment-4d.glsl?raw'
 import includesSource from './shaders/includes.glsl?raw'
 import globalsSource from './shaders/globals.glsl?raw'
 import renderSource from './shaders/render.glsl?raw'
 import colorsSource from './shaders/colors.glsl?raw'
 import complexSource from './shaders/complex.glsl?raw'
 import specialSource from './shaders/special.glsl?raw'
-import vertexSource from './shaders/vertex.glsl?raw'
+import iterateSource from './shaders/iterate.glsl?raw'
+import vertexQuadSource from './shaders/vertex-quad.glsl?raw'
+import vertex4dSource from './shaders/vertex-4d.glsl?raw'
+import { grid } from './geometry'
+import {
+  columnMajor,
+  frustum,
+  inverse,
+  multiply,
+  multiplyVector,
+  rotate,
+  translate,
+} from './matrix'
 
 export const includes = {
   includes: includesSource,
@@ -17,6 +30,7 @@ export const includes = {
   render: renderSource,
   complex: complexSource,
   special: specialSource,
+  iterate: iterateSource,
 }
 
 export const camelCaseToSnakeCase = str =>
@@ -163,12 +177,20 @@ export const linkProgram = rt => {
 }
 
 export const recompileVertex = rt => {
-  compileShader(rt, vertexSource, rt.env.vertexShader)
+  compileShader(
+    rt,
+    rt.mode === '2d' ? vertexQuadSource : preprocess(rt, vertex4dSource),
+    rt.env.vertexShader
+  )
 }
 
 export const recompileFragment = rt => {
   const { gl } = rt
-  compileShader(rt, preprocess(rt, fragmentSource), rt.env.fragmentShader)
+  compileShader(
+    rt,
+    preprocess(rt, rt.mode === '2d' ? fragment2dSource : fragment4dSource),
+    rt.env.fragmentShader
+  )
   linkProgram(rt)
   gl.useProgram(rt.env.program) // NEEDED?
 
@@ -188,7 +210,164 @@ export const recompileFragment = rt => {
       console.info(name, st.toShader(), st.toComplex())
     })
   }
+  if (rt.mode === '4d') {
+    rt.env.uniforms.viewProjection = gl.getUniformLocation(
+      rt.env.program,
+      'viewProjection'
+    )
+    rt.env.uniforms.eye = gl.getUniformLocation(rt.env.program, 'eye')
+  }
   updateUniforms(rt)
+}
+
+export const changeProgram = rt => {
+  const gl = rt.gl
+  if (rt.env) {
+    if (rt.env.mode === rt.mode) {
+      console.warn('Mode already set', rt.mode)
+      return
+    }
+    if (rt.env.mode === '2d') {
+      gl.deleteTexture(rt.env.orbit)
+    } else {
+      gl.deleteBuffer(rt.env.uvBuffer)
+      gl.deleteBuffer(rt.env.vertexBuffer)
+      gl.deleteBuffer(rt.env.indexBuffer)
+      gl.deleteVertexArray(rt.env.vao)
+    }
+    gl.deleteShader(rt.env.vertexShader)
+    gl.deleteShader(rt.env.fragmentShader)
+    gl.deleteProgram(rt.env.program)
+    delete rt.env
+  }
+
+  rt.env = {
+    vertexShader: gl.createShader(gl.VERTEX_SHADER),
+    fragmentShader: gl.createShader(gl.FRAGMENT_SHADER),
+    program: gl.createProgram(),
+    mode: rt.mode,
+  }
+
+  gl.attachShader(rt.env.program, rt.env.vertexShader)
+  gl.attachShader(rt.env.program, rt.env.fragmentShader)
+
+  recompileVertex(rt)
+  recompileFragment(rt)
+
+  if (rt.mode === '2d') {
+    rt.env.orbit = gl.createTexture()
+    gl.bindTexture(gl.TEXTURE_2D, rt.env.orbit)
+    gl.texImage2D(
+      gl.TEXTURE_2D,
+      0,
+      gl.RGBA32F,
+      128,
+      128,
+      0,
+      gl.RGBA,
+      gl.FLOAT,
+      null
+    )
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false)
+  } else {
+    rt.env.camera = {
+      zoom: 2,
+      fov: Math.PI / 3,
+      eye: [0, 0, 0],
+      rotation: rotate(Math.PI / 2, 1, 2),
+      near: 0.01,
+      far: 100,
+      update(offset) {
+        const position = translate(0, 0, this.zoom)
+        const eye = [0, 0, this.zoom, 0]
+        this.eye = multiplyVector(this.rotation, eye).slice(0, 3)
+        const viewMatrix = inverse(multiply(this.rotation, position))
+
+        this.aspect = offset
+          ? offset.fullWidth / offset.fullHeight
+          : gl.canvas.clientWidth / gl.canvas.clientHeight
+
+        const zoom = Math.min(this.aspect, 1)
+
+        const bounds = {
+          left: 0,
+          right: 0,
+          top: 0,
+          bottom: 0,
+          near: this.near,
+          far: this.far,
+        }
+
+        bounds.top = (this.near * Math.tan(this.fov / 2)) / zoom
+        let height = 2 * bounds.top
+        let width = this.aspect * height
+        bounds.left = -0.5 * width
+
+        if (offset) {
+          bounds.left += (offset.x * width) / offset.fullWidth
+          bounds.top -= (offset.y * height) / offset.fullHeight
+          width *= offset.width / offset.fullWidth
+          height *= offset.height / offset.fullHeight
+        }
+
+        bounds.bottom = bounds.top - height
+        bounds.right = bounds.left + width
+
+        const projectionMatrix = frustum(bounds)
+        const viewProjection = multiply(projectionMatrix, viewMatrix)
+        this.viewProjection = columnMajor(viewProjection)
+        // this.viewProjectionInverse = columnMajor(inverse(viewProjection))
+        gl.uniformMatrix4fv(
+          rt.env.uniforms.viewProjection,
+          false,
+          this.viewProjection
+        )
+        gl.uniform3fv(rt.env.uniforms.eye, this.eye)
+      },
+      center() {
+        this.eye = [0, 0, 0]
+        this.rotation = rotate(Math.PI / 2, 1, 2)
+        this.update()
+      },
+    }
+    rt.env.camera.update()
+
+    const geometry = grid()
+    rt.env.elements = geometry.indices.length
+    rt.env.vao = gl.createVertexArray()
+    gl.bindVertexArray(rt.env.vao)
+    rt.env.indiceBuffer = gl.createBuffer()
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, rt.env.indiceBuffer)
+    gl.bufferData(
+      gl.ELEMENT_ARRAY_BUFFER,
+      new Uint16Array(geometry.indices),
+      gl.STATIC_DRAW
+    )
+    rt.env.vertexBuffer = gl.createBuffer()
+    gl.bindBuffer(gl.ARRAY_BUFFER, rt.env.vertexBuffer)
+    rt.env.vertexLocation = gl.getAttribLocation(rt.env.program, 'vertex')
+    gl.enableVertexAttribArray(rt.env.vertexLocation)
+    gl.vertexAttribPointer(rt.env.vertexLocation, 2, gl.FLOAT, false, 0, 0)
+    gl.bufferData(
+      gl.ARRAY_BUFFER,
+      new Float32Array(geometry.vertices),
+      gl.STATIC_DRAW
+    )
+    rt.env.uvBuffer = gl.createBuffer()
+    gl.bindBuffer(gl.ARRAY_BUFFER, rt.env.uvBuffer)
+    rt.env.uvLocation = gl.getAttribLocation(rt.env.program, 'uv')
+    gl.enableVertexAttribArray(rt.env.uvLocation)
+    gl.vertexAttribPointer(rt.env.uvLocation, 2, gl.FLOAT, false, 0, 0)
+    gl.bufferData(
+      gl.ARRAY_BUFFER,
+      new Float32Array(geometry.uvs),
+      gl.STATIC_DRAW
+    )
+  }
 }
 
 export const initializeGl = (rt, onContextLost, onContextRestored) => {
@@ -201,7 +380,7 @@ export const initializeGl = (rt, onContextLost, onContextRestored) => {
 
   const gl = canvas.getContext('webgl2', {
     antialias: false,
-    depth: false,
+    // depth: false,
     stencil: false,
     powerPreference: 'high-performance',
   })
@@ -217,45 +396,11 @@ export const initializeGl = (rt, onContextLost, onContextRestored) => {
     )
     return
   }
-  rt.env = {
-    vertexShader: gl.createShader(gl.VERTEX_SHADER),
-    fragmentShader: gl.createShader(gl.FRAGMENT_SHADER),
-    program: gl.createProgram(),
-  }
-
-  gl.attachShader(rt.env.program, rt.env.vertexShader)
-  gl.attachShader(rt.env.program, rt.env.fragmentShader)
-
-  recompileVertex(rt)
-  recompileFragment(rt)
-
-  const orbit = gl.createTexture()
-  gl.bindTexture(gl.TEXTURE_2D, orbit)
-  gl.texImage2D(
-    gl.TEXTURE_2D,
-    0,
-    gl.RGBA32F,
-    128,
-    128,
-    0,
-    gl.RGBA,
-    gl.FLOAT,
-    null
-  )
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
-  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false)
-
-  const textures = {
-    orbit,
-  }
+  changeProgram(rt)
 
   return {
     ...rt,
     gl,
-    textures,
   }
 }
 
@@ -285,6 +430,7 @@ export const updateUniforms = rt => {
         rt.gl['uniform' + type](uniform, v)
       }
     })
+  rt.env.camera?.update()
 }
 
 export const resizeCanvasToDisplaySize = (canvas, sampling, forceSize) => {
@@ -304,7 +450,7 @@ export const resizeCanvasToDisplaySize = (canvas, sampling, forceSize) => {
   return !!forceSize
 }
 
-const multiply = (c, matrix) => {
+const multiplyC = (c, matrix) => {
   return cx(
     c.re.multiply(matrix[0][0]).add(c.im.multiply(matrix[0][1])),
     c.re.multiply(matrix[1][0]).add(c.im.multiply(matrix[1][1]))
@@ -378,37 +524,51 @@ export const render = (rt, forceSize) => {
     }
   }
 
-  // TODO: In useProcess / worker + only in prevention if still in viewPort
-  if (rt.perturb) {
-    const orbit = new Float32Array(128 * 128 * 4)
-    const max = [0, 0]
-    const z = rt.varying.includes('z')
-      ? multiply(rt.args.z, rt.transform)
-      : rt.args.z
-    const c = rt.varying.includes('c')
-      ? multiply(rt.args.c, rt.transform)
-      : rt.args.c
-    try {
-      fillOrbit(rt, orbit, cx(), c, max)
-      fillOrbit(rt, orbit, z, c, max, true)
-    } catch (e) {
-      console.warn(e)
-    }
-    gl.uniform2iv(rt.env.uniforms.maxIterations, max)
+  if (rt.mode === '2d') {
+    gl.disable(gl.DEPTH_TEST)
+    gl.disable(gl.BLEND)
+    // TODO: In useProcess / worker + only in prevention if still in viewPort
+    if (rt.perturb) {
+      const orbit = new Float32Array(128 * 128 * 4)
+      const max = [0, 0]
+      const z = rt.varying.includes('z')
+        ? multiplyC(rt.args.z, rt.transform)
+        : rt.args.z
+      const c = rt.varying.includes('c')
+        ? multiplyC(rt.args.c, rt.transform)
+        : rt.args.c
+      try {
+        fillOrbit(rt, orbit, cx(), c, max)
+        fillOrbit(rt, orbit, z, c, max, true)
+      } catch (e) {
+        console.warn(e)
+      }
+      gl.uniform2iv(rt.env.uniforms.maxIterations, max)
 
-    gl.texImage2D(
-      gl.TEXTURE_2D,
-      0,
-      gl.RGBA32F,
-      128,
-      128,
-      0,
-      gl.RGBA,
-      gl.FLOAT,
-      orbit
-    )
+      gl.texImage2D(
+        gl.TEXTURE_2D,
+        0,
+        gl.RGBA32F,
+        128,
+        128,
+        0,
+        gl.RGBA,
+        gl.FLOAT,
+        orbit
+      )
+    }
+    gl.drawArrays(gl.TRIANGLES, 0, 3)
+  } else {
+    gl.clearColor(0, 0, 0, 0)
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+    gl.enable(gl.DEPTH_TEST)
+    gl.enable(gl.BLEND)
+    // gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
+    gl.blendFunc(gl.ONE, gl.ONE)
+    // gl.depthFunc(gl.LEQUAL)
+    gl.depthFunc(gl.ALWAYS)
+    gl.drawElements(gl.TRIANGLES, rt.env.elements, gl.UNSIGNED_SHORT, 0)
   }
-  gl.drawArrays(gl.TRIANGLES, 0, 3)
 }
 
 window.render = render

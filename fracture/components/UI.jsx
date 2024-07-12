@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 
-import { palettes, shadings } from '../default.js'
+import { controls, palettes, shadings } from '../default.js'
 import {
   contrastIcon,
   eyeIcon,
@@ -19,6 +19,8 @@ import Select from './Select.jsx'
 import { cx } from '../decimal.js'
 import { makeBigPng } from '../export.js'
 import Declaration from './Declaration.jsx'
+import { ident, rotate } from '../matrix.js'
+import { render } from '../render.js'
 
 const getShowUI = () => {
   try {
@@ -183,6 +185,75 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
                 >
                   {params.animate ? stopIcon : playIcon}
                 </button>
+              ) : null}
+              {['simple', 'advanced', 'full'].includes(showUI) ? (
+                <button
+                  className="button"
+                  onClick={() =>
+                    updateParams({
+                      mode: params.mode === '2d' ? '4d' : '2d',
+                    })
+                  }
+                >
+                  {params.mode}
+                </button>
+              ) : null}
+              {params.mode === '4d' &&
+              ['simple', 'advanced', 'full'].includes(showUI) ? (
+                <>
+                  <button
+                    className="button"
+                    onClick={() =>
+                      updateParams({
+                        control:
+                          controls[
+                            (controls.indexOf(params.control) + 1) %
+                              controls.length
+                          ],
+                      })
+                    }
+                  >
+                    {params.control}
+                  </button>
+                  {params.control === '4d' ? (
+                    <>
+                      <button
+                        className="button"
+                        onClick={() =>
+                          updateParams({
+                            matrix: ident(),
+                            anakata: 10,
+                          })
+                        }
+                      >
+                        c
+                      </button>
+                      <button
+                        className="button"
+                        onClick={() =>
+                          updateParams({
+                            rotation: (params.rotation + 1) % 3,
+                          })
+                        }
+                      >
+                        {params.rotation}
+                      </button>
+                    </>
+                  ) : null}
+                  {params.control === '3d' ? (
+                    <button
+                      className="button"
+                      onClick={() => {
+                        runtime.env.camera.rotation = rotate(Math.PI / 2, 1, 2)
+                        runtime.env.camera.zoom = 2
+                        runtime.env.camera.update()
+                        render(runtime)
+                      }}
+                    >
+                      c
+                    </button>
+                  ) : null}
+                </>
               ) : null}
             </div>
           </aside>

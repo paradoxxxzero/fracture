@@ -12,6 +12,7 @@ offScreenCanvas.width = previewSize.width
 offScreenCanvas.height = previewSize.height
 
 const previewer = {
+  mode: '2d',
   locked: false,
   gl: null,
   env: null,
@@ -19,7 +20,7 @@ const previewer = {
   init() {
     this.gl = offScreenCanvas.getContext('webgl2', {
       antialias: false,
-      depth: false,
+      // depth: false,
       stencil: false,
     })
     this.env = {
@@ -86,7 +87,7 @@ export default memo(function Preview({ params }) {
       ctx.scale(1, -1)
       ctx.translate(0, -previewSize.height)
       ctx.drawImage(canvas.current, 0, 0)
-    }, 5)
+    }, 0)
   }, [params])
 
   return <canvas ref={canvas} className="preview" style={previewSize} />
