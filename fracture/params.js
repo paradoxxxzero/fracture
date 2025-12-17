@@ -31,15 +31,20 @@ export const filterParams = (maybeBadParams, changed = [], oldParams) => {
       }
     }
   })
-  if (changed.includes('f')) {
+  if (changed.includes('f') || changed.includes('dimensions')) {
     const args = vars(ast(params.f)).filter(a => a.length === 1)
     if (!args.includes('z')) {
       args.push('z')
     }
+    if(params.dimensions === 1 || params.dimensions === 3) { 
+      if (!args.includes('o')) {
+        args.push('o')
+      }
+    }
     const currentArguments = Object.keys(params.args)
     if (!arrayEquals(args, currentArguments)) {
       params.args = args.reduce((acc, a) => {
-        acc[a] = params.args[a] || cx(1)
+        acc[a] = params.args[a] || cx("o".includes(a)?0:1)
         return acc
       }, {})
     }
@@ -58,6 +63,16 @@ export const filterParams = (maybeBadParams, changed = [], oldParams) => {
         badParams.push('f_prime_c')
         console.warn(e)
       }
+    }
+    if (!args.includes(params.move)) {
+      params.move = 'z'
+    }
+  }
+  if (changed.includes('dimensions')) {
+    if (params.dimensions === 3) {
+      params.transparent = false
+    } else if (params.dimensions === 4) {
+      params.transparent = true
     }
   }
   if (changed.includes('convergent') || changed.includes('divergent')) {

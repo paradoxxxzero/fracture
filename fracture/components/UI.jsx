@@ -191,14 +191,14 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
                   className="button"
                   onClick={() =>
                     updateParams({
-                      mode: params.mode === '2d' ? '4d' : '2d',
+                      dimensions: (params.dimensions + 1) % 5 || 1,
                     })
                   }
                 >
-                  {params.mode}
+                  {params.dimensions}D
                 </button>
               ) : null}
-              {params.mode === '4d' &&
+              {params.dimensions > 2 &&
               ['simple', 'advanced', 'full'].includes(showUI) ? (
                 <>
                   <button
@@ -208,7 +208,7 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
                         control:
                           controls[
                             (controls.indexOf(params.control) + 1) %
-                              controls.length
+                              (controls.length - (params.dimensions === 3 ? 1 : 0))
                           ],
                       })
                     }
@@ -252,7 +252,17 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
                     >
                       c
                     </button>
-                  ) : null}
+                    ) : null}
+                    <button
+                      className="button"
+                      onClick={() =>
+                        updateParams({
+                          transparent: !params.transparent,
+                        })
+                      }
+                    >
+                      {params.transparent ? 'T' : 'O'}
+                    </button>
                 </>
               ) : null}
             </div>

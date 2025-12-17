@@ -12,7 +12,7 @@ offScreenCanvas.width = previewSize.width
 offScreenCanvas.height = previewSize.height
 
 const previewer = {
-  mode: '2d',
+  dimensions: 2,
   locked: false,
   gl: null,
   env: null,

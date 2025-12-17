@@ -1,4 +1,4 @@
-export const grid = ({ resolution = 100 } = {}) => {
+export const grid = ({ resolution =  100 } = {}) => {
   const indices = []
   const vertices = []
   const uvs = []

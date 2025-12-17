@@ -1,3 +1,5 @@
+import { consts } from './decimal'
+
 const tokens = {
   whitespace: /^\s+/,
   float: /^([0-9]+([.][0-9]*)?|[.][0-9]+)/,
@@ -35,20 +37,6 @@ class Token {
   }
 }
 
-export const consts = [
-  'PI',
-  'TAU',
-  'ETA',
-  'PHI',
-  'GAMMA',
-  'E',
-  'SQRT2',
-  'SQRT3',
-  'LN10',
-  'LN2',
-  'LEMNISCATE',
-  'GAUSS',
-]
 
 const shaderBinary = {
   '+': 'cadd',
@@ -127,6 +115,10 @@ export const functionShader = {
   dawson: 'cdawson',
   faddeeva: 'cfaddeeva',
   "faddeeva'": 'cdfaddeeva',
+  fresnels: 'cfresnels',
+  fresnelc: 'cfresnelc',
+  fresnelf: 'cfresnelf',
+  fresnelg: 'cfresnelg',
 }
 const opFunctions = {
   '+': (a, b) => a + b,
@@ -271,8 +263,6 @@ class BinaryOp {
         } else {
           return `cpow(${this.left.toShader()}, ${k})`
         }
-      } else {
-        return `cpow(${this.left.toShader()}, ${k})`
       }
     }
 
@@ -1026,7 +1016,9 @@ class Leaf {
   isPureImag() {
     return this.type === 'identifier' && this.value === 'i'
   }
-
+  isConstant() {
+    return Object.keys(consts).includes(this.value)
+  }
   toTree() {
     return `<${this.type}: ${this.value}>`
   }
@@ -1037,7 +1029,7 @@ class Leaf {
     if (this.isPureImag()) {
       return 'vec2(0., 1.)'
     }
-    if (consts.includes(this.value)) {
+    if (this.isConstant()) {
       return `vec2(${this.value}, 0.)`
     }
     if (this.type === 'identifier') {
@@ -1048,6 +1040,9 @@ class Leaf {
   toComplex() {
     if (this.isPureImag()) {
       return 'cx(0, 1)'
+    }
+    if (this.isConstant()) {
+      return `cx("${this.value}")`
     }
     if (this.type === 'identifier') {
       return this.value.replace(/'/g, '_prime')
@@ -1279,10 +1274,12 @@ export const vars = (ast_, ids = []) => {
 export const ast = s => parse(tokenize(s)).simplify()
 export const derive = (s, wrt_funs = ['z', 'z_1'], wrt_vars = []) =>
   parse(tokenize(s)).simplify().toDerivative(wrt_funs, wrt_vars).simplify()
+export const evaluate = (s, values = {}) => new Function(...Object.keys(values), `return ${ast(s).toComplex()}`)(...Object.values(values))
 
 window.tokenize = tokenize
 window.parse = parse
 window.ast = ast
 window.vars = vars
 window.derive = derive
+window.evaluate = evaluate
 window.astRaw = s => parse(tokenize(s))

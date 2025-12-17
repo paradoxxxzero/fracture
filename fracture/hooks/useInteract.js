@@ -46,7 +46,7 @@ export const useInteract = (runtime, updateParams) => {
 
   const shift = useCallback(
     (dx, dy, zoom, alt) => {
-      if (runtime.mode === '4d') {
+      if (runtime.dimensions > 2) {
         if (runtime.control === '4d') {
           const pairs = [
             [
@@ -96,7 +96,7 @@ export const useInteract = (runtime, updateParams) => {
       runtime.gl.canvas.height,
       runtime.gl.canvas.width,
       runtime.move,
-      runtime.mode,
+      runtime.dimensions,
       runtime.control,
       runtime.rotation,
       runtime.varying,
@@ -107,10 +107,10 @@ export const useInteract = (runtime, updateParams) => {
     (delta, x, y) => {
       const dx = 0.5 - x
       const dy = 0.5 - y
-      if (runtime.mode === '2d') {
+      if (runtime.dimensions < 3) {
         shift(dx * delta, dy * delta, true)
       }
-      if (runtime.mode === '4d') {
+      if (runtime.dimensions > 2) {
         if (runtime.control === '3d') {
           runtime.env.camera.zoom -= delta
           runtime.env.camera.update()
@@ -130,7 +130,7 @@ export const useInteract = (runtime, updateParams) => {
       }
       local.current.scale = local.current.scale.subtract(scaleDiff)
     },
-    [shift, runtime.mode, runtime.control]
+    [shift, runtime.dimensions, runtime.control]
   )
 
   const quickUpdate = useCallback(
@@ -214,9 +214,23 @@ export const useInteract = (runtime, updateParams) => {
         return
       }
 
-      const dx = delta[0] / window.innerWidth
-      const dy = delta[1] / window.innerHeight
-      shift(dx, dy, false, e.shiftKey)
+      let dx =  delta[0] / window.innerWidth
+      let dy =  delta[1] / window.innerHeight
+      if (e.shiftKey) {
+        dx += dy
+        dy = 0
+      }
+      if (e.ctrlKey || e.metaKey) {
+        dy += dx
+        dx = 0
+      }
+      if (e.altKey) {
+        const avg = (dx + dy) / 2
+        dx = avg
+        dy = avg
+      }
+
+      shift(dx, dy, false)
       quickUpdate()
     }
 

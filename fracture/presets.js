@@ -573,6 +573,10 @@ export const presets = withDefaults([
       domain('Error Function Complementary', 'erfc(z) + c'),
       domain('Error Function Scaled Complementary', 'erfcx(z) + c'),
       domain('Error Function Imaginary', 'erfi(z) + c'),
+      domain('Fresnel Cosine', 'fresnelc(z) + c'),
+      domain('Fresnel Sine', 'fresnels(z) + c'),
+      domain('Fresnel Auxiliary F', 'fresnelf(z) + c'),
+      domain('Fresnel Auxiliary G', 'fresnelg(z) + c'),
       domain('Dawson', 'dawson(z) + c'),
       domain('Beta', 'beta(z, c)', { args: { z: cx(), c: cx(2) } }),
       domain('Beta First derivative', "beta'(z, c)", {

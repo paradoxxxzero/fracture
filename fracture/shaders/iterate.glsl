@@ -1,4 +1,3 @@
-
 float aafract(float x) {
     float v = fract(x);
     float w = length(vec2(dFdx(x), dFdy(x)));
@@ -65,7 +64,7 @@ vec4 iterate(vec2 pixel) {
     #endif
 
     float n = 0.;
-    for (int i = 0; i < iterations; i++) {
+    for(int i = 0; i < iterations; i++) {
         n = float(i) + 1.;
 
         #if SHADING >= 5
@@ -107,21 +106,21 @@ vec4 iterate(vec2 pixel) {
         #endif
 
         #ifdef USE_DERIVATIVE
-        if (dot2(zdz) < zdzmax) {
+        if(dot2(zdz) < zdzmax) {
             n = float(iterations);
             break;
         }
         #endif
 
         #ifdef USE_CYCLE
-        if (dot2(z - cycleZRef) < 1e-16) {
+        if(dot2(z - cycleZRef) < 1e-16) {
             n = float(iterations);
             break;
         }
 
-        if (cycle.x == cycle.y) {
+        if(cycle.x == cycle.y) {
             cycle.y = 0;
-            if (cycle.z == cycle.w) {
+            if(cycle.z == cycle.w) {
                 cycle.w = 0;
                 cycle.x *= 2;
             }
@@ -132,20 +131,20 @@ vec4 iterate(vec2 pixel) {
         #endif
 
         #ifdef CONVERGENT
-        if (dot2(z - z_1) < BAILIN) {
+        if(dot2(z - z_1) < BAILIN) {
             break;
         }
         #endif
 
         #ifdef DIVERGENT
-        if (dot2(z) > BAILOUT) {
+        if(dot2(z) > BAILOUT) {
             break;
         }
         #endif
 
         #ifdef PERTURB
         // Rebasing
-        if (dot2(z) < dot2(dz) || m >= max) {
+        if(dot2(z) < dot2(dz) || m >= max) {
             dz = z;
             m = 0;
             max = maxIterations.x;
@@ -175,12 +174,12 @@ vec4 iterate(vec2 pixel) {
 
     vec3 col = vec3(0.);
     #ifdef ONLY_BAILED
-    if (n < float(iterations)) {
+    if(n < float(iterations)) {
         #endif
         float colorLevel = 0.;
         float root = 0.;
         #ifdef USE_ROOTS
-        if (lengthZ > .002) {
+        if(lengthZ > .002) {
             root = (mod((argZ + lengthZ) * TAU, TAU)) / TAU;
         }
         #endif
@@ -192,7 +191,7 @@ vec4 iterate(vec2 pixel) {
         colorLevel = n + 1. - log2(2. * log2(lengthZ)) - 4.0;
 
         #ifdef CONVERGENT
-        if (dot2(z - z_1) < BAILIN) {
+        if(dot2(z - z_1) < BAILIN) {
             float diff = dot2(z - z_1);
             float prev = dot2(z_1 - z_2);
             colorLevel = n - 1. + log(BAILIN / prev) / log(diff / prev);
@@ -238,7 +237,7 @@ vec4 iterate(vec2 pixel) {
     vec2 grid = gridZ;
     #endif
 
-    vec2 gridDist = fract(2. * (grid + vec2(timeFactor)) * gridScale);
+    vec2 gridDist = fract((grid + vec2(timeFactor)) * gridScale);
     gridDist = min(gridDist, 1. - gridDist);
     gridDist /= fwidth(grid) * gridScale;
     col = mix(vec3(0.), col, smoothstep(0., gridWidth * 3., gridDist.x));

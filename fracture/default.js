@@ -26,11 +26,10 @@ export const shadings = [
   'distance',
   'distance_scaled',
 ]
-export const varyings = ['z', 'c', 'zc']
-export const controls = ['3d', '4d', 'arg']
+export const controls = ['arg', '3d', '4d']
 
 export const defaultParams = {
-  mode: '2d',
+  dimensions: 2,
   args: { z: cx(), c: cx() },
   scale: cx(1.2),
   varying: 'c',
@@ -45,6 +44,7 @@ export const defaultParams = {
   shading: 'bail_time_log',
   offset: 80,
   velocity: 100,
+  transparent: true,
   hue: 0,
   saturation: 100,
   lightness: 100,

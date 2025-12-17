@@ -28,7 +28,7 @@ void main() {
     vec3 lightDirection = eyeDirection;
     float diffuse = abs(dot(vNormal, lightDirection));
     vec3 halfVector = normalize(lightDirection + eyeDirection);
-    float specular = pow(abs(dot(vNormal, halfVector)), 32.);
+    // float specular = pow(abs(dot(vNormal, halfVector)), 32.);
     float k = diffuse; //+ specular;
 
     outColor = vec4(vec3(k * albedo), 1.);

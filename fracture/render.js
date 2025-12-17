@@ -1,6 +1,7 @@
 import { cx, m } from './decimal'
 import { uniformParams, compileConstants } from './default'
 import { ast } from './formula'
+import fragment1dSource from './shaders/fragment-1d.glsl?raw'
 import fragment2dSource from './shaders/fragment-2d.glsl?raw'
 import fragment4dSource from './shaders/fragment-4d.glsl?raw'
 import includesSource from './shaders/includes.glsl?raw'
@@ -11,6 +12,7 @@ import complexSource from './shaders/complex.glsl?raw'
 import specialSource from './shaders/special.glsl?raw'
 import iterateSource from './shaders/iterate.glsl?raw'
 import vertexQuadSource from './shaders/vertex-quad.glsl?raw'
+import vertex3dSource from './shaders/vertex-3d.glsl?raw'
 import vertex4dSource from './shaders/vertex-4d.glsl?raw'
 import { grid } from './geometry'
 import {
@@ -179,7 +181,9 @@ export const linkProgram = rt => {
 export const recompileVertex = rt => {
   compileShader(
     rt,
-    rt.mode === '2d' ? vertexQuadSource : preprocess(rt, vertex4dSource),
+    rt.dimensions < 3
+      ? vertexQuadSource : preprocess(rt, rt.dimensions === 3
+        ? vertex3dSource : vertex4dSource),
     rt.env.vertexShader
   )
 }
@@ -188,7 +192,13 @@ export const recompileFragment = rt => {
   const { gl } = rt
   compileShader(
     rt,
-    preprocess(rt, rt.mode === '2d' ? fragment2dSource : fragment4dSource),
+    preprocess(
+      rt,
+      rt.dimensions === 1
+        ? fragment1dSource
+        : rt.dimensions === 2
+          ? fragment2dSource
+          : fragment4dSource),
     rt.env.fragmentShader
   )
   linkProgram(rt)
@@ -210,7 +220,7 @@ export const recompileFragment = rt => {
       console.info(name, st.toShader(), st.toComplex())
     })
   }
-  if (rt.mode === '4d') {
+  if (rt.dimensions > 2) {
     rt.env.uniforms.viewProjection = gl.getUniformLocation(
       rt.env.program,
       'viewProjection'
@@ -223,11 +233,11 @@ export const recompileFragment = rt => {
 export const changeProgram = rt => {
   const gl = rt.gl
   if (rt.env) {
-    if (rt.env.mode === rt.mode) {
-      console.warn('Mode already set', rt.mode)
+    if (rt.env.dimensions === rt.dimensions) {
+      console.warn('Dimensions already set', rt.dimensions)
       return
     }
-    if (rt.env.mode === '2d') {
+    if (rt.env.dimensions < 3) {
       gl.deleteTexture(rt.env.orbit)
     } else {
       gl.deleteBuffer(rt.env.uvBuffer)
@@ -245,7 +255,7 @@ export const changeProgram = rt => {
     vertexShader: gl.createShader(gl.VERTEX_SHADER),
     fragmentShader: gl.createShader(gl.FRAGMENT_SHADER),
     program: gl.createProgram(),
-    mode: rt.mode,
+    dimensions: rt.dimensions,
   }
 
   gl.attachShader(rt.env.program, rt.env.vertexShader)
@@ -254,7 +264,7 @@ export const changeProgram = rt => {
   recompileVertex(rt)
   recompileFragment(rt)
 
-  if (rt.mode === '2d') {
+  if (rt.dimensions < 3) {
     rt.env.orbit = gl.createTexture()
     gl.bindTexture(gl.TEXTURE_2D, rt.env.orbit)
     gl.texImage2D(
@@ -524,7 +534,7 @@ export const render = (rt, forceSize) => {
     }
   }
 
-  if (rt.mode === '2d') {
+  if (rt.dimensions < 3) {
     gl.disable(gl.DEPTH_TEST)
     gl.disable(gl.BLEND)
     // TODO: In useProcess / worker + only in prevention if still in viewPort
@@ -562,11 +572,14 @@ export const render = (rt, forceSize) => {
     gl.clearColor(0, 0, 0, 0)
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
     gl.enable(gl.DEPTH_TEST)
-    gl.enable(gl.BLEND)
-    // gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
-    gl.blendFunc(gl.ONE, gl.ONE)
-    // gl.depthFunc(gl.LEQUAL)
-    gl.depthFunc(gl.ALWAYS)
+    if (rt.transparent) {
+      gl.enable(gl.BLEND)
+      gl.blendFunc(gl.ONE, gl.ONE)
+      gl.depthFunc(gl.ALWAYS)
+    } else {
+      gl.disable(gl.BLEND)
+      gl.depthFunc(gl.LEQUAL)
+    }
     gl.drawElements(gl.TRIANGLES, rt.env.elements, gl.UNSIGNED_SHORT, 0)
   }
 }

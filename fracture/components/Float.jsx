@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { evaluate } from '../formula'
 import { m } from '../decimal'
 
 export default function Float({
@@ -16,9 +17,27 @@ export default function Float({
 }) {
   const [raw, setRaw] = useState(`${value}`)
 
+  const parse = useCallback(
+    raw => {
+      if (decimal) {
+        try {
+          return m(raw)
+        } catch (e) {
+          try {
+            return evaluate(raw).real()
+          } catch (e) {
+            return NaN
+          }
+        }
+      }
+      return parseFloat(raw)
+    },
+    [decimal]
+  )
+
   useEffect(() => {
     try {
-      if (decimal ? !value.eq(m(raw)) : value !== parseFloat(raw)) {
+      if (decimal ? !value.eq(parse(raw)) : value !== parse(raw)) {
         setRaw(`${value}`)
         setValid(true)
       }
@@ -35,19 +54,21 @@ export default function Float({
     newRaw => {
       setRaw(newRaw)
       if (
-        !newRaw ||
-        !newRaw.match(/^\s*-?\s*(\d+(\.\d*)?|\.\d+)(e-?\d+)?\s*$/)
+        !newRaw
+        // ||
+        // !newRaw.match(/^\s*-?\s*(\d+(\.\d*)?|\.\d+)(e-?\d+)?\s*$/)
       ) {
         setValid(false)
         return
       }
-      const parsed = decimal ? m(newRaw) : parseFloat(newRaw)
-      if (!decimal && (isNaN(parsed) || parsed < min || parsed > max)) {
+      const parsed = parse(newRaw)
+
+      if (isNaN(parsed) || (!decimal && (parsed < min || parsed > max))) {
         setValid(false)
-      } else {
-        setValid(true)
-        onChange(name, parsed)
+        return
       }
+      setValid(true)
+      onChange(name, parsed)
     },
     [decimal, max, min, name, onChange]
   )

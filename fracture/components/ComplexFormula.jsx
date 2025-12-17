@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { cx } from '../decimal'
-import { ast, consts, functionShader } from '../formula'
+import { ast, functionShader } from '../formula'
+import { consts } from '../decimal'
 
 export default function ComplexFormula({
   name,
