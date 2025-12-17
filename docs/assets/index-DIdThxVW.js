@@ -514,15 +514,16 @@ vec2 catan(in vec2 z) {
 }
 
 vec2 ccosh(in vec2 z) {
-    return .5 * cadd(cexp(z), cexp(cmul(-ci, z)));
+    return .5 * cadd(cexp(z), cexp(-z));
 }
 
 vec2 csinh(in vec2 z) {
-    return .5 * (cexp(z) - cexp(cmul(-ci, z)));
+    return .5 * csub(cexp(z), cexp(-z));
 }
 
 vec2 ctanh(in vec2 z) {
-    return cdiv(csinh(z), ccosh(z));
+    vec2 e2z = cexp(-2. * z);
+    return cdiv(csub(c1, e2z), cadd(c1, e2z));
 }
 
 vec2 cacosh(in vec2 z) {
@@ -543,14 +544,14 @@ vec2 cpow(in vec2 z, in vec2 k) {
 
 vec2 cpow(in vec2 z, in int k) {
     vec2 w = vec2(1., 0.);
-    if (abs(k) > 10) {
+    if(abs(k) > 10) {
         return cpow(z, R(k));
     }
-    if (k < 0) {
+    if(k < 0) {
         z = cinv(z);
         k = -k;
     }
-    for (int i = 0; i < k; i++) {
+    for(int i = 0; i < k; i++) {
         w = cmul(w, z);
     }
     return w;
