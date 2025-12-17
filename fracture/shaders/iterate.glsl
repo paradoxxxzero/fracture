@@ -237,7 +237,7 @@ vec4 iterate(vec2 pixel) {
     vec2 grid = gridZ;
     #endif
 
-    vec2 gridDist = fract((grid + vec2(timeFactor)) * gridScale);
+    vec2 gridDist = fract(2. * (grid + vec2(timeFactor)) * gridScale);
     gridDist = min(gridDist, 1. - gridDist);
     gridDist /= fwidth(grid) * gridScale;
     col = mix(vec3(0.), col, smoothstep(0., gridWidth * 3., gridDist.x));

@@ -69,9 +69,7 @@ export const filterParams = (maybeBadParams, changed = [], oldParams) => {
     }
   }
   if (changed.includes('dimensions')) {
-    if (params.dimensions === 3) {
-      params.transparent = false
-    } else if (params.dimensions === 4) {
+    if (params.dimensions === 4) {
       params.transparent = true
     }
   }
