@@ -578,6 +578,8 @@ export const presets = withDefaults([
       domain('Fresnel Auxiliary F', 'fresnelf(z) + c'),
       domain('Fresnel Auxiliary G', 'fresnelg(z) + c'),
       domain('Dawson', 'dawson(z) + c'),
+      domain('Lambert W', 'lambertw(z, k) + c', { args: { z: cx(0), k: cx(0), c: cx(0) } }),
+      domain('Lambert Omega', 'omega(z) + c'),
       domain('Beta', 'beta(z, c)', { args: { z: cx(), c: cx(2) } }),
       domain('Beta First derivative', "beta'(z, c)", {
         args: { z: cx(), c: cx(2) },
@@ -588,7 +590,11 @@ export const presets = withDefaults([
       domain('Zeta', 'zeta(z) + c'),
       domain('Zeta First derivative', "zeta'(z) + c"),
       domain('Psi (Digamma)', 'psi(z) + c'),
+      domain('Polygamma', 'polygamma(z, w) + c', {
+        args: { z: cx(1), w: cx(1), c: cx() },
+      }),
       // domain('Phi', 'phi(z) + c'),
+      // domain('Xi', 'xi(z) + c'),
       domain('Tania', 'tania(z) + c'),
       domain('Atania', 'atania(z) + c'),
       domain('Doya', 'doya(z) + c'),

@@ -119,6 +119,9 @@ export const functionShader = {
   fresnelc: 'cfresnelc',
   fresnelf: 'cfresnelf',
   fresnelg: 'cfresnelg',
+  lambertw: 'clambertw',
+  W0: 'clambertw',
+  omega: 'comega',
 }
 const opFunctions = {
   '+': (a, b) => a + b,

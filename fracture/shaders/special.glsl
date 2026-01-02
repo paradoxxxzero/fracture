@@ -983,3 +983,46 @@ vec2 cfresnelg(vec2 z) {
     vec2 z2 = cmul(z, z);
     return csub(cmul(csub(c1 * .5, cfresnels(z)), csin(z2)), cmul(csub(c1 * .5, cfresnelc(z)), ccos(z2)));
 }
+
+vec2 clambertw(vec2 z, vec2 k) {
+    // https://www.researchgate.net/publication/346309410_Precise_and_fast_computation_of_Lambert_W_function_by_piecewise_minimax_rational_function_approximation_with_variable_transformation?channel=doi&linkId=5fbe04fd458515b7976a3395&showFulltext=true
+
+    int branch = int(k.x);
+    // Initial guess for Lambert W function
+    vec2 tauki = TAU * float(branch) * ci;
+    vec2 w = clog(z) + tauki - clog(clog(z) + tauki);
+    vec2 m = cadd(c1, 2. * z);
+
+    if(branch == 0 && length(z) < 1.) {
+        vec2 p = csqrt(2. * (E * z + c1));
+        vec2 p2 = cpow2(p) / 3.;
+        vec2 p3 = 11. * cpow3(p) / 72.;
+        w = -c1 + p - p2 + p3;
+    }
+
+    if(branch == 0 && length(csub(z, R(.5))) <= .5) {
+        w = cdiv(0.35173371 * cadd(R(0.1237166), 7.061302897 * z), cadd(R(2.), 0.827184 * m));
+    }
+
+    vec2 wp = w;
+    vec2 c2 = R(2.);
+
+    for(int i = 0; i < 30; i++) {
+        wp = w;
+        vec2 ew = cexp(w);
+        w = csub(w, cdiv(cmul(c2, cmul(w + c1, cmul(w, ew) - z)), cmul(ew, cpow2(w) + cmul(c2, w) + c2) + cmul(w + c2, z)));
+
+        if(length(csub(w, wp)) < 1e-9) {
+            break;
+        }
+    }
+    return w;
+}
+
+vec2 clambertw(vec2 z) {
+    return clambertw(z, c0);
+}
+
+vec2 comega(in vec2 z) {
+    return clambertw(cexp(z), R(ceil((z.y - PI) / TAU)));
+}

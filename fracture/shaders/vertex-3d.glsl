@@ -28,7 +28,7 @@ void main() {
     #transform_args
     vec2 z0 = z;
     // Tangent and bitangent
-    float eps = 1e-3;
+    float eps = 1e-4;
     vec2 zt = z + R(eps);
     vec2 zb = z + I(eps);
     vec2 zt0 = zt;
@@ -46,9 +46,6 @@ void main() {
     z0 -= arg_z;
     zt0 -= arg_z;
     zb0 -= arg_z;
-    if(anakata < 0.) {
-        z = clamp(z, anakata, -anakata);
-    }
     z = cdiv(z, cis(o.x));
     zt = cdiv(zt, cis(o.x));
     zb = cdiv(zb, cis(o.x));
