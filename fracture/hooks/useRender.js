@@ -7,6 +7,7 @@ import {
   updateUniforms,
   changeProgram,
 } from '../render'
+import { use } from 'react'
 
 const params = (runtime, keys) => keys.map(key => runtime[key])
 const argValue = args =>
@@ -44,6 +45,41 @@ export const useRender = (runtime, setRuntime) => {
   }, [...params(runtime, compileParams), setRuntime])
 
   useEffect(() => {
+    if (!runtime.texture) {
+      return
+    }
+    const img = new Image()
+    img.crossOrigin = 'anonymous'
+    img.onload = () => {
+      setRuntime(runtime => {
+        const gl = runtime.gl
+        gl.activeTexture(gl.TEXTURE2)
+        gl.bindTexture(gl.TEXTURE_2D, runtime.env.texture)
+        gl.texImage2D(
+          gl.TEXTURE_2D,
+          0,
+          gl.RGBA,
+          img.width,
+          img.height,
+          0,
+          gl.RGBA,
+          gl.UNSIGNED_BYTE,
+          img
+        )
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
+        return {
+          ...runtime,
+          textureElement: img,
+        }
+      })
+    }
+    img.src = runtime.texture
+  }, [runtime.texture])
+
+  useEffect(() => {
     setRuntime(runtime => {
       updateUniforms(runtime)
       return runtime
@@ -53,6 +89,7 @@ export const useRender = (runtime, setRuntime) => {
     ...params(runtime, Object.keys(uniformParams)),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     argValue(runtime.args),
+    runtime.textureElement,
     setRuntime,
   ])
 

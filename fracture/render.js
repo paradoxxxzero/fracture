@@ -182,14 +182,19 @@ export const recompileVertex = rt => {
   compileShader(
     rt,
     rt.dimensions < 3
-      ? vertexQuadSource : preprocess(rt, rt.dimensions === 3
-        ? vertex3dSource : vertex4dSource),
+      ? vertexQuadSource
+      : preprocess(rt, rt.dimensions === 3 ? vertex3dSource : vertex4dSource),
     rt.env.vertexShader
   )
 }
 
 export const recompileFragment = rt => {
   const { gl } = rt
+
+  if (rt.env.texture) {
+    gl.deleteTexture(rt.env.texture)
+  }
+
   compileShader(
     rt,
     preprocess(
@@ -198,11 +203,32 @@ export const recompileFragment = rt => {
         ? fragment1dSource
         : rt.dimensions === 2
           ? fragment2dSource
-          : fragment4dSource),
+          : fragment4dSource
+    ),
     rt.env.fragmentShader
   )
   linkProgram(rt)
   gl.useProgram(rt.env.program) // NEEDED?
+
+  gl.activeTexture(gl.TEXTURE2)
+  rt.env.texture = gl.createTexture()
+  gl.bindTexture(gl.TEXTURE_2D, rt.env.texture)
+  gl.texImage2D(
+    gl.TEXTURE_2D,
+    0,
+    gl.RGBA,
+    rt.textureElement ? rt.textureElement.width : 1,
+    rt.textureElement ? rt.textureElement.height : 1,
+    0,
+    gl.RGBA,
+    gl.UNSIGNED_BYTE,
+    rt.textureElement ? rt.textureElement : new Uint8Array([255, 0, 0, 255])
+  )
+
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
 
   rt.env.uniforms = Object.keys(uniformParams)
     .concat(Object.keys(rt.args).map(arg => `arg_${arg}`))
@@ -265,6 +291,7 @@ export const changeProgram = rt => {
   recompileFragment(rt)
 
   if (rt.dimensions < 3) {
+    gl.activeTexture(gl.TEXTURE1)
     rt.env.orbit = gl.createTexture()
     gl.bindTexture(gl.TEXTURE_2D, rt.env.orbit)
     gl.texImage2D(

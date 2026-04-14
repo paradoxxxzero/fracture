@@ -8,6 +8,7 @@ import {
   playIcon,
   presetsIcon,
   stopIcon,
+  imageIcon,
 } from '../icons'
 import { presets } from '../presets.js'
 import Boolean from './Boolean.jsx'
@@ -21,6 +22,7 @@ import { makeBigPng } from '../export.js'
 import Declaration from './Declaration.jsx'
 import { ident, rotate } from '../matrix.js'
 import { render } from '../render.js'
+import Text from './Text.jsx'
 
 const getShowUI = () => {
   try {
@@ -41,6 +43,22 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
       animate: false,
     })
     setShowPresets(true)
+  }, [updateParams])
+
+  const loadImage = useCallback(() => {
+    const file = document.createElement('input')
+    file.type = 'file'
+    file.accept = 'image/*'
+    file.onchange = e => {
+      const reader = new FileReader()
+      reader.onload = () => {
+        updateParams({
+          texture: reader.result,
+        })
+      }
+      reader.readAsDataURL(e.target.files[0])
+    }
+    file.click()
   }, [updateParams])
   const closePresets = useCallback(() => {
     setShowPresets(false)
@@ -208,7 +226,8 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
                         control:
                           controls[
                             (controls.indexOf(params.control) + 1) %
-                              (controls.length - (params.dimensions === 3 ? 1 : 0))
+                              (controls.length -
+                                (params.dimensions === 3 ? 1 : 0))
                           ],
                       })
                     }
@@ -252,17 +271,17 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
                     >
                       c
                     </button>
-                    ) : null}
-                    <button
-                      className="button"
-                      onClick={() =>
-                        updateParams({
-                          transparent: !params.transparent,
-                        })
-                      }
-                    >
-                      {params.transparent ? 'T' : 'O'}
-                    </button>
+                  ) : null}
+                  <button
+                    className="button"
+                    onClick={() =>
+                      updateParams({
+                        transparent: !params.transparent,
+                      })
+                    }
+                  >
+                    {params.transparent ? 'T' : 'O'}
+                  </button>
                 </>
               ) : null}
             </div>
@@ -312,6 +331,34 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
                 options={palettes}
                 onChange={handleChange}
               />
+              {runtime.palette === 'texture' ? (
+                <>
+                  <Text
+                    name="texture"
+                    label="Texture"
+                    value={params.texture}
+                    onChange={handleChange}
+                    truncate={1000}
+                    className="texture-input"
+                  >
+                    <button
+                      className="button small"
+                      onClick={loadImage}
+                      title="Image"
+                    >
+                      {imageIcon}
+                    </button>
+                  </Text>
+                  <Number
+                    name="textureBlend"
+                    label="Texture Blend"
+                    min={0}
+                    step={0.1}
+                    value={params.textureBlend}
+                    onChange={handleChange}
+                  />
+                </>
+              ) : null}
               <Select
                 label="Shading"
                 name="shading"
@@ -698,7 +745,7 @@ export default function UI({ runtime, params, setRuntime, updateParams }) {
                 })
               }
             >
-              𝚫{params.move}
+              ∆{params.move}
             </button>
           ) : null}
         </div>

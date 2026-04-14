@@ -8,6 +8,7 @@ export default function App({ params, updateParams }) {
   const [runtime, setRuntime] = useState({
     ...params,
     perturb: false,
+    textureElement: null,
     timeref: 0,
   })
   const [displayStack, setDisplayStack] = useState(false)

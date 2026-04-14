@@ -64,7 +64,7 @@ vec4 iterate(vec2 pixel) {
     #endif
 
     float n = 0.;
-    for(int i = 0; i < iterations; i++) {
+    for (int i = 0; i < iterations; i++) {
         n = float(i) + 1.;
 
         #if SHADING >= 5
@@ -106,21 +106,21 @@ vec4 iterate(vec2 pixel) {
         #endif
 
         #ifdef USE_DERIVATIVE
-        if(dot2(zdz) < zdzmax) {
+        if (dot2(zdz) < zdzmax) {
             n = float(iterations);
             break;
         }
         #endif
 
         #ifdef USE_CYCLE
-        if(dot2(z - cycleZRef) < 1e-16) {
+        if (dot2(z - cycleZRef) < 1e-16) {
             n = float(iterations);
             break;
         }
 
-        if(cycle.x == cycle.y) {
+        if (cycle.x == cycle.y) {
             cycle.y = 0;
-            if(cycle.z == cycle.w) {
+            if (cycle.z == cycle.w) {
                 cycle.w = 0;
                 cycle.x *= 2;
             }
@@ -131,20 +131,20 @@ vec4 iterate(vec2 pixel) {
         #endif
 
         #ifdef CONVERGENT
-        if(dot2(z - z_1) < BAILIN) {
+        if (dot2(z - z_1) < BAILIN) {
             break;
         }
         #endif
 
         #ifdef DIVERGENT
-        if(dot2(z) > BAILOUT) {
+        if (dot2(z) > BAILOUT) {
             break;
         }
         #endif
 
         #ifdef PERTURB
         // Rebasing
-        if(dot2(z) < dot2(dz) || m >= max) {
+        if (dot2(z) < dot2(dz) || m >= max) {
             dz = z;
             m = 0;
             max = maxIterations.x;
@@ -174,12 +174,12 @@ vec4 iterate(vec2 pixel) {
 
     vec3 col = vec3(0.);
     #ifdef ONLY_BAILED
-    if(n < float(iterations)) {
+    if (n < float(iterations)) {
         #endif
         float colorLevel = 0.;
         float root = 0.;
         #ifdef USE_ROOTS
-        if(lengthZ > .002) {
+        if (lengthZ > .002) {
             root = (mod((argZ + lengthZ) * TAU, TAU)) / TAU;
         }
         #endif
@@ -191,7 +191,7 @@ vec4 iterate(vec2 pixel) {
         colorLevel = n + 1. - log2(2. * log2(lengthZ)) - 4.0;
 
         #ifdef CONVERGENT
-        if(dot2(z - z_1) < BAILIN) {
+        if (dot2(z - z_1) < BAILIN) {
             float diff = dot2(z - z_1);
             float prev = dot2(z_1 - z_2);
             colorLevel = n - 1. + log(BAILIN / prev) / log(diff / prev);
@@ -214,6 +214,13 @@ vec4 iterate(vec2 pixel) {
 
         #ifdef ONLY_BAILED
     }
+    #endif
+
+    #if PALETTE == 13
+    vec2 uv = mod((z * vec2(1., -textureRatio) * velocity) - vec2(.5), vec2(1.0));
+    // vec2 textureDist = min(uv, 1. - uv) / fwidth(uv);
+    vec3 texCol = texture(tex, uv).rgb;
+    col = mix(max(texCol, col), texCol, textureBlend);
     #endif
 
     #ifdef NORM_SHADE

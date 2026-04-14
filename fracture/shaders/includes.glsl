@@ -36,6 +36,10 @@ uniform sampler2D orbit;
 uniform ivec2 maxIterations;
 #endif
 
+uniform sampler2D tex;
+uniform float textureRatio;
+uniform float textureBlend;
+
 #include globals
 #include colors
 #include render

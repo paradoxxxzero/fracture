@@ -16,6 +16,7 @@ export const palettes = [
   'magma',
   'inferno',
   'turbo',
+  'texture',
 ]
 export const shadings = [
   'domain_coloring',
@@ -94,6 +95,8 @@ export const defaultParams = {
   polya: 15,
   polyaColor: true,
   polyaLightness: 120,
+  texture: 'https://threejs.org/examples/textures/uv_grid_opengl.jpg',
+  textureBlend: 1,
 }
 
 export const allParams = Object.keys(defaultParams)
@@ -127,8 +130,8 @@ export const compileParams = [
   'f_prime_z',
   'f_prime_c',
   'f_perturb',
-  'args',
-  'varying',
+  // 'args',
+  // 'varying',
   ...Object.keys(compileConstants),
 ]
 export const uniformParams = {
@@ -156,8 +159,20 @@ export const uniformParams = {
   },
   orbit: {
     type: '1i',
-    value: () => 0,
+    value: () => 1,
   },
+  tex: {
+    type: '1i',
+    value: () => 2,
+  },
+  textureRatio: {
+    type: '1f',
+    value: (_, rt) =>
+      rt.textureElement
+        ? rt.textureElement.width / rt.textureElement.height
+        : 1,
+  },
+  textureBlend: '1f',
   bailin: '1f',
   bailout: '1f',
   derivative: '1f',
