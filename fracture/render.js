@@ -583,7 +583,7 @@ export const render = (rt, forceSize) => {
         console.warn(e)
       }
       gl.uniform2iv(rt.env.uniforms.maxIterations, max)
-
+      gl.activeTexture(gl.TEXTURE1)
       gl.texImage2D(
         gl.TEXTURE_2D,
         0,

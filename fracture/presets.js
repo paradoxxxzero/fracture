@@ -801,8 +801,8 @@ export const presets = withDefaults([
         args: { z: cx(), c: cx(0.3, 0.2) },
         scale: cx(3),
       }),
-      domain('Theta 3 (nome)', 'theta3(0, z) + c', { scale: cx(1.1), c: cx() }),
-      domain('Euler Function', 'eulerq(z) + c', { scale: cx(1.1), c: cx() }),
+      domain('Theta 3 (nome)', 'theta3(0, z) + c', { scale: cx(1.1) }),
+      domain('Euler Function', 'eulerq(z) + c', { scale: cx(1.1) }),
       domain('q-Pochhammer', 'qpoch(c, z)', {
         args: { z: cx(), c: cx(0.5, 0.2) },
         scale: cx(1.1),

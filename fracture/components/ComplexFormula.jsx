@@ -72,7 +72,7 @@ export default function ComplexFormula({
             .match(/(.+) is not defined/)[1]
             .split(': ')
             .slice(-1)[0]
-          if (idName.length > 1 && !consts.includes(idName)) {
+          if (idName.length > 1 && !Object.keys(consts).includes(idName)) {
             console.warn('Undeclared identifier in formula', e)
             setValid(false)
             onChange(name, newRaw)

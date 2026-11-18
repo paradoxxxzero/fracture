@@ -7,7 +7,6 @@ import {
   updateUniforms,
   changeProgram,
 } from '../render'
-import { use } from 'react'
 
 const params = (runtime, keys) => keys.map(key => runtime[key])
 const argValue = args =>
