@@ -6,7 +6,8 @@ const tokens = {
   integer: /^[0-9]+/,
   operator: /^(\*\*|[+\-*/%]|\^{1,2}|\|-\|)/,
   unaryPrefix: /^~/,
-  unarySuffix: /^#/,
+  // # is f / f', ' is the derivative (an identifier consumes its own trailing quotes: z' stays a name)
+  unarySuffix: /^[#']/,
   identifier: /^[a-zA-Z_][a-zA-Z0-9_]*'*/,
   pipe: /^\|/,
   lparen: /^\(/,

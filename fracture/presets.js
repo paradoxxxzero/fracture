@@ -108,6 +108,66 @@ const nova = (name, f, extra = {}) => ({
   },
 })
 
+// Escape time fractal of an arbitrary map (no perturbation, no derivative)
+const escape = (name, f, extra = {}) => ({
+  name,
+  params: {
+    ...brot(name, 2).params,
+    f,
+    f_perturb: null,
+    useDerivative: false,
+    ...extra,
+  },
+})
+
+// Higher order root finding iterations built with the derivative operator: (f)' and (f)''
+const rootFinding = (method, name, f, extra = {}) => {
+  const d1 = `(${f})'`
+  const d2 = `(${f})''`
+  const formulas = {
+    halley: `z - 2 * (${f}) * ${d1} / (2 * (${d1})^2 - (${f}) * ${d2})`,
+    schroder: `z - (${f}) * ${d1} / ((${d1})^2 - (${f}) * ${d2})`,
+    // Two steps method, uses the previous iterate z_1
+    secant: `z - (${f}) * (z - z_1) / ((${f}) - (${f.replace(/\bz\b/g, 'z_1')}))`,
+  }
+  return {
+    name,
+    params: { ...newt(name, f, extra).params, f: `${formulas[method]} + c` },
+  }
+}
+
+// Fractals defined by the digits of z in a base: z -> base * frac(z) - digit, escaping
+// where the (integer) digits of the pair (re z, im z) satisfy a condition
+const digits = (name, base, condition, extra = {}) => {
+  const d = `floor(${base} * frac(z))`
+  const isOne = part => `(1 - |${part}(${d}) - 1|)`
+  const conditions = {
+    both: `${isOne('re')} * ${isOne('im')}`,
+    either: `(${isOne('re')} + ${isOne('im')} - ${isOne('re')} * ${isOne('im')})`,
+    neither: `(1 - ${isOne('re')}) * (1 - ${isOne('im')})`,
+    xor2: `re(${d}) * im(${d})`,
+  }
+  return {
+    name,
+    params: {
+      args: { z: cx(0.5, 0.5), c: cx(base) },
+      scale: cx(0.55),
+      varying: 'z',
+      // Anything outside of the unit square escapes at once (no periodic tiling)
+      f: `c * frac(z) - ${d} + 1000 * (${conditions[condition]} + |re(floor(z))| + |im(floor(z))|)`,
+      shading: 'bail_time',
+      palette: 'turbo',
+      offset: 0,
+      velocity: 200,
+      iterations: 100,
+      useDerivative: false,
+      useCycle: false,
+      onlyBailed: true,
+      ...extra,
+    },
+  }
+}
+
 const domain = (name, f, extra = {}) => ({
   name,
   params: {
@@ -324,6 +384,51 @@ export const presets = withDefaults([
           useDerivative: false,
         },
       },
+      escape('Heart', '(|re(z)| + im(z)i)^2 + c', {
+        args: { z: cx(), c: cx(-0.6) },
+        scale: cx(1.6),
+      }),
+      escape('Perpendicular Burning Ship', '(|re(z)| - im(z)i)^2 + c', {
+        args: { z: cx(), c: cx(-0.1) },
+        scale: cx(2.2),
+      }),
+      escape('Fractional Multibrot', 'z^(5/2) + c', {
+        args: { z: cx(), c: cx() },
+        scale: cx(1.6),
+      }),
+      escape('Lambda', 'c * z * (1 - z)', {
+        args: { z: cx(0.5), c: cx(2) },
+        scale: cx(3.5),
+      }),
+      escape('Manowar', 'z^2 + z_1 + c', {
+        args: { z: cx(), c: cx(-0.2) },
+        scale: cx(0.9),
+      }),
+      escape('Phoenix Mandelbrot', 'z^2 + re(c) + im(c) * z_1', {
+        args: { z: cx(), c: cx() },
+        scale: cx(2),
+      }),
+      escape(
+        'Magnet II',
+        '((z^3 + 3(c - 1)z + (c - 1)(c - 2)) / (3z^2 + 3(c - 2)z + (c - 1)(c - 2) + 1))^2',
+        {
+          args: { z: cx(), c: cx(2) },
+          scale: cx(2.2),
+          convergent: true,
+        }
+      ),
+      escape('Exponential', 'c * exp(z)', {
+        args: { z: cx(), c: cx(0.3) },
+        scale: cx(2.5),
+      }),
+      escape('Sine', 'c * sin(z)', {
+        args: { z: cx(Math.PI / 2), c: cx() },
+        scale: cx(3),
+      }),
+      escape('Cosine', 'c * cos(z)', {
+        args: { z: cx(), c: cx() },
+        scale: cx(3),
+      }),
     ],
   },
   {
@@ -416,6 +521,44 @@ export const presets = withDefaults([
           f: 'faddeeva(z) + c',
         },
       },
+      julia('Dendrite', 2, cx(0, 1)),
+      julia('Douady Rabbit', 2, cx(-0.123, 0.745)),
+      julia('Siegel Disk', 2, cx(-0.391, -0.587)),
+      julia('Airplane', 2, cx(-1.755, 0), { scale: cx(2) }),
+      julia('San Marco', 2, cx(-0.75, 0), { scale: cx(1.8) }),
+      julia('Cauliflower', 2, cx(0.25, 0), { scale: cx(1.8) }),
+      julia('Dragon', 2, cx(-0.8, 0.156)),
+      julia('Spiral', 2, cx(-0.7269, 0.1889)),
+      escape('Sine Julia', 'c * sin(z)', {
+        args: { z: cx(), c: cx(1, 1) },
+        varying: 'z',
+        scale: cx(5),
+      }),
+      escape('Heart Julia', '(|re(z)| + im(z)i)^2 + c', {
+        args: { z: cx(), c: cx(-0.8, 0.1) },
+        varying: 'z',
+        scale: cx(1.5),
+      }),
+      escape('Celtic Julia', '|re(z^2)| + i * im(z^2) + c', {
+        args: { z: cx(), c: cx(-0.7, 0.2) },
+        varying: 'z',
+        scale: cx(2),
+      }),
+      escape('Burning Ship Julia', '(|re(z)| + |im(z)|i)^2 + c', {
+        args: { z: cx(), c: cx(-1.755, -0.04) },
+        varying: 'z',
+        scale: cx(2),
+      }),
+      escape('Hénon basin', '1 - re(c) * re(z)^2 + im(z) + i * im(c) * re(z)', {
+        args: { z: cx(), c: cx(1.4, 0.3) },
+        varying: 'z',
+        scale: cx(3),
+        iterations: 100,
+        shading: 'bail_time',
+        palette: 'turbo',
+        offset: 0,
+        velocity: 200,
+      }),
     ],
   },
   {
@@ -482,6 +625,24 @@ export const presets = withDefaults([
         args: { z: cx(1, 0.25), c: cx(), a: cx(1.9) },
         scale: cx(0.05),
       }),
+      newt('Newton', 'z^5 - 1'),
+      newt('Newton', 'z^7 - 1'),
+      newt('Newton', 'z^3 - z', { scale: cx(2.5) }),
+      newt('Newton', 'z^z - 1', { scale: cx(3) }),
+      newt('Newton', 'besselj(z, 0)', {
+        args: { z: cx(), c: cx() },
+        scale: cx(10),
+      }),
+      rootFinding('halley', 'Halley', 'z^3 - 1', { scale: cx(2) }),
+      rootFinding('halley', 'Halley', 'z^5 - 1', { scale: cx(2) }),
+      rootFinding('halley', 'Halley', 'sin(z)', {
+        args: { z: cx(Math.PI / 2), c: cx() },
+        scale: cx(3),
+      }),
+      rootFinding('schroder', 'Schroder', 'z^3 - 1'),
+      rootFinding('schroder', 'Schroder', 'z^4 - 1'),
+      rootFinding('secant', 'Secant', 'z^3 - 1'),
+      rootFinding('secant', 'Secant', 'z^5 - 1'),
     ],
   },
   {
@@ -513,6 +674,16 @@ export const presets = withDefaults([
       nova('Nova', 'z^8 + 15z^4 - 16'),
       nova('Nova', 'z^6 + z^3 - 1'),
       nova('Nova', 'z^4 * sin(z) - 1'),
+      nova('Nova', 'z^5 - 1'),
+      nova('Nova', 'z^3 - z'),
+    ],
+  },
+  {
+    ...digits('Sierpinski Triangle', 2, 'xor2'),
+    subforms: [
+      digits('Sierpinski Carpet', 3, 'both'),
+      digits('Cantor Dust', 3, 'either'),
+      digits('Vicsek', 3, 'neither'),
     ],
   },
   {
