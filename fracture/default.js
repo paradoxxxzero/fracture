@@ -131,7 +131,7 @@ export const compileParams = [
   'f_prime_c',
   'f_perturb',
   // 'args',
-  // 'varying',
+  'varying',
   ...Object.keys(compileConstants),
 ]
 export const uniformParams = {
