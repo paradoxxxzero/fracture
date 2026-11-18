@@ -6,7 +6,10 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build && touch docs/.nojekyll",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "npm run test:formula && npm run test:shaders",
+    "test:formula": "node --no-warnings --import ./tests/register.mjs --test tests/formula.test.mjs",
+    "test:shaders": "python3 tests/run.py"
   },
   "devDependencies": {
     "@types/react": "^19.2.14",
