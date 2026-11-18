@@ -55,7 +55,7 @@ vec2 cmod(in vec2 z, in vec2 m) {
 
 vec2 csqrt(in vec2 z) {
     float r = length(z);
-    return vec2(sqrt(0.5 * (r + z.x)), sign(z.y) * sqrt(0.5 * (r - z.x)));
+    return vec2(sqrt(0.5 * (r + z.x)), (z.y < 0. ? -1. : 1.) * sqrt(0.5 * (r - z.x)));
 }
 
 vec2 clog(in vec2 z) {
@@ -99,7 +99,7 @@ vec2 ctanh(in vec2 z) {
 }
 
 vec2 cacosh(in vec2 z) {
-    return clog(cadd(z, csqrt(csub(cmul(z, z), c1))));
+    return clog(cadd(z, cmul(csqrt(cadd(z, c1)), csqrt(csub(z, c1)))));
 }
 
 vec2 casinh(in vec2 z) {

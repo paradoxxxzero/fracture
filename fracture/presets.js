@@ -578,7 +578,9 @@ export const presets = withDefaults([
       domain('Fresnel Auxiliary F', 'fresnelf(z) + c'),
       domain('Fresnel Auxiliary G', 'fresnelg(z) + c'),
       domain('Dawson', 'dawson(z) + c'),
-      domain('Lambert W', 'lambertw(z, k) + c', { args: { z: cx(0), k: cx(0), c: cx(0) } }),
+      domain('Lambert W', 'lambertw(z, k) + c', {
+        args: { z: cx(0), k: cx(0), c: cx(0) },
+      }),
       domain('Lambert Omega', 'omega(z) + c'),
       domain('Beta', 'beta(z, c)', { args: { z: cx(), c: cx(2) } }),
       domain('Beta First derivative', "beta'(z, c)", {
@@ -604,6 +606,148 @@ export const presets = withDefaults([
       domain('Tetra', 'tetra(z, c)', {
         args: { z: cx(0), c: cx(2, 2) },
       }),
+    ],
+  },
+  {
+    ...domain('Domain coloring Theta & Modular', 'theta3(z, c)', {
+      args: { z: cx(), c: cx(0.3, 0.2) },
+      scale: cx(3),
+    }),
+    subforms: [
+      domain('Theta 1', 'theta1(z, c)', {
+        args: { z: cx(), c: cx(0.3, 0.2) },
+        scale: cx(3),
+      }),
+      domain('Theta 2', 'theta2(z, c)', {
+        args: { z: cx(), c: cx(0.3, 0.2) },
+        scale: cx(3),
+      }),
+      domain('Theta 3', 'theta3(z, c)', {
+        args: { z: cx(), c: cx(0.3, 0.2) },
+        scale: cx(3),
+      }),
+      domain('Theta 4', 'theta4(z, c)', {
+        args: { z: cx(), c: cx(0.3, 0.2) },
+        scale: cx(3),
+      }),
+      domain('Theta 3 (nome)', 'theta3(0, z) + c', { scale: cx(1.1), c: cx() }),
+      domain('Euler Function', 'eulerq(z) + c', { scale: cx(1.1), c: cx() }),
+      domain('q-Pochhammer', 'qpoch(c, z)', {
+        args: { z: cx(), c: cx(0.5, 0.2) },
+        scale: cx(1.1),
+      }),
+      domain('Dedekind Eta', 'dedekind(z) + c', {
+        args: { z: cx(0, 1), c: cx() },
+        scale: cx(1.5),
+      }),
+      domain('Eisenstein E4', 'eisenstein4(z) + c', {
+        args: { z: cx(0, 1), c: cx() },
+        scale: cx(1.5),
+      }),
+      domain('Eisenstein E6', 'eisenstein6(z) + c', {
+        args: { z: cx(0, 1), c: cx() },
+        scale: cx(1.5),
+      }),
+      domain('Klein j-invariant', 'kleinj(z) + c', {
+        args: { z: cx(0, 1), c: cx() },
+        scale: cx(1.5),
+      }),
+      domain('Modular Lambda', 'modlambda(z) + c', {
+        args: { z: cx(0, 1), c: cx() },
+        scale: cx(1.5),
+      }),
+      domain('Weierstrass on a lattice (1, c)', 'wp(z, c)', {
+        args: { z: cx(), c: cx(0.2, 1) },
+        scale: cx(1.5),
+      }),
+      domain('Complete Elliptic Integral of Second Kind', 'ellke(z) + c'),
+    ],
+  },
+  {
+    ...domain('Domain coloring Bessel & Hypergeometric', 'besselj(z, c)', {
+      args: { z: cx(), c: cx(1) },
+      scale: cx(10),
+    }),
+    subforms: [
+      domain('Bessel J', 'besselj(z, c)', {
+        args: { z: cx(), c: cx(1) },
+        scale: cx(10),
+      }),
+      domain('Bessel Y', 'bessely(z, c)', {
+        args: { z: cx(), c: cx(1) },
+        scale: cx(10),
+      }),
+      domain('Hankel H1', 'besselh1(z, c)', {
+        args: { z: cx(), c: cx(1) },
+        scale: cx(10),
+      }),
+      domain('Hankel H2', 'besselh2(z, c)', {
+        args: { z: cx(), c: cx(1) },
+        scale: cx(10),
+      }),
+      domain('Modified Bessel I', 'besseli(z, c)', {
+        args: { z: cx(), c: cx(1) },
+        scale: cx(10),
+      }),
+      domain('Modified Bessel K', 'besselk(z, c)', {
+        args: { z: cx(), c: cx(1) },
+        scale: cx(10),
+      }),
+      domain('Airy Ai', 'airyai(z) + c', { scale: cx(8) }),
+      domain('Airy Bi', 'airybi(z) + c', { scale: cx(8) }),
+      domain('Hypergeometric 2F1', 'hyp2f1(a, b, c, z)', {
+        args: { z: cx(), a: cx(0.5), b: cx(0.5), c: cx(1) },
+        scale: cx(3),
+      }),
+      domain('Kummer 1F1', 'hyp1f1(a, c, z)', {
+        args: { z: cx(), a: cx(1), c: cx(2) },
+        scale: cx(8),
+      }),
+      domain('Hypergeometric 0F1', 'hyp0f1(c, z)', {
+        args: { z: cx(), c: cx(1.5) },
+        scale: cx(8),
+      }),
+      domain('Legendre P', 'legendre(z, c)', {
+        args: { z: cx(), c: cx(2.5) },
+        scale: cx(3),
+      }),
+      domain('Chebyshev T', 'chebyshevt(z, c)', {
+        args: { z: cx(), c: cx(3.5) },
+        scale: cx(3),
+      }),
+      domain('Chebyshev U', 'chebyshevu(z, c)', {
+        args: { z: cx(), c: cx(3.5) },
+        scale: cx(3),
+      }),
+      domain('Laguerre', 'laguerre(z, c)', {
+        args: { z: cx(), c: cx(2.5) },
+        scale: cx(8),
+      }),
+      domain('Hermite', 'hermite(z, c)', {
+        args: { z: cx(), c: cx(2.5) },
+        scale: cx(3),
+      }),
+      domain('Sine Integral', 'sinint(z) + c'),
+      domain('Cosine Integral', 'cosint(z) + c'),
+      domain('Hyperbolic Sine Integral', 'sinhint(z) + c'),
+      domain('Hyperbolic Cosine Integral', 'coshint(z) + c'),
+      domain('Lower Incomplete Gamma', 'gammal(c, z)', {
+        args: { z: cx(), c: cx(2.5) },
+        scale: cx(6),
+      }),
+      domain('Upper Incomplete Gamma', 'gammau(c, z)', {
+        args: { z: cx(), c: cx(2.5) },
+        scale: cx(6),
+      }),
+      domain('Log Gamma', 'lgamma(z) + c', { scale: cx(6) }),
+      domain('Reciprocal Gamma', 'rgamma(z) + c', { scale: cx(6) }),
+      domain('Trigamma', "psi'(z) + c", { scale: cx(6) }),
+      domain('Riemann-Siegel Z', 'riemannz(z) + c', {
+        args: { z: cx(25, 0), c: cx() },
+        scale: cx(25),
+      }),
+      domain('Dirichlet Beta', 'dirichletbeta(z) + c', { scale: cx(8) }),
+      domain('Dirichlet L (mod 3)', 'dirichletl3(z) + c', { scale: cx(8) }),
     ],
   },
   {

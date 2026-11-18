@@ -10,6 +10,7 @@ import renderSource from './shaders/render.glsl?raw'
 import colorsSource from './shaders/colors.glsl?raw'
 import complexSource from './shaders/complex.glsl?raw'
 import specialSource from './shaders/special.glsl?raw'
+import extraSource from './shaders/extra.glsl?raw'
 import iterateSource from './shaders/iterate.glsl?raw'
 import vertexQuadSource from './shaders/vertex-quad.glsl?raw'
 import vertex3dSource from './shaders/vertex-3d.glsl?raw'
@@ -32,6 +33,7 @@ export const includes = {
   render: renderSource,
   complex: complexSource,
   special: specialSource,
+  extra: extraSource,
   iterate: iterateSource,
 }
 

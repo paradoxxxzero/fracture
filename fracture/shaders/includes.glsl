@@ -45,3 +45,4 @@ uniform float textureBlend;
 #include render
 #include complex
 #include special
+#include extra

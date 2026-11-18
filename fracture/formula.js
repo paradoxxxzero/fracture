@@ -37,7 +37,6 @@ class Token {
   }
 }
 
-
 const shaderBinary = {
   '+': 'cadd',
   '-': 'csub',
@@ -101,6 +100,7 @@ export const functionShader = {
   ate: 'cate',
   tetra: 'ctetranat',
   fibonacci: 'cfibonacci',
+  fibonaccir: 'cfibonaccir',
   weierstrass: 'cweierstrass',
   "weierstrass'": 'cdweierstrass',
   weierstrassr: 'cweierstrassr',
@@ -122,6 +122,80 @@ export const functionShader = {
   lambertw: 'clambertw',
   W0: 'clambertw',
   omega: 'comega',
+  sec: 'csec',
+  csc: 'ccsc',
+  cot: 'ccot',
+  sech: 'csech',
+  csch: 'ccsch',
+  coth: 'ccoth',
+  acot: 'cacot',
+  asec: 'casec',
+  acsc: 'cacsc',
+  acoth: 'cacoth',
+  asech: 'casech',
+  acsch: 'cacsch',
+  cbrt: 'ccbrt',
+  root: 'croot',
+  sinc: 'csinc',
+  floor: 'cfloor',
+  ceil: 'cceil',
+  round: 'cround',
+  frac: 'cfrac',
+  log2: 'clog2',
+  log10: 'clog10',
+  logb: 'clogb',
+  sgn: 'csgn',
+  lgamma: 'clgamma',
+  rgamma: 'crgamma',
+  trigamma: 'ctrigamma',
+  "psi'": 'ctrigamma',
+  gammal: 'cgammal',
+  gammau: 'cgammau',
+  gammap: 'cgammap',
+  gammaq: 'cgammaq',
+  rstheta: 'crstheta',
+  riemannz: 'criemannz',
+  dirichletbeta: 'cdirichletbeta',
+  dirichletl3: 'cdirichletl3',
+  dirichletlambda: 'cdirichletlambda',
+  qnome: 'cqnome',
+  theta1: 'ctheta1',
+  theta2: 'ctheta2',
+  theta3: 'ctheta3',
+  theta4: 'ctheta4',
+  "theta1'": 'cdtheta1',
+  "theta2'": 'cdtheta2',
+  "theta3'": 'cdtheta3',
+  "theta4'": 'cdtheta4',
+  qpoch: 'cqpoch',
+  eulerq: 'ceulerq',
+  dedekind: 'cdedekind',
+  eisenstein4: 'ceisenstein4',
+  eisenstein6: 'ceisenstein6',
+  kleinj: 'ckleinj',
+  modlambda: 'cmodlambda',
+  ellke: 'cellke',
+  wp: 'cwp',
+  hyp0f1: 'chyp0f1',
+  hyp1f1: 'chyp1f1',
+  hyp2f1: 'chyp2f1',
+  legendre: 'clegendrep',
+  chebyshevt: 'cchebyshevt',
+  chebyshevu: 'cchebyshevu',
+  laguerre: 'claguerre',
+  hermite: 'chermite',
+  besselj: 'cbesselj',
+  bessely: 'cbessely',
+  besselh1: 'cbesselh1',
+  besselh2: 'cbesselh2',
+  besseli: 'cbesseli',
+  besselk: 'cbesselk',
+  airyai: 'cairyai',
+  airybi: 'cairybi',
+  sinint: 'csinint',
+  cosint: 'ccosint',
+  sinhint: 'csinhint',
+  coshint: 'ccoshint',
 }
 const opFunctions = {
   '+': (a, b) => a + b,
@@ -645,6 +719,158 @@ class UnaryOp {
   }
 }
 
+const num = v => new Leaf('number', v)
+const ident = v => new Leaf('identifier', v)
+const bin = (op, l, r) => new BinaryOp(op, l, r)
+const fn = (name, ...args) => new FunctionOp(name, args)
+const twoOverSqrtPi = () => bin('/', num(2), fn('sqrt', ident('PI')))
+
+// Derivatives of the functions that have a closed form in terms of others.
+// The derivative is taken with respect to the variable argument (the first
+// one, except for hypergeometric and incomplete gamma functions: the last).
+const specialDerivative = (op, wrt_funs, wrt_vars) => {
+  const { name, args } = op
+  const z = args[0]
+  const last = args[args.length - 1]
+  const dz = z.toDerivative(wrt_funs, wrt_vars)
+  const dlast = last.toDerivative(wrt_funs, wrt_vars)
+  const chain = (outer, d = dz) => bin('*', outer, d)
+  const nu = args[1]
+  const shift = k => bin(k < 0 ? '-' : '+', nu, num(Math.abs(k)))
+  switch (name) {
+    case 'sec':
+      return chain(bin('*', fn('sec', z), fn('tan', z)))
+    case 'csc':
+      return chain(new UnaryOp('-', bin('*', fn('csc', z), fn('cot', z))))
+    case 'cot':
+      return bin('/', new UnaryOp('-', dz), bin('^', fn('sin', z), num(2)))
+    case 'sech':
+      return chain(new UnaryOp('-', bin('*', fn('sech', z), fn('tanh', z))))
+    case 'csch':
+      return chain(new UnaryOp('-', bin('*', fn('csch', z), fn('coth', z))))
+    case 'coth':
+      return bin('/', new UnaryOp('-', dz), bin('^', fn('sinh', z), num(2)))
+    case 'cbrt':
+      return bin('/', dz, bin('*', num(3), bin('^', fn('cbrt', z), num(2))))
+    case 'lgamma':
+      return chain(fn('psi', z))
+    case 'expint':
+      return chain(bin('/', fn('exp', z), z))
+    case 'lint':
+      return chain(bin('/', num(1), fn('log', z)))
+    case 'sinint':
+      return chain(bin('/', fn('sin', z), z))
+    case 'cosint':
+      return chain(bin('/', fn('cos', z), z))
+    case 'sinhint':
+      return chain(bin('/', fn('sinh', z), z))
+    case 'coshint':
+      return chain(bin('/', fn('cosh', z), z))
+    case 'erfc':
+      return chain(new UnaryOp('-', fn("erf'", z)))
+    case 'erfi':
+      return chain(bin('*', twoOverSqrtPi(), fn('exp', bin('^', z, num(2)))))
+    case 'dawson':
+      return chain(
+        bin('-', num(1), bin('*', num(2), bin('*', z, fn('dawson', z))))
+      )
+    case 'lambertw':
+    case 'W0':
+      return chain(
+        bin('/', op, bin('*', z, bin('+', num(1), fn('lambertw', ...args))))
+      )
+    case 'omega':
+      return chain(bin('/', op, bin('+', num(1), op)))
+    case 'besselj':
+    case 'bessely':
+      if (args.length === 2) {
+        return chain(
+          bin(
+            '/',
+            bin('-', fn(name, z, shift(-1)), fn(name, z, shift(1))),
+            num(2)
+          )
+        )
+      }
+      return null
+    case 'besseli':
+      if (args.length === 2) {
+        return chain(
+          bin(
+            '/',
+            bin('+', fn(name, z, shift(-1)), fn(name, z, shift(1))),
+            num(2)
+          )
+        )
+      }
+      return null
+    case 'besselk':
+      if (args.length === 2) {
+        return chain(
+          new UnaryOp(
+            '-',
+            bin(
+              '/',
+              bin('+', fn(name, z, shift(-1)), fn(name, z, shift(1))),
+              num(2)
+            )
+          )
+        )
+      }
+      return null
+    case 'hyp2f1':
+      if (args.length === 4) {
+        const [a, b, c] = args
+        return chain(
+          bin(
+            '*',
+            bin('/', bin('*', a, b), c),
+            fn(
+              name,
+              bin('+', a, num(1)),
+              bin('+', b, num(1)),
+              bin('+', c, num(1)),
+              last
+            )
+          ),
+          dlast
+        )
+      }
+      return null
+    case 'hyp1f1':
+      if (args.length === 3) {
+        const [a, b] = args
+        return chain(
+          bin(
+            '*',
+            bin('/', a, b),
+            fn(name, bin('+', a, num(1)), bin('+', b, num(1)), last)
+          ),
+          dlast
+        )
+      }
+      return null
+    case 'hyp0f1':
+      if (args.length === 2) {
+        return chain(bin('/', fn(name, bin('+', z, num(1)), last), z), dlast)
+      }
+      return null
+    case 'gammal':
+    case 'gammau': {
+      // derivative with respect to the second argument
+      const [s] = args
+      const d = bin(
+        '*',
+        bin('^', last, bin('-', s, num(1))),
+        fn('exp', new UnaryOp('-', last))
+      )
+      return chain(name === 'gammal' ? d : new UnaryOp('-', d), dlast)
+    }
+    default:
+      return null
+  }
+}
+
 class FunctionOp {
   constructor(name, args) {
     this.name = name
@@ -886,18 +1112,17 @@ class FunctionOp {
         )
       )
     }
-    if (this.name === 'log2') {
+    if (['log2', 'log10'].includes(this.name)) {
       return new BinaryOp(
         '/',
-        new FunctionOp('log', [new Leaf('number', 2)]),
-        this.args[0].toDerivative(wrt_funs, wrt_vars)
-      )
-    }
-    if (this.name === 'log10') {
-      return new BinaryOp(
-        '/',
-        new FunctionOp('log', [new Leaf('number', 10)]),
-        this.args[0].toDerivative(wrt_funs, wrt_vars)
+        this.args[0].toDerivative(wrt_funs, wrt_vars),
+        new BinaryOp(
+          '*',
+          this.args[0],
+          new FunctionOp('log', [
+            new Leaf('number', this.name === 'log2' ? 2 : 10),
+          ])
+        )
       )
     }
     if (this.name === 'sn') {
@@ -929,13 +1154,17 @@ class FunctionOp {
           '*',
           new BinaryOp(
             '*',
-            new UnaryOp('-', this.args[1] || new Leaf('number', 0.8)),
+            new UnaryOp('-', this.args[1] || new Leaf('number', 0.5)),
             new FunctionOp('sn', this.args)
           ),
           new FunctionOp('cn', this.args)
         ),
         this.args[0].toDerivative(wrt_funs, wrt_vars)
       )
+    }
+    const special = specialDerivative(this, wrt_funs, wrt_vars)
+    if (special) {
+      return special
     }
     if (['re', 'im'].includes(this.name)) {
       return new FunctionOp(
@@ -1277,7 +1506,10 @@ export const vars = (ast_, ids = []) => {
 export const ast = s => parse(tokenize(s)).simplify()
 export const derive = (s, wrt_funs = ['z', 'z_1'], wrt_vars = []) =>
   parse(tokenize(s)).simplify().toDerivative(wrt_funs, wrt_vars).simplify()
-export const evaluate = (s, values = {}) => new Function(...Object.keys(values), `return ${ast(s).toComplex()}`)(...Object.values(values))
+export const evaluate = (s, values = {}) =>
+  new Function(...Object.keys(values), `return ${ast(s).toComplex()}`)(
+    ...Object.values(values)
+  )
 
 window.tokenize = tokenize
 window.parse = parse
